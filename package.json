@@ -1,0 +1,18 @@
+{
+  "name": "Brownie",
+  "description": "Brownie browser bake- and glazery",
+  "version": "0.1.0",
+  "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
+  "repository": "git://github.com/clux/brownie",
+  "main": "./index.js",
+  "bin": { 
+    "bake"  : "./bin/bake",
+    "glaze" : "./bin/glaze"
+  },
+  "dependencies": {
+    "commander": "0.1.0",
+  },
+  "devDependencies": {
+  },
+  "engines": { "node": ">= 0.4.8" }
+}
