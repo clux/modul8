@@ -5,12 +5,10 @@
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
   "repository": "git://github.com/clux/brownie",
   "main": "./index.js",
-  "bin": { 
-    "bake"  : "./bin/bake",
-    "glaze" : "./bin/glaze"
-  },
   "dependencies": {
-    "commander": "0.1.0",
+    "coffee-script": ">= 1.1.2",
+    "uglify-js": ">= 1.1.0",
+    "detective": ">= 0.0.3"
   },
   "devDependencies": {
   },
