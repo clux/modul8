@@ -32,16 +32,16 @@ via npm: coming
 brownie = require 'brownie'
 
 brownie.bake
-  target         : './public/js/target.js'
-  minify         : environment is 'production'
+  target    : './public/js/target.js'
+  minify    : environment is 'production'
   
-  clientDir      : './app/client/'
-  libDir         : './app/client/lib/'
-  sharedDir      : './app/shared/'
+  clientDir : './app/client/'
+  libDir    : './app/client/lib/'
+  sharedDir : './app/shared/'
 
 brownie.glaze
-  target  : './public/css/target.css'
-  minify  : environment is 'production'
+  target : './public/css/target.css'
+  minify : environment is 'production'
 ```
 
 ### Options
@@ -59,7 +59,7 @@ brownie.glaze
 
 (The MIT License)
 
-Copyright (c) 2009-2010 Eirik ALbrigtsen;
+Copyright (c) 2009-2010 Eirik Albrigtsen;
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
