@@ -3,6 +3,8 @@
  Brownie is a code and style bundler for the browser applications inspired by [RequireJS](http://requirejs.org/)
  and [Hem](http://github.com/maccman/hem). It is implemented with CoffeeScript for [node](http://nodejs.org),
  and allows bundling of shared code without heavy modification of your environment or require calls.
+ 
+## STILL IN HEAVY PRODUCTION!
 
 ## Features
 
@@ -20,9 +22,8 @@
 
 ## Installation
 
-via npm:
+via npm: coming
 
-    npm install brownie
 
 ## Usage
 
