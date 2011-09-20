@@ -1,26 +1,3 @@
-# this can easily be made into a commonjs compatible module if that is nicer
-makeRequire = (app_name) ->
-  (what, domain='client') ->
-    o = window[app_name]
-    return o.modules[what] if !(/\//).test(what) and domain is 'client' and o.modules[what] # search base level requires iin modules domain first
-    o = o[domain]
-    for part in what.split('/')
-      if o isnt undefined
-        o = o[part]
-      else
-        break
-    console.error("Unable to resolve require to #{app_name}.#{domain}.#{what.replace(/\//,'.')}") if o is undefined
-    o
-
-window.require = makeRequire(requireAppName) #requireAppName is attached to window
-window.shared = (what) -> require(what, 'shared')
-#window.server = (what) -> require(what, 'server')
-window.internal = (what) -> require(what, 'internal')
-
-
-#POSSIBLE:
-
-#FNWRAP with .call(this):
 app = @[requireAppName]
 domains = [app.modules, app.client, app.shared]
 
