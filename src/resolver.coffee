@@ -82,7 +82,14 @@ class Resolver
     console.log tree
 
 sortDependencies = (tree) -> # must flatten array into levels to get an ordered list of filenames w/resp. paths
-  []
+  #need to:
+  #1. add an index to the tree to indicate what level we are on (do in recursiveDetective step?)
+  #2. create an ARRAY with path+level+$+level (so there will be multiple versions potentially, so remove worse ones as we go)
+  for mod in tree
+    stuff
+
+  #3. then sort by level descending and remove the level from the name so that it can be used by builder verbatim : )
+  arr.sort((a,b) -> b.split('$')[1] - a.split('$')[1]).map((e) -> e.split('$')[0]) # this will give you the inclusion order!
 
 
 module.exports = (o) ->
