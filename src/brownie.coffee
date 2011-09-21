@@ -1,7 +1,5 @@
-coffee      = require 'coffee-script'
 fs          = require 'fs'
 path        = require 'path'
-detective   = require 'detective'
 {cjsWrap, compile, anonWrap, jQueryWrap, pullData} = require './utils'
 
 
