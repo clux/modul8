@@ -16,30 +16,42 @@ client code will then exclude the shared code (already included), then use our m
 
 coffee      = require 'coffee-script'
 fs          = require 'fs'
-detective   = require 'detective'
+path        = require 'path'
+#detective   = require 'detective'
 {compile}   = require './utils'
 
-domainToPath = (domain) ->
-  switch domain
-    when 'shared' then 'shared/'
-    when 'client' then 'client/'
-    when 'modules' then 'client/modules'
-    else 'client/libs'
 
-findAppropriate = (file) ->
-  # must be able to use the require algorithm...
+toAbsPath = (name, reqFolders) ->
+  if name[0...2] is './' # relative path
+    name = name[2...]
+    while name[0...3] is '../'
+      reqFolders = reqFolders[0...-1] # slice away the top folder every time we see a '../' string (NB: currently allows excessive ups as slice is always legal - but illegal on client)
+      name = name[3...]
+  prependStr = if reqFolders.join('/') then reqFolders.join('/')+'/' else ''
+  absPath = prependStr+name
 
-loadDependencies = (file) -> # name is the require string.. we need to map this to the file => need to use the require function in require.coffee
-  code = compile(findAppropriate(file))
-  detective(code)
 
 class Resolver
-  constructor : ({@basePoint, @baseFolder}) ->
-    #NB: this must use the same require algorithm... to be sure that it can resolve the files
-    #IE must create the global object as if we were to use it...
+  constructor : ({@basePoint, @domainPaths}) ->
+
+  loadDependencies : (name, reqFolders, domain) ->
+    code = compile(@findAppropriate(toAbsPath(name, reqFolders), domain))
+    detective(code)
+
+  findAppropriate : (absPath, domain) -> # what domain are we scanning?
+    orderedPaths = [domain].concat @domainPaths.filter((e) -> e isnt domain) # means this domain is scanned first, else order is preserved
+    for path in orderedPaths
+      return
+      #fs. check if path+file is an existing file, if it is return the compiled version of it + THE DOMAIN WE FOUND IT ON SO DETECTIVE KNOWR WHERE TO LOOK
+    throw new Error("require call for #{file} not found on any of the client require domains", @domainPaths)
+    return
+
+    #cant use the require algorithms, but needs to know current domain for relative require strings
+    # this should construct an ABSOLUTE path (which can be the ambiguous absolute version my require uses)
+
 
   getTree : () ->
-    tree = {name : @basePoint, deps : {}}
+    tree = {name: @basePoint, deps: {}, reqFolders: [], domain: @domainPaths['client']}
 
     clearParentEntries = (treePos) ->
       delete treePos.parent # does not have to exist to be cleared
@@ -58,9 +70,10 @@ class Resolver
       return
 
     recursiveDetective = (treePos, name) ->
-      for dep in loadDependencies(treePos.name) # use detective to get this 'deps' fn
+      reqFolders = treePos.name.split(path.basename(treePos.name))[0][0...-1].split('/') # array of folders to move into relative to basepoint to get to the file that required dep below
+      for dep in @loadDependencies(treePos.name, treePos.reqFolders, treePos.domain) # use detective to get this 'deps' fn
         branchScanUp(treePos, dep) # make sure this dep does not exist above it in the tree
-        treePos.deps[dep] = {name : dep, parent: treePos, deps: {}}
+        treePos.deps[dep] = {name : dep, parent: treePos, deps: {}, reqFolders: reqFolders }
         arguments.callee(treePos.deps[dep])
       return
 
@@ -68,7 +81,25 @@ class Resolver
     clearParentEntries(tree)
     console.log tree
 
-  sortDependencies : () ->
+sortDependencies = (tree) -> # must flatten array into levels to get an ordered list of filenames w/resp. paths
+  []
+
+
+module.exports = (o) ->
+  tree = (new Resolver(o)).getTree()
+  if o.targetTree
+    # write sanitized version of the tree to the target file for code review
+    return
+
+  sortDependencies(tree)
+
+
+if module is require.main
+  reqPoint = 'models/user'
+  name = './event'
+  reqFolders = reqPoint.split(path.basename(reqPoint))[0][0...-1].split('/') #remove name, last slash and convert to folders
+  console.log reqFolders
+  console.log toAbsPath(name, reqFolders)
 
 
 ###
