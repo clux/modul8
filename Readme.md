@@ -1,9 +1,9 @@
 # Brownie - browser bakery and glazery
 
- Brownie is a code and style bundler for the browser applications inspired by [RequireJS](http://requirejs.org/)
- and [Hem](http://github.com/maccman/hem). It is implemented with CoffeeScript for [node](http://nodejs.org),
- and allows bundling of shared code without heavy modification of your environment or require calls.
- 
+ Brownie is a code and style bundler for browser applications. It's inspired by [RequireJS](http://requirejs.org/)
+ and [Hem](http://github.com/maccman/hem), and is implemented with CoffeeScript for [node](http://nodejs.org),
+ and allows bundling of shared code without modification of your environment or require calls.
+
 ## STILL IN HEAVY PRODUCTION!
 
 ## Features
@@ -34,7 +34,7 @@ brownie = require 'brownie'
 brownie.bake
   target    : './public/js/target.js'
   minify    : environment is 'production'
-  
+
   clientDir : './app/client/'
   libDir    : './app/client/lib/'
   sharedDir : './app/shared/'
@@ -47,7 +47,7 @@ brownie.glaze
 ### Options
 
  - `target`       File to write to (must be referenced by your template) - required
- - `minify`       Defaults to false 
+ - `minify`       Defaults to false
  - `clientDir`    Client code directory (should include all your personal MVC/MVVM/spaghetti code)
  - `sharedDir`    Shared code directory (should include files needed on both server and client, but have no external dependencies in client or server code)
  - `basePoint`    Base file where your app is launched. Defaults to 'app'.
@@ -55,7 +55,7 @@ brownie.glaze
  - `treeTarget`   Where to write the current prettified require tree to. Optional.
 
 
-## License 
+## License
 
 (The MIT License)
 
