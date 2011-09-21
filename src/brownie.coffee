@@ -1,6 +1,7 @@
 fs          = require 'fs'
 path        = require 'path'
 {cjsWrap, compile, anonWrap, jQueryWrap, pullData} = require './utils'
+resolver    = require './dependency' # rename to resolver
 
 
 class Brownie # all main behaviour should go in here
@@ -15,12 +16,17 @@ class Brownie # all main behaviour should go in here
     @internalDir    = i.internalDir
     @libDir         = i.libDir
 
-
+    throw new Error("Brownie needs valid basePoint and clientDir") if !@basePoint or !@clientDir
     #@lib_files        = i.lib_files       ? []
     #@lib_files_cjs    = i.lib_files_cjs   ? []
     #@client_files     = i.client_files    ? []
     #@internal_files   = i.internal_files  ? []
     #@shared_files     = i.shared_files    ? []
+    dp = []
+    dp.push @moduleDir if @moduleDir # should not include stuff like jQuery, but Spine should be fine...
+    dp.push @clientDir
+    dp.push @sharedDir if @sharedDir
+    @tree = resolver({basePoint: @basePoint, domainPaths: dp})
 
 
 
