@@ -17,7 +17,7 @@ client code will then exclude the shared code (already included), then use our m
 coffee      = require 'coffee-script'
 fs          = require 'fs'
 path        = require 'path'
-#detective   = require 'detective'
+detective   = require 'detective'
 {compile}   = require './utils'
 
 
@@ -51,7 +51,7 @@ class Resolver
 
 
   getTree : () ->
-    tree = {name: @basePoint, deps: {}, reqFolders: [], domain: @domainPaths['client']}
+    tree = {name: @basePoint, deps: {}, reqFolders: [], domain: @domainPaths['client'], level: 0}
 
     clearParentEntries = (treePos) ->
       delete treePos.parent # does not have to exist to be cleared
@@ -73,31 +73,37 @@ class Resolver
       reqFolders = treePos.name.split(path.basename(treePos.name))[0][0...-1].split('/') # array of folders to move into relative to basepoint to get to the file that required dep below
       for dep in @loadDependencies(treePos.name, treePos.reqFolders, treePos.domain) # use detective to get this 'deps' fn
         branchScanUp(treePos, dep) # make sure this dep does not exist above it in the tree
-        treePos.deps[dep] = {name : dep, parent: treePos, deps: {}, reqFolders: reqFolders }
+        treePos.deps[dep] = {name : dep, parent: treePos, deps: {}, reqFolders: reqFolders, level: treePos.level+1 }
         arguments.callee(treePos.deps[dep])
       return
 
-    recursiveDetective(tree, @basePoint)
+    recursiveDetective(tree, @basePoint) #name of basePoint might have to call path.basename on it first
     clearParentEntries(tree)
     console.log tree
 
 sortDependencies = (tree) -> # must flatten array into levels to get an ordered list of filenames w/resp. paths
-  #need to:
-  #1. add an index to the tree to indicate what level we are on (do in recursiveDetective step?)
-  #2. create an ARRAY with path+level+$+level (so there will be multiple versions potentially, so remove worse ones as we go)
-  for mod in tree
-    stuff
+  obj = {}
+  ((treePos) ->
+    obj[treePos.name] = Math.max(treePos.level, obj[treePos.name] or 0)
+    arguments.callee(dep) for dep of treePos.deps
+    return
+  )(tree)
+  ([key,val] for key,val of obj).sort((a,b) -> b[1] - a[1]).map((e) -> e[0])
 
-  #3. then sort by level descending and remove the level from the name so that it can be used by builder verbatim : )
-  arr.sort((a,b) -> b.split('$')[1] - a.split('$')[1]).map((e) -> e.split('$')[0]) # this will give you the inclusion order!
-
+sanitizeTree = (tree) ->
+  m = {'app':{}}
+  ((treePos, mPos) ->
+    arguments.callee(treePos.deps[dep], mPos[dep]={}) for dep of treePos.deps
+    return
+  )(tree,m['app'])
+  m
 
 module.exports = (o) ->
   tree = (new Resolver(o)).getTree()
   if o.targetTree
-    # write sanitized version of the tree to the target file for code review
+    #fs.writeFileSync(o.treeTarget, sanitizeTree(tree)) if o.treeTarget # write sanitized version of the tree to the target file for code review
+    console.log sanitizeTree(tree)
     return
-
   sortDependencies(tree)
 
 
@@ -105,9 +111,21 @@ if module is require.main
   reqPoint = 'models/user'
   name = './event'
   reqFolders = reqPoint.split(path.basename(reqPoint))[0][0...-1].split('/') #remove name, last slash and convert to folders
-  console.log reqFolders
-  console.log toAbsPath(name, reqFolders)
+  #console.log reqFolders
+  #console.log toAbsPath(name, reqFolders)
 
+  tree =
+    name : 'app'
+    deps :
+      'A'  :
+        name : 'A'
+        deps : {}
+      'B'  :
+        name : 'B'
+        deps : {'C': {name:'C', deps: {'E':{name:'E',deps:{}}}  }, 'D' :{name:'D', deps: {}} }
+  console.log JSON.stringify sanitizeTree tree
+
+  return
 
 ###
 tree = {
