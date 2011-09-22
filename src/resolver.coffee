@@ -98,6 +98,40 @@ sanitizeTree = (tree) ->
   )(tree,m['app'])
   m
 
+
+getBranchSize = (branch) ->
+  i = 0
+  i++ for key of branch
+  i
+
+getReadableDep = (tree) ->
+  lines = []
+  ((branch, level, parentAry) ->
+    idx = 0
+    bSize = getBranchSize(branch)
+    for key,val of branch
+      hasChildren = getBranchSize(branch[key]) > 0
+      forkChar = if hasChildren then "┬" else "─"
+      isLast = ++idx is bSize
+      turnChar = if isLast then "└" else "├"
+
+      indents = []
+      if level > 1
+        for i in [1...level]
+          gapChar = if parentAry[i] then " " else "│"
+          indents.push gapChar+"  " #add one extra space per (horizontal) length of branch
+
+      if level <= 0
+        lines.push "#{key}" #root
+      else
+        lines.push "#{indents.join('')}#{turnChar}──#{forkChar} #{key}"
+
+      arguments.callee(branch[key], level+1, parentAry.concat(isLast)) #recurse into key's tree (NB: parentAry.length === level)
+    return
+  )(tree, 0, [])
+  lines.join('\n')
+
+
 module.exports = (o) ->
   tree = (new Resolver(o)).getTree()
   if o.targetTree
@@ -119,12 +153,14 @@ if module is require.main
     deps :
       'A'  :
         name : 'A'
-        deps : {}
+        deps : { 'F':{name:'F',deps:{}},  'G':{name:'G',deps:{}}  ,  'H':{name:'H',deps:{'Z':{name:'Z', deps:{  'WWW':{name:'W',deps:{}}   }}}},  'underWWW':{name:'underWWW',deps:{}}   }
       'B'  :
         name : 'B'
         deps : {'C': {name:'C', deps: {'E':{name:'E',deps:{}}}  }, 'D' :{name:'D', deps: {}} }
-  console.log JSON.stringify sanitizeTree tree
+  #console.log JSON.stringify sanitizeTree tree
 
+  smallTree = sanitizeTree tree
+  console.log getReadableDep(smallTree)
   return
 
 ###
