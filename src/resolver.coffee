@@ -81,6 +81,8 @@ class Resolver
     clearParentEntries(tree)
     console.log tree
 
+
+
 sortDependencies = (tree) -> # must flatten array into levels to get an ordered list of filenames w/resp. paths
   obj = {}
   ((treePos) ->
@@ -97,7 +99,6 @@ sanitizeTree = (tree) ->
     return
   )(tree,m['app'])
   m
-
 
 getBranchSize = (branch) ->
   i = 0
@@ -117,15 +118,9 @@ getReadableDep = (tree) ->
 
       indents = []
       if level > 1
-        for i in [1...level]
-          gapChar = if parentAry[i] then " " else "│"
-          indents.push gapChar+"  " #add one extra space per (horizontal) length of branch
+        indents.push((if parentAry[i] then " " else "│")+"  ") for i in [1...level] # extra double whitespace correspond to double dash used to connect
 
-      if level <= 0
-        lines.push "#{key}" #root
-      else
-        lines.push "#{indents.join('')}#{turnChar}──#{forkChar} #{key}"
-
+      lines.push(if level <= 0 then key else indents.join('')+turnChar+"──"+forkChar+key)
       arguments.callee(branch[key], level+1, parentAry.concat(isLast)) #recurse into key's tree (NB: parentAry.length === level)
     return
   )(tree, 0, [])
