@@ -13,11 +13,6 @@ cjsWrap = (code, exportLocation) ->
   (start + code + end)
 
 
-#This is good, but need define available somewhere on the browser: i can either attach it to app_name.modules, app_name, or window
-
-defineWrap = (code) ->
-  'define(function(require, exports, module) {'+code+'});'
-
 compile = (fileName) ->
   switch path.extname(fileName)
     when '.js'
@@ -27,9 +22,6 @@ compile = (fileName) ->
     else
       throw new Error("file: #{fileName} does not have a valid javascript/coffeescript extension")
 
-pullData = (parser, name) -> # parser interface
-  throw new Error("#{name}_parser is not a function") if not parser instanceof Function
-  parser()
 
 listToTree = (list) -> # create the object tree from input list of files
   moduleScan = (o, partial) ->
@@ -43,7 +35,6 @@ listToTree = (list) -> # create the object tree from input list of files
 
 module.exports =
   compile     : compile
-  pullData    : pullData
   cjsWrap     : cjsWrap
   anonWrap    : anonWrap
   jQueryWrap  : jQueryWrap

@@ -1,8 +1,11 @@
 fs          = require 'fs'
 path        = require 'path'
-{cjsWrap, compile, anonWrap, jQueryWrap, pullData} = require './utils'
+{cjsWrap, compile, anonWrap, jQueryWrap} = require './utils'
 resolver    = require './dependency' # rename to resolver
 
+pullData = (parser, name) -> # parser interface
+  throw new Error("#{name}_parser is not a function") if not parser instanceof Function
+  parser()
 
 class Brownie # all main behaviour should go in here
   constructor  : (i) ->
@@ -71,13 +74,45 @@ class Brownie # all main behaviour should go in here
     l.join '\n'
 
 
+bundle = (codeList, appName, libraries, parsers) ->
+  l = []
+  # 1. construct the global object
+  # TODO: we need the sanitized? code tree, not just the codeList to be able to construct this...
+
+  l.push "#{appName}.internal.#{name} = #{pullData(parser,name)};" for name, parser of parsers
+
+  # 3. attach require code
+  # 4. attach libraries that were included in list
+  l.push (compile(@libDir+file) for file in @libFiles).join('\n') # non CJS modules are exported RAW (CS files compiled bare, TODO: maybe change?)
+
+  # 5. Attach compiled files from codeList in correct order, and make use of our define implementation to attach it to our export tree
+  defineWrap = (code, exportName, domain) -> "#{appName}.define(function(require, exports, module){#{code}}, exportName, domain);"
+  l.push (defineWrap(compile(file.path), file.exportName, file.domain) for file in codeList).join('\n')
+
+
+#app -> spine, controllers, models
+#models,controllers -> spine
+# => spine gets high rating (included in all of these) => gets included early in bundle
+# but spine ought to have its modules included before itself if we mean to use them...
+# => when WE use them, we require them at the same time as Spine (=>IF we require them, then this is fine (as they would get before))
+# if we use them at the same time but simply Spine = require('Spine') and use Spine.Ajax (then Ajax module does not get required...) BAD
+# SOLN: either:
+#   1. include them in order as libraries and add an arbiter for the whole of spine (since we technically use it as one)
+#   2. explicitly require submodules of spine at the same time as spine was required => order gets correct
+# 2. however comes with the problem of having these spine submodules having a particular name!
+# IF we call them SpineAjax we must require SpineAjax
+# IF we call them Spine.Ajax we must require Spine.Ajax (which may lead people to believe we can require Spine and reference Spine.Ajax which simply isnt true)
+
+
+
 exports.bake = (i) ->
+
+
   b = (new Brownie i).bake([])
   if i.minify
     {uglify, parser} = require 'uglify-js'
     b = uglify.gen_code(uglify.ast_squeeze(uglify.ast_mangle(parser.parse(b))))
-
-  if i.target then fs.writeFileSync(i.target, b) else b
+  fs.writeFileSync(i.target, b) if i.target
 
 exports.decorate = (i) ->
   stylus = require 'stylus'

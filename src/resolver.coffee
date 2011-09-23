@@ -1,90 +1,100 @@
-###
-KILLING CIRCULAR DEPENDENCIES
-  1. create FULL tree for level i
-  2. for each branch: for each leaf: if leaf INCLUDED in its parent branch somewhere? As in: if we go directly UP, will we find this leaf?
-
-
-
-Anyway. It needs to give me a list of all shared code, client code (burrito can seperate) and give ME the order in which they are needed
-Shared code will have numbers from the big function, but we will simply maintain their order restricted to the shared folder (shared does not depend on client)
-client code will then exclude the shared code (already included), then use our metric for including the files
-  How does it seperate cjs and non-cjs libs?
-  1. hopefully jQuery exists in CJS format, although => have to host it ourselves...
-  2. alternatively requires can be done conditionally $ ?= require('jQuery') for stuff we are not sure of
-  3. spine attaches to module.exports conditionally, so we can export it into app_name.modules and everything else requires Spine will get it from there!
-###
-
 coffee      = require 'coffee-script'
 fs          = require 'fs'
 path        = require 'path'
 detective   = require 'detective'
 {compile}   = require './utils'
 
+# simple fs extension to check if a file exists [used to verify require calls' validity]
+exists = (file) ->
+  try
+    fs.statSync(file)
+    return true
+  catch e
+    return false
 
-toAbsPath = (name, reqFolders) ->
-  if name[0...2] is './' # relative path
-    name = name[2...]
-    while name[0...3] is '../'
-      reqFolders = reqFolders[0...-1] # slice away the top folder every time we see a '../' string
-      name = name[3...]
-  prependStr = if reqFolders.join('/') then reqFolders.join('/')+'/' else ''
-  absPath = prependStr+name
+# criteria for whether a require string is relative, rather than absolute
+isRelative = (reqStr) -> reqStr[0...2] is './'
+
+# convert relative requires to absolute ones
+# relative folder movement limited to ./(../)*n + normalpath [no backing out after normal folder movement has started]
+# will return a string (without a leading slash) that can be post-concatenated with the domain specific path
+toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain base that we were requiring from
+  return name if !isRelative(name)
+  name = name[2...]
+  while name[0...3] is '../'
+    subFolders = subFolders[0...-1] # slice away the top folder every time we see a '../' string
+    name = name[3...]
+  folderStr = subFolders.join('/')
+  prependStr = if folderStr then folderStr+'/' else ''
+  prependStr+name
+
 
 Organizer = (@basePoint, @domainPaths) ->
-  @resolveDependencies()
+  #@resolveDependencies() #not ready for that yet
   return
+
+#NB: domainPaths must be COMPLETE PATHS UP TO BASE POINT: i.e. ['/home/e/repos/dmjs/app/client/', '/home/e/repos/dmjs/app/shared/', '/home/e/repos/dmjs/app/client/modules/']
+#But obviously, they can be relativized up to require point. i.e. if node started in /home/e/repos/dmjs/ then can write ['./app/client/', ... ]
+
+Organizer::resolveRequire = (absReq, domain, wasRelative) ->
+  # always scan current domain first, but only scan current domain path if require string was relative
+  orderedPaths = if wasRelative then [domain] else [domain].concat @domainPaths.filter((e) -> e isnt domain)
+  return {path: path+absReq, base: path} for path in orderedPaths when exists(path+absReq)
+
+  errorStr = if wasRelative then "the relatively required domain: #{domain}" else "any of the client require domains #{JSON.stringify(domainPaths)}"
+  throw new Error("require call for #{absReq} not found on #{errorStr}")
+  return
+
+# resolve and compile a target file to js, then apply detective on it
+Organizer::loadDependencies = (name, subFolders, domain) ->
+  {path, foundDomain} = @resolveRequire(toAbsPath(name, subFolders), domain, isRelative(name))
+  r =
+    deps    : detective(compile(path))
+    domain  : foundDomain
+
+
+# big resolver, creates 3 recursive functions within
+# one to remove cirular parent references in the tree that fn 3 is building
+# one to scan the parent references at each level to make sure no circular refeneces exists in app code
+# and the final (anonymous one) to call detective recursively to find and resolve require calls in current file
 Organizer::resolveDependencies = -> # private
+  tree = {name: @basePoint, deps: {}, reqFolders: [], domain: @domainPaths['client'], level: 0}
+
+  uncircularize = (treePos) ->
+    delete treePos.parent # does not have to exist to be cleared
+    uncircularize(treePos.deps[dep]) for dep of treePos.deps
+    return
+
+  branchScanUp = (treePos, dep) -> # makes sure no circular references exists for dep going up from current point in tree (tree starts at top)
+    loop
+      return if treePos.parent is undefined # got all the way to @basePoint without finding self => good
+      treePos = treePos.parent
+
+      if treePos.name is currentDep.name
+        uncircularize(tree) # so that node is able to console.log it (cant log a circular structure)
+        throw new Error("#{treePos.name} has a circular dependency: it gets re-required by its requirement for module: #{currentDep.parent.name}", tree)
+    return
+
+  ((treePos) ->
+    subFolders = treePos.name.split(path.basename(treePos.name))[0][0...-1].split('/') # array of folders to move into relative to basepoint to get to the file that required dep below
+    for dep in @loadDependencies(treePos.name, treePos.subFolders, treePos.domain) # use detective to get this 'deps' fn
+      branchScanUp(treePos, dep.name) # make sure this dep does not exist above it in the tree
+      treePos.deps[dep.name] = {name : dep.name, parent: treePos, deps: {}, subFolders: subFolders, domain: dep.domain, level: treePos.level+1 }
+      arguments.callee(treePos.deps[dep.name])
+    return
+  )(tree) # call detective recursively and resolve each require
+
+  uncircularize(tree)
+  @tree = tree
+  console.log @tree
+
+Organizer::
 Organizer::getCodeOrder = ->
 Organizer::writeCodeTree = (target) ->
 
 organizer = (b,d) -> new Organizer(b,d)
 
 
-class Resolver
-  constructor : ({@basePoint, @domainPaths}) ->
-
-  loadDependencies : (name, reqFolders, domain) ->
-    code = compile(@findAppropriate(toAbsPath(name, reqFolders), domain))
-    detective(code)
-
-  findAppropriate : (absReq, domain) ->
-    orderedPaths = [domain].concat @domainPaths.filter((e) -> e isnt domain) # means this domain is scanned first, else order is preserved
-    for path in orderedPaths
-      fs. path + absReq
-    throw new Error("require call for #{file} not found on any of the client require domains", @domainPaths)
-    return
-
-
-  getTree : () ->
-    tree = {name: @basePoint, deps: {}, reqFolders: [], domain: @domainPaths['client'], level: 0}
-
-    clearParentEntries = (treePos) ->
-      delete treePos.parent # does not have to exist to be cleared
-      for dep of treePos.deps
-        clearParentEntries(treePos.deps[dep])
-      return
-
-    branchScanUp = (treePos, dep) -> # makes sure no circular references exists for dep going up from current point in tree (tree starts at top)
-      loop
-        return if treePos.parent is undefined # got all the way to @basePoint without finding self => good
-        treePos = treePos.parent
-
-        if treePos.name is currentDep.name
-          clearParentEntries(tree) # so that node is able to console.log it (cant log a circular structure)
-          throw new Error("#{treePos.name} has a circular dependency: it gets re-required by its requirement for module: #{currentDep.parent.name}", tree)
-      return
-
-    recursiveDetective = (treePos, name) ->
-      reqFolders = treePos.name.split(path.basename(treePos.name))[0][0...-1].split('/') # array of folders to move into relative to basepoint to get to the file that required dep below
-      for dep in @loadDependencies(treePos.name, treePos.reqFolders, treePos.domain) # use detective to get this 'deps' fn
-        branchScanUp(treePos, dep) # make sure this dep does not exist above it in the tree
-        treePos.deps[dep] = {name : dep, parent: treePos, deps: {}, reqFolders: reqFolders, level: treePos.level+1 }
-        arguments.callee(treePos.deps[dep])
-      return
-
-    recursiveDetective(tree, @basePoint) #name of basePoint might have to call path.basename on it first
-    clearParentEntries(tree)
-    console.log tree
 
 
 
@@ -110,7 +120,7 @@ getBranchSize = (branch) ->
   i++ for key of branch
   i
 
-getReadableDep = (tree) ->
+getReadableDep = (tree) -> # requires a sanitized tree as input
   lines = []
   ((branch, level, parentAry) ->
     idx = 0
@@ -133,7 +143,7 @@ getReadableDep = (tree) ->
 
 
 module.exports = (o) ->
-  tree = (new Resolver(o)).getTree()
+  organizer = organizer()
   if o.targetTree
     #fs.writeFileSync(o.treeTarget, sanitizeTree(tree)) if o.treeTarget # write sanitized version of the tree to the target file for code review
     console.log sanitizeTree(tree)
@@ -157,8 +167,8 @@ if module is require.main
       'B'  :
         name : 'B'
         deps : {'C': {name:'C', deps: {'E':{name:'E',deps:{}}}  }, 'D' :{name:'D', deps: {}} }
-  #console.log JSON.stringify sanitizeTree tree
+  console.log JSON.stringify sanitizeTree tree
 
-  smallTree = sanitizeTree tree
-  console.log getReadableDep(smallTree)
+  #smallTree = sanitizeTree tree
+  #console.log getReadableDep(smallTree)
   return

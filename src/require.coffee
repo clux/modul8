@@ -24,12 +24,14 @@ resolveRelative = (domain, pathName, relReqStr) ->
     folders = folders[0...-1] # slice away the top folder every time it is required
     relReqStr = relReqStr[3...]
   path = folders.concat(relReqStr.split('/')).join('/') # take the remaining path and make the string
-  resolveAbs(domain, path)
+  out = resolveAbs(domain, path)
+  console.error("Unable to resolve require for: #{relReqStr}, looking in domain: #{domain} relative to path: #{pathName}") if !out
+  out
 
 
-app.define = (fn, fileName, domain) ->
+app.define = (fn, exportName, domain) -> # pass in a fn that expects require, module and exports, this will create/refer these objects/fns correctly
   exports = app[domain][fileName] #could work, define calls would be structured anyway
   module = {}
-  fn(makeRequire(domain, fileName), module, exports)
+  fn(makeRequire(domain, exportName), module, exports)
   app.client = module.exports if module.exports
 
