@@ -1,5 +1,7 @@
 # code wrapper helpers
 jQueryWrap = (code) ->
+  #TODO: this needs a more generic function for handling DOMLoaded fn depending on library
+  # If no library, need to write a simple fn here, (it only needs to wrap app code)
   '$(function(){'+code+'});'
 
 anonWrap = (code) ->
@@ -23,14 +25,17 @@ compile = (fileName) ->
       throw new Error("file: #{fileName} does not have a valid javascript/coffeescript extension")
 
 
-listToTree = (list) -> # create the object tree from input list of files
+listToTree = (list, base) -> # create the object tree from input list of files
+  obj = {}
   moduleScan = (o, partial) ->
     f = partial[0]
     o[f] = {} if !o[f]?
     return if partial.length is 1
     moduleScan(o[f], partial[1..])
-  obj = {}
-  moduleScan(obj, file.replace(/\..*/,'').split('/')) for file in list
+  for file in list
+
+    file = spl[1] if (spl = file.split(base)).length > 0
+    moduleScan(obj, file.replace(/\..*/,'').split('/'))
   obj
 
 module.exports =
@@ -39,3 +44,7 @@ module.exports =
   anonWrap    : anonWrap
   jQueryWrap  : jQueryWrap
   listToTree  : listToTree
+
+
+if module is require.main
+  console.log JSON.stringify listToTree(['/home/e/repos/dmjs/app/client/app.coffee', '/home/e/repos/dmjs/app/client/controllers/user.coffee'], '/home/e/repos/dmjs/app/')

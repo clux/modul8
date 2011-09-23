@@ -30,7 +30,7 @@ toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain 
 
 
 Organizer = (@basePoint, @domainPaths) ->
-  #@resolveDependencies() #not ready for that yet
+  #@resolveDependencies() #resolve dependency tree and sanitize it for use under @tree
   return
 
 #NB: domainPaths must be COMPLETE PATHS UP TO BASE POINT: i.e. ['/home/e/repos/dmjs/app/client/', '/home/e/repos/dmjs/app/shared/', '/home/e/repos/dmjs/app/client/modules/']
@@ -41,9 +41,10 @@ Organizer::resolveRequire = (absReq, domain, wasRelative) ->
   orderedPaths = if wasRelative then [domain] else [domain].concat @domainPaths.filter((e) -> e isnt domain)
   return {path: path+absReq, base: path} for path in orderedPaths when exists(path+absReq)
 
-  errorStr = if wasRelative then "the relatively required domain: #{domain}" else "any of the client require domains #{JSON.stringify(domainPaths)}"
+  errorStr = if wasRelative then "the relatively required domain: #{domain}" else "any of the client require domains #{JSON.stringify(@domainPaths)}"
   throw new Error("require call for #{absReq} not found on #{errorStr}")
   return
+
 
 # resolve and compile a target file to js, then apply detective on it
 Organizer::loadDependencies = (name, subFolders, domain) ->
@@ -51,6 +52,18 @@ Organizer::loadDependencies = (name, subFolders, domain) ->
   r =
     deps    : detective(compile(path))
     domain  : foundDomain
+
+
+
+# test everything up to this point
+if module is require.main
+  clientPath = '~/repos/node/app/client/'
+  sharedPath = '~/repos/node/app/shared/'
+  #o = new Organizer('app.coffee', [clientPath])
+  #console.log o.loadDependencies('app',[],'client')
+
+  console.log exists "~/repos/node/app/client/"+'app.coffee' #weird
+  return # dont define more stuff
 
 
 # big resolver, creates 3 recursive functions within
@@ -65,7 +78,7 @@ Organizer::resolveDependencies = -> # private
     uncircularize(treePos.deps[dep]) for dep of treePos.deps
     return
 
-  branchScanUp = (treePos, dep) -> # makes sure no circular references exists for dep going up from current point in tree (tree starts at top)
+  circularCheck = (treePos, dep) -> # makes sure no circular references exists for dep going up from current point in tree (tree starts at top)
     loop
       return if treePos.parent is undefined # got all the way to @basePoint without finding self => good
       treePos = treePos.parent
@@ -78,42 +91,38 @@ Organizer::resolveDependencies = -> # private
   ((treePos) ->
     subFolders = treePos.name.split(path.basename(treePos.name))[0][0...-1].split('/') # array of folders to move into relative to basepoint to get to the file that required dep below
     for dep in @loadDependencies(treePos.name, treePos.subFolders, treePos.domain) # use detective to get this 'deps' fn
-      branchScanUp(treePos, dep.name) # make sure this dep does not exist above it in the tree
+      circularCheck(treePos, dep.name)
       treePos.deps[dep.name] = {name : dep.name, parent: treePos, deps: {}, subFolders: subFolders, domain: dep.domain, level: treePos.level+1 }
       arguments.callee(treePos.deps[dep.name])
     return
   )(tree) # call detective recursively and resolve each require
 
   uncircularize(tree)
-  @tree = tree
+  @tree = @sanitize(tree)
   console.log @tree
 
-Organizer::
-Organizer::getCodeOrder = ->
-Organizer::writeCodeTree = (target) ->
 
-organizer = (b,d) -> new Organizer(b,d)
+Organizer::sanitize = (tree) -> # private
+  m = {}
+  m[@basePoint] = {}
+  ((treePos, mPos) ->
+    arguments.callee(treePos.deps[dep], mPos[dep]={}) for dep of treePos.deps
+    return
+  )(tree,m[@basePoint])
+  m
 
-
-
-
-
-sortDependencies = (tree) -> # must flatten array into levels to get an ordered list of filenames w/resp. paths
+Organizer::getCodeOrder = -> # must flatten the tree, and order based on
   obj = {}
   ((treePos) ->
     obj[treePos.name] = Math.max(treePos.level, obj[treePos.name] or 0)
     arguments.callee(dep) for dep of treePos.deps
     return
-  )(tree)
+  )(@tree)
   ([key,val] for key,val of obj).sort((a,b) -> b[1] - a[1]).map((e) -> e[0])
+Organizer::writeCodeTree = (target) ->
 
-sanitizeTree = (tree) ->
-  m = {'app':{}}
-  ((treePos, mPos) ->
-    arguments.callee(treePos.deps[dep], mPos[dep]={}) for dep of treePos.deps
-    return
-  )(tree,m['app'])
-  m
+organizer = (b,d) -> new Organizer(b,d)
+
 
 getBranchSize = (branch) ->
   i = 0

@@ -1,7 +1,7 @@
 fs          = require 'fs'
 path        = require 'path'
 {cjsWrap, compile, anonWrap, jQueryWrap} = require './utils'
-resolver    = require './dependency' # rename to resolver
+organizer   = require './organizer'
 
 pullData = (parser, name) -> # parser interface
   throw new Error("#{name}_parser is not a function") if not parser instanceof Function
@@ -77,7 +77,11 @@ class Brownie # all main behaviour should go in here
 bundle = (codeList, appName, libraries, parsers) ->
   l = []
   # 1. construct the global object
-  # TODO: we need the sanitized? code tree, not just the codeList to be able to construct this...
+  # we can ALMOST make do with codeList, we only need to determine what domain these files are on and remove the beginning from that..
+  # though this can be quite hard:
+  # 1. domainPaths can be passed in relatively OR absolutely to Organizer, so simply splitting away this isnt going to work
+  # 2. if passed in relatively and path is ./ then how the fuck do we determine domain from that? => impossible
+  # SOLN: codeList must be an array of dicts: {path: pathrelativetodomain, domain: domainPath[x]}
 
   l.push "#{appName}.internal.#{name} = #{pullData(parser,name)};" for name, parser of parsers
 
