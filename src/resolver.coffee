@@ -25,10 +25,19 @@ toAbsPath = (name, reqFolders) ->
   if name[0...2] is './' # relative path
     name = name[2...]
     while name[0...3] is '../'
-      reqFolders = reqFolders[0...-1] # slice away the top folder every time we see a '../' string (NB: currently allows excessive ups as slice is always legal - but illegal on client)
+      reqFolders = reqFolders[0...-1] # slice away the top folder every time we see a '../' string
       name = name[3...]
   prependStr = if reqFolders.join('/') then reqFolders.join('/')+'/' else ''
   absPath = prependStr+name
+
+Organizer = (@basePoint, @domainPaths) ->
+  @resolveDependencies()
+  return
+Organizer::resolveDependencies = -> # private
+Organizer::getCodeOrder = ->
+Organizer::writeCodeTree = (target) ->
+
+organizer = (b,d) -> new Organizer(b,d)
 
 
 class Resolver
@@ -38,16 +47,12 @@ class Resolver
     code = compile(@findAppropriate(toAbsPath(name, reqFolders), domain))
     detective(code)
 
-  findAppropriate : (absPath, domain) -> # what domain are we scanning?
+  findAppropriate : (absReq, domain) ->
     orderedPaths = [domain].concat @domainPaths.filter((e) -> e isnt domain) # means this domain is scanned first, else order is preserved
     for path in orderedPaths
-      return
-      #fs. check if path+file is an existing file, if it is return the compiled version of it + THE DOMAIN WE FOUND IT ON SO DETECTIVE KNOWR WHERE TO LOOK
+      fs. path + absReq
     throw new Error("require call for #{file} not found on any of the client require domains", @domainPaths)
     return
-
-    #cant use the require algorithms, but needs to know current domain for relative require strings
-    # this should construct an ABSOLUTE path (which can be the ambiguous absolute version my require uses)
 
 
   getTree : () ->
@@ -157,34 +162,3 @@ if module is require.main
   smallTree = sanitizeTree tree
   console.log getReadableDep(smallTree)
   return
-
-###
-tree = {
-  name : 'app'
-  deps : {
-    'A' : {
-      parent: tree
-      name : 'A'
-      deps : {}
-    },
-    'B' : {
-      parent: tree
-      name : 'B'
-      deps :
-        'BA' : {
-          parent : tree.deps['B']
-          name : 'BA'
-          deps : {}
-        }
-      }
-    }
-
-  }
-}
-
-deps are simply in the form
-['A','B','C'] => should map onto the keys in tree.deps(['A'].deps(['AB'].deps)) etc
-
-at each point we can check parents by doing:
-
-###
