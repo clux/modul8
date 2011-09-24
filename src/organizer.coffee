@@ -1,8 +1,8 @@
-coffee      = require 'coffee-script'
+#coffee      = require 'coffee-script'
 fs          = require 'fs'
 path        = require 'path'
 detective   = require 'detective'
-{compile}   = require './utils'
+{compile, cutTests} = require './utils'
 
 # simple fs extension to check if a file exists [used to verify require calls' validity]
 exists = (file) ->
@@ -29,8 +29,8 @@ toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain 
   prependStr+name
 
 
-Organizer = (@basePoint, @domainPaths) ->
-  #@resolveDependencies() #resolve dependency tree and sanitize it for use under @tree
+Organizer = (@basePoint, @domainPaths, @useLocalTests=true) ->
+  @resolveDependencies() #resolve dependency tree and sanitize it for use under @tree
   return
 
 #NB: domainPaths must be COMPLETE PATHS UP TO BASE POINT: i.e. ['/home/e/repos/dmjs/app/client/', '/home/e/repos/dmjs/app/shared/', '/home/e/repos/dmjs/app/client/modules/']
@@ -38,32 +38,27 @@ Organizer = (@basePoint, @domainPaths) ->
 
 Organizer::resolveRequire = (absReq, domain, wasRelative) ->
   # always scan current domain first, but only scan current domain path if require string was relative
+  console.log "resolveRequire (failed here):", absReq, domain, wasRelative
   orderedPaths = if wasRelative then [domain] else [domain].concat @domainPaths.filter((e) -> e isnt domain)
-  return {path: path+absReq, base: path} for path in orderedPaths when exists(path+absReq)
+  return {absReq: absReq, basePath: path} for path in orderedPaths when exists(path+absReq)
 
   errorStr = if wasRelative then "the relatively required domain: #{domain}" else "any of the client require domains #{JSON.stringify(@domainPaths)}"
-  throw new Error("require call for #{absReq} not found on #{errorStr}")
+  throw new Error("require call for #{absReq} not matched on #{errorStr}")
   return
 
 
 # resolve and compile a target file to js, then apply detective on it
 Organizer::loadDependencies = (name, subFolders, domain) ->
-  {path, foundDomain} = @resolveRequire(toAbsPath(name, subFolders), domain, isRelative(name))
+  console.log 'LOADDEPS:',name, subFolders, domain
+  {absReq, basePath} = @resolveRequire(toAbsPath(name, subFolders), domain, isRelative(name))
+  code = compile(basePath+absReq)
+  code = cutTests(code) if @useLocalTests
   r =
-    deps    : detective(compile(path))
-    domain  : foundDomain
+    deps    : detective(code)
+    domain  : basePath
+  console.log "from loadDeps for ",name,"out:",r
+  r
 
-
-
-# test everything up to this point
-if module is require.main
-  clientPath = '~/repos/node/app/client/'
-  sharedPath = '~/repos/node/app/shared/'
-  #o = new Organizer('app.coffee', [clientPath])
-  #console.log o.loadDependencies('app',[],'client')
-
-  console.log exists "~/repos/node/app/client/"+'app.coffee' #weird
-  return # dont define more stuff
 
 
 # big resolver, creates 3 recursive functions within
@@ -71,7 +66,7 @@ if module is require.main
 # one to scan the parent references at each level to make sure no circular refeneces exists in app code
 # and the final (anonymous one) to call detective recursively to find and resolve require calls in current file
 Organizer::resolveDependencies = -> # private
-  tree = {name: @basePoint, deps: {}, reqFolders: [], domain: @domainPaths['client'], level: 0}
+  tree = {name: @basePoint, deps: {}, subFolders: [], domain: @domainPaths[0], level: 0}
 
   uncircularize = (treePos) ->
     delete treePos.parent # does not have to exist to be cleared
@@ -83,23 +78,27 @@ Organizer::resolveDependencies = -> # private
       return if treePos.parent is undefined # got all the way to @basePoint without finding self => good
       treePos = treePos.parent
 
-      if treePos.name is currentDep.name
+      if treePos.name is dep.name
         uncircularize(tree) # so that node is able to console.log it (cant log a circular structure)
         throw new Error("#{treePos.name} has a circular dependency: it gets re-required by its requirement for module: #{currentDep.parent.name}", tree)
     return
 
-  ((treePos) ->
-    subFolders = treePos.name.split(path.basename(treePos.name))[0][0...-1].split('/') # array of folders to move into relative to basepoint to get to the file that required dep below
-    for dep in @loadDependencies(treePos.name, treePos.subFolders, treePos.domain) # use detective to get this 'deps' fn
-      circularCheck(treePos, dep.name)
-      treePos.deps[dep.name] = {name : dep.name, parent: treePos, deps: {}, subFolders: subFolders, domain: dep.domain, level: treePos.level+1 }
-      arguments.callee(treePos.deps[dep.name])
+  loadDeps = @loadDependencies # needed outside @
+  ((treePos) =>
+    subFolders = treePos.name.split('.')[0].split('/')[0...-1] # kill extension, get all folder names
+    console.log "recDetectiveCall:",subFolders, treePos.name
+    {deps, domain} = @loadDependencies(treePos.name, treePos.subFolders, treePos.domain) #TODO: this should perhaps be domain or concat with previous...
+    for dep in  deps # use detective to get this 'deps' fn
+      console.log dep,"use this:?", dep.split('/')[0...-1], "or this:?", subFolders, "or even this:", treePos.subFolders
+      circularCheck(treePos, dep)
+      treePos.deps[dep] = {name : dep, parent: treePos, deps: {}, subFolders: dep.split('/')[0...-1], domain: domain, level: treePos.level+1 }
+      arguments.callee.call(@,treePos.deps[dep])
     return
   )(tree) # call detective recursively and resolve each require
 
   uncircularize(tree)
   @tree = @sanitize(tree)
-  console.log @tree
+  return
 
 
 Organizer::sanitize = (tree) -> # private
@@ -110,6 +109,7 @@ Organizer::sanitize = (tree) -> # private
     return
   )(tree,m[@basePoint])
   m
+
 
 Organizer::getCodeOrder = -> # must flatten the tree, and order based on
   obj = {}
@@ -129,7 +129,7 @@ getBranchSize = (branch) ->
   i++ for key of branch
   i
 
-getReadableDep = (tree) -> # requires a sanitized tree as input
+Organizer::getCoolCodeTree = () -> # uses the sanitized tree
   lines = []
   ((branch, level, parentAry) ->
     idx = 0
@@ -147,8 +147,26 @@ getReadableDep = (tree) -> # requires a sanitized tree as input
       lines.push(if level <= 0 then key else indents.join('')+turnChar+"──"+forkChar+key)
       arguments.callee(branch[key], level+1, parentAry.concat(isLast)) #recurse into key's tree (NB: parentAry.length === level)
     return
-  )(tree, 0, [])
+  )(@tree, 0, [])
   lines.join('\n')
+
+
+
+# test everything up to this point
+if module is require.main
+  clientPath = '/home/clux/repos/deathmatchjs/app/client/'
+  sharedPath = '/home/clux/repos/deathmatchjs/app/shared/'
+  o = new Organizer('app.coffee', [clientPath,sharedPath])
+  console.log o.getCoolCodeTree()
+  #console.log o.loadDependencies('app.coffee',[],clientPath)
+
+  #s = 'app.coffee'
+  #console.log s.split(path.basename(s))[0][0...-1].split('/') #<- problem, need this to return empty array
+  #i.e. might have split around the domain name as well!, but will that work?
+  #technically, each name SHOULD NOT INCLUDE MORE THAN ITS RELATIVE PATH: FIX SO THAT THIS IS RIGHT
+
+  #console.log exists "/home/clux/repos/deathmatchjs/app/client/"+'app.coffee' #weird
+  return # dont define more stuff
 
 
 module.exports = (o) ->

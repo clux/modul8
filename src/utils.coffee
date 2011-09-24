@@ -1,3 +1,6 @@
+path        = require 'path'
+fs          = require 'fs'
+coffee      = require 'coffee-script'
 # code wrapper helpers
 jQueryWrap = (code) ->
   #TODO: this needs a more generic function for handling DOMLoaded fn depending on library
@@ -24,6 +27,9 @@ compile = (fileName) ->
     else
       throw new Error("file: #{fileName} does not have a valid javascript/coffeescript extension")
 
+#TODO: this can eventually use burrito, but atm I can require that if people want this feature, then it must be put in the bottom of the file
+cutTests = (code) ->
+  code.replace(/\n.*require.main[\w\W]*$/, '')
 
 listToTree = (list, base) -> # create the object tree from input list of files
   obj = {}
@@ -42,6 +48,7 @@ module.exports =
   compile     : compile
   cjsWrap     : cjsWrap
   anonWrap    : anonWrap
+  cutTests    : cutTests
   jQueryWrap  : jQueryWrap
   listToTree  : listToTree
 
