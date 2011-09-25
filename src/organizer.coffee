@@ -81,10 +81,10 @@ Organizer::resolveDependencies = -> # private
 
   ((treePos) =>
     {deps, domain} = @loadDependencies(treePos.name, treePos.subFolders, treePos.domain)
-    for dep in  deps # use detective to get this 'deps' fn
-      #console.log dep, dep.split('/')[0...-1]
+    treePos.domain = domain
+    for dep in deps
       circularCheck(treePos, dep)
-      treePos.deps[dep] = {name : dep, parent: treePos, deps: {}, subFolders: dep.split('/')[0...-1], domain: domain, level: treePos.level+1 }
+      treePos.deps[dep] = {name : dep, parent: treePos, deps: {}, subFolders: dep.split('/')[0...-1], level: treePos.level+1 }
       arguments.callee.call(@, treePos.deps[dep])
     return
   )(tree) # call detective recursively and resolve each require
@@ -98,11 +98,13 @@ Organizer::codeOrder = -> # must flatten the tree, and order based on
   obj[@basePoint] = 0
   ((treePos) ->
     for name,dep of treePos.deps
-      obj[name] = Math.max(dep.level, obj[name] or 0)
+      obj[name] = {} if !obj[name]
+      obj[name][0] = Math.max(dep.level, obj[name].level or 0)
+      obj[name][1] = dep.domain
       arguments.callee(dep)
     return
-  )(@tree)
-  ([key,val] for key,val of obj).sort((a,b) -> b[1] - a[1]).map((e) -> e[0])
+  )(@tree) # creates an object of arrays of form [level, domain], so key,val of obj => val = [level, domain]
+  ([key,val] for key,val of obj).sort((a,b) -> b[1][1] - a[1][1]).map((e) -> [e[0], e[1][1]]) # returns arrray of pairs where pair = [name, domain]
 Organizer::writeCodeTree = (target) ->
 
 # helpers for codeAnalysis
