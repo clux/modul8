@@ -140,7 +140,7 @@ Organizer::codeAnalysis = () -> # uses the sanitized tree
       lines.push(if level <= 0 then key else indents.join('')+turnChar+"──"+forkChar+key)
       arguments.callee(branch[key], level+1, parentAry.concat(isLast)) #recurse into key's tree (NB: parentAry.length === level)
     return
-  )(@sanitizedTree, 0, [])
+  )(@sanitizedTree(), 0, [])
   lines.join('\n')
 
 
