@@ -62,7 +62,7 @@ Organizer::loadDependencies = (name, subFolders, domain) ->
 # one to scan the parent references at each level to make sure no circular refeneces exists in app code
 # and the final (anonymous one) to call detective recursively to find and resolve require calls in current file
 Organizer::resolveDependencies = -> # private
-  tree = {name: @basePoint, deps: {}, subFolders: [], domain: @domainPaths[0], level: 0}
+  @tree = tree = {name: @basePoint, deps: {}, subFolders: [], domain: @domainPaths[0], level: 0}
 
   uncircularize = (treePos) ->
     delete treePos.parent # does not have to exist to be cleared
@@ -88,38 +88,38 @@ Organizer::resolveDependencies = -> # private
       arguments.callee.call(@, treePos.deps[dep])
     return
   )(tree) # call detective recursively and resolve each require
-
   uncircularize(tree)
-  @tree = @sanitize(tree)
   return
 
-
-Organizer::sanitize = (tree) -> # private
-  m = {}
-  m[@basePoint] = {}
-  ((treePos, mPos) ->
-    arguments.callee(treePos.deps[dep], mPos[dep]={}) for dep of treePos.deps
-    return
-  )(tree,m[@basePoint])
-  m
 
 # public method, used by brownie to get the list
 Organizer::codeOrder = -> # must flatten the tree, and order based on
   obj = {}
+  obj[@basePoint] = 0
   ((treePos) ->
-    console.log treePos #TODO: FIX THIS NOW, doestn work yet
-    obj[treePos.name] = Math.max(treePos.level, obj[treePos.name] or 0)
-    arguments.callee(dep) for dep of treePos.deps
+    for name,dep of treePos.deps
+      obj[name] = Math.max(dep.level, obj[name] or 0)
+      arguments.callee(dep)
     return
   )(@tree)
   ([key,val] for key,val of obj).sort((a,b) -> b[1] - a[1]).map((e) -> e[0])
 Organizer::writeCodeTree = (target) ->
 
-# helper for codeAnalysis
+# helpers for codeAnalysis
+Organizer::sanitizedTree = () -> # private
+  m = {}
+  m[@basePoint] = {}
+  ((treePos, mPos) ->
+    arguments.callee(treePos.deps[dep], mPos[dep]={}) for dep of treePos.deps
+    return
+  )(@tree,m[@basePoint])
+  m
+
 getBranchSize = (branch) ->
   i = 0
   i++ for key of branch
   i
+
 # returns an npm like dependency tree
 Organizer::codeAnalysis = () -> # uses the sanitized tree
   lines = []
@@ -140,13 +140,13 @@ Organizer::codeAnalysis = () -> # uses the sanitized tree
       lines.push(if level <= 0 then key else indents.join('')+turnChar+"──"+forkChar+key)
       arguments.callee(branch[key], level+1, parentAry.concat(isLast)) #recurse into key's tree (NB: parentAry.length === level)
     return
-  )(@tree, 0, [])
+  )(@sanitizedTree, 0, [])
   lines.join('\n')
 
 
 organizer = (b,d) -> new Organizer(b,d)
 
-module.exports = organizer
+#module.exports = organizer
 # TODO: should really encapsulate away the private methods here
 # public methods:
 # o = organizer(basePoint, domainPath) <-1st param filename to start from in domainPath[0], 2nd param array of paths to look for files in
