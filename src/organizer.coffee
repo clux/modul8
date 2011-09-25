@@ -1,4 +1,3 @@
-#coffee      = require 'coffee-script'
 fs          = require 'fs'
 path        = require 'path'
 detective   = require 'detective'
@@ -13,6 +12,7 @@ exists = (file) ->
     return false
 
 # criteria for whether a require string is relative, rather than absolute
+# absolute require strings will scan on the defined require paths (@domainPaths)
 isRelative = (reqStr) -> reqStr[0...2] is './'
 
 # convert relative requires to absolute ones
@@ -66,14 +66,12 @@ Organizer::resolveDependencies = -> # private
 
   circularCheck = (treePos, dep) -> # makes sure no circular references exists for dep going up from current point in tree (tree starts at top)
     requiree = treePos.name
+    chain = [dep]
     loop
-      #console.log "circularCheck for", dep, treePos.name, !!treePos.parent #, dep, treePos.parent
       return if treePos.parent is undefined # got all the way to @basePoint without finding self => good
+      chain.push treePos.name
       treePos = treePos.parent # follow the chain up
-
-      if treePos.name is dep
-        uncircularize(tree) # so that node is able to console.log it (cant log a circular structure)
-        throw new Error("circular dependency detected : #{treePos.name} <- .. <- #{requiree} <- #{treePos.name}")
+      throw new Error("circular dependency detected: #{chain.join(' <- ')} <- #{dep}") if treePos.name is dep
     return
 
   ((treePos) =>
@@ -140,11 +138,11 @@ Organizer::codeOrder = -> # must flatten the tree, and order based on
       arguments.callee(dep)
     return
   )(@tree) # creates an object of arrays of form [level, domain], so key,val of obj => val = [level, domain]
-  ([key,val] for key,val of obj).sort((a,b) -> b[1][1] - a[1][1]).map((e) -> [e[0], e[1][1]]) # returns arrray of pairs where pair = [name, domain]
+  ([key,val] for key,val of obj).sort((a,b) -> b[1][1] - a[1][1]).map((e) -> [e[0], e[1][1]]) # returns array of pairs where pair = [name, domain]
 Organizer::writeCodeTree = (target) ->
 
 
-# require gives a function which returns a closured object with access to only the public methods
+# requiring this gives a function which returns a closured object with access to only the public methods of a bound instance
 # TODO: include some strings to ignore [e.g. stuff from internal that require will handle outside default behaviour]
 module.exports = (basePoint, domains, useLocalTests=false) ->
   throw new Error("brownie organizer: basePoint required") if !basePoint
@@ -156,7 +154,7 @@ module.exports = (basePoint, domains, useLocalTests=false) ->
 
 
 
-# test everything up to this point
+# tests
 if module is require.main
   clientPath = '/home/clux/repos/deathmatchjs/app/client/'
   sharedPath = '/home/clux/repos/deathmatchjs/app/shared/'
