@@ -28,15 +28,13 @@ toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain 
   prependStr = if folderStr then folderStr+'/' else ''
   prependStr+name
 
-
-Organizer = (@basePoint, @domainPaths, @useLocalTests=true) ->
-  @resolveDependencies() #resolve dependency tree and sanitize it for use under @tree
+# constructor, private
+Organizer = (@basePoint, @domainPaths, @useLocalTests) ->
+  @resolveDependencies() #automatically resolves dependency tree on construction, stores in @tree
   return
 
-#NB: domainPaths must be COMPLETE PATHS UP TO BASE POINT: i.e. ['/home/e/repos/dmjs/app/client/', '/home/e/repos/dmjs/app/shared/', '/home/e/repos/dmjs/app/client/modules/']
-#But obviously, they can be relativized up to require point. i.e. if node started in /home/e/repos/dmjs/ then can write ['./app/client/', ... ]
-
-Organizer::resolveRequire = (absReq, domain, wasRelative) ->
+# resolveDependencies helpers
+Organizer::resolveRequire = (absReq, domain, wasRelative) -> # finds file, reports where it wound it
   # always scan current domain first, but only scan current domain path if require string was relative
   orderedPaths = if wasRelative then [domain] else [domain].concat @domainPaths.filter((e) -> e isnt domain)
   return {absReq: absReq, basePath: path} for path in orderedPaths when exists(path+absReq)
@@ -45,19 +43,16 @@ Organizer::resolveRequire = (absReq, domain, wasRelative) ->
   throw new Error("require call for #{absReq} not matched on #{errorStr}")
   return
 
-
-# resolve and compile a target file to js, then apply detective on it
-Organizer::loadDependencies = (name, subFolders, domain) ->
+Organizer::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
   {absReq, basePath} = @resolveRequire(name, domain, isRelative(name))
   code = compile(basePath+absReq)
   code = cutTests(code) if @useLocalTests
-  #console.log 'loadDependencies for',name, subFolders, domain, '..FOUND:', detective(code)
   r =
     deps    : (toAbsPath(dep, subFolders) for dep in detective(code)) # convert all require paths to absolutes here
     domain  : basePath
 
 
-# big resolver, creates 3 recursive functions within
+# big resolver, called on Organizer instantiation. creates 3 recursive functions within
 # one to remove cirular parent references in the tree that fn 3 is building
 # one to scan the parent references at each level to make sure no circular refeneces exists in app code
 # and the final (anonymous one) to call detective recursively to find and resolve require calls in current file
@@ -70,26 +65,67 @@ Organizer::resolveDependencies = -> # private
     return
 
   circularCheck = (treePos, dep) -> # makes sure no circular references exists for dep going up from current point in tree (tree starts at top)
+    requiree = treePos.name
     loop
+      #console.log "circularCheck for", dep, treePos.name, !!treePos.parent #, dep, treePos.parent
       return if treePos.parent is undefined # got all the way to @basePoint without finding self => good
-      treePos = treePos.parent
+      treePos = treePos.parent # follow the chain up
 
-      if treePos.name is dep.name
+      if treePos.name is dep
         uncircularize(tree) # so that node is able to console.log it (cant log a circular structure)
-        throw new Error("#{treePos.name} has a circular dependency: it gets re-required by its requirement for module: #{currentDep.parent.name}", tree)
+        throw new Error("circular dependency detected : #{treePos.name} <- .. <- #{requiree} <- #{treePos.name}")
     return
 
   ((treePos) =>
     {deps, domain} = @loadDependencies(treePos.name, treePos.subFolders, treePos.domain)
     treePos.domain = domain
     for dep in deps
-      circularCheck(treePos, dep)
       treePos.deps[dep] = {name : dep, parent: treePos, deps: {}, subFolders: dep.split('/')[0...-1], level: treePos.level+1 }
+      circularCheck(treePos, dep)
       arguments.callee.call(@, treePos.deps[dep])
     return
   )(tree) # call detective recursively and resolve each require
   uncircularize(tree)
   return
+
+
+# helpers for codeAnalysis
+Organizer::sanitizedTree = () -> # private
+  m = {}
+  m[@basePoint] = {}
+  ((treePos, mPos) ->
+    arguments.callee(treePos.deps[dep], mPos[dep]={}) for dep of treePos.deps
+    return
+  )(@tree,m[@basePoint])
+  m
+
+getBranchSize = (branch) ->
+  i = 0
+  i++ for key of branch
+  i
+
+# public method, returns an npm like dependency tree
+Organizer::codeAnalysis = (hideExtensions=false) ->
+  lines = []
+  ((branch, level, parentAry) ->
+    idx = 0
+    bSize = getBranchSize(branch)
+    for key,val of branch
+      hasChildren = getBranchSize(branch[key]) > 0
+      forkChar = if hasChildren then "┬" else "─"
+      isLast = ++idx is bSize
+      turnChar = if isLast then "└" else "├"
+
+      indents = []
+      if level > 1
+        indents.push((if parentAry[i] then " " else "│")+"  ") for i in [1...level] # extra double whitespace correspond to double dash used to connect
+
+      nkey = if hideExtensions then key.split('.')[0] else key
+      lines.push(if level <= 0 then nkey else indents.join('')+turnChar+"──"+forkChar+nkey)
+      arguments.callee(branch[key], level+1, parentAry.concat(isLast)) #recurse into key's tree (NB: parentAry.length === level)
+    return
+  )(@sanitizedTree(), 0, [])
+  lines.join('\n')
 
 
 # public method, used by brownie to get the list
@@ -107,72 +143,26 @@ Organizer::codeOrder = -> # must flatten the tree, and order based on
   ([key,val] for key,val of obj).sort((a,b) -> b[1][1] - a[1][1]).map((e) -> [e[0], e[1][1]]) # returns arrray of pairs where pair = [name, domain]
 Organizer::writeCodeTree = (target) ->
 
-# helpers for codeAnalysis
-Organizer::sanitizedTree = () -> # private
-  m = {}
-  m[@basePoint] = {}
-  ((treePos, mPos) ->
-    arguments.callee(treePos.deps[dep], mPos[dep]={}) for dep of treePos.deps
-    return
-  )(@tree,m[@basePoint])
-  m
 
-getBranchSize = (branch) ->
-  i = 0
-  i++ for key of branch
-  i
+# require gives a function which returns a closured object with access to only the public methods
+# TODO: include some strings to ignore [e.g. stuff from internal that require will handle outside default behaviour]
+module.exports = (basePoint, domains, useLocalTests=false) ->
+  throw new Error("brownie organizer: basePoint required") if !basePoint
+  throw new Error("brownie organizer: domains needed as array, got "+domains) if !domains or !(a instanceof Array)
+  o = new Organizer(basePoint, domain, useLocalTests)
+  r =
+    analyze   : o.codeAnalysis
+    orderCode : o.codeOrder
 
-# returns an npm like dependency tree
-Organizer::codeAnalysis = () -> # uses the sanitized tree
-  lines = []
-  ((branch, level, parentAry) ->
-    idx = 0
-    bSize = getBranchSize(branch)
-    for key,val of branch
-      hasChildren = getBranchSize(branch[key]) > 0
-      forkChar = if hasChildren then "┬" else "─"
-      isLast = ++idx is bSize
-      turnChar = if isLast then "└" else "├"
-
-      indents = []
-      if level > 1
-        indents.push((if parentAry[i] then " " else "│")+"  ") for i in [1...level] # extra double whitespace correspond to double dash used to connect
-
-      #strippedkey = key.split('.')[0] #TODO: should use this, but then key cannot be a relative path...
-      lines.push(if level <= 0 then key else indents.join('')+turnChar+"──"+forkChar+key)
-      arguments.callee(branch[key], level+1, parentAry.concat(isLast)) #recurse into key's tree (NB: parentAry.length === level)
-    return
-  )(@sanitizedTree(), 0, [])
-  lines.join('\n')
-
-
-organizer = (b,d) -> new Organizer(b,d)
-
-#module.exports = organizer
-# TODO: should really encapsulate away the private methods here
-# public methods:
-# o = organizer(basePoint, domainPath) <-1st param filename to start from in domainPath[0], 2nd param array of paths to look for files in
-# o.codeAnalysis() #returns a string containing containing the npm like depenency tree
-# o.codeOrder() # returns an array containing the files required from basePoint in the order they need to be included in the browser
-
-
-
-module.exports = (o) ->
-  organizer = organizer()
-  if o.targetTree
-    #fs.writeFileSync(o.treeTarget, sanitizeTree(tree)) if o.treeTarget # write sanitized version of the tree to the target file for code review
-    console.log sanitizeTree(tree)
-    return
-  sortDependencies(tree)
 
 
 # test everything up to this point
 if module is require.main
   clientPath = '/home/clux/repos/deathmatchjs/app/client/'
   sharedPath = '/home/clux/repos/deathmatchjs/app/shared/'
-  o = new Organizer('app.coffee', [clientPath,sharedPath])
+  o = new Organizer('app.coffee', [clientPath,sharedPath], true)
   console.log o.codeAnalysis()
-  console.log o.codeOrder()
+  #console.log o.codeOrder()
   #console.log o.loadDependencies('app.coffee',[],clientPath)
 
   #s = 'app.coffee'
