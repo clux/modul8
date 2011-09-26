@@ -1,6 +1,6 @@
 fs          = require 'fs'
 path        = require 'path'
-{cjsWrap, compile, anonWrap, jQueryWrap} = require './utils'
+{cjsWrap, compile, anonWrap, jQueryWrap, listToTree} = require './utils'
 organizer   = require './organizer'
 
 pullData = (parser, name) -> # parser interface
@@ -83,6 +83,8 @@ bundle = (codeList, appName, libraries, parsers) ->
   # 2. if passed in relatively and path is ./ then how the fuck do we determine domain from that? => impossible
   # SOLN: codeList must be an array of dicts: {path: pathrelativetodomain, domain: domainPath[x]}
 
+  #filelist = (c[0] for c in codeList) might have to write a new listToTree that can take these pairs
+
   l.push "#{appName}.internal.#{name} = #{pullData(parser,name)};" for name, parser of parsers
 
   # 3. attach require code
@@ -107,16 +109,26 @@ bundle = (codeList, appName, libraries, parsers) ->
 # IF we call them SpineAjax we must require SpineAjax
 # IF we call them Spine.Ajax we must require Spine.Ajax (which may lead people to believe we can require Spine and reference Spine.Ajax which simply isnt true)
 
-
-
 exports.bake = (i) ->
+  throw new Error("brownie: clientDir parameter is required") if !i.clientDir
+  domains = [i.clientDir]
+  domains.push [i.sharedDir] if i.sharedDir
 
+  o = organizer(i.basePoint, domains)
 
-  b = (new Brownie i).bake([])
-  if i.minify
-    {uglify, parser} = require 'uglify-js'
-    b = uglify.gen_code(uglify.ast_squeeze(uglify.ast_mangle(parser.parse(b))))
-  fs.writeFileSync(i.target, b) if i.target
+  if i.target
+    b = bundle(o.codeOrder(), i.appName ? 'Brownie', i.libs, i.parsers)
+    if i.minify
+      {uglify, parser} = require 'uglify-js'
+      b = uglify.gen_code(uglify.ast_squeeze(uglify.ast_mangle(parser.parse(b))))
+    fs.writeFileSync(i.target, b)
+
+  if i.treeTarget
+    fs.writeFileSync(i.treeTarget, o.codeAnalysis())
+
+  if i.logTree
+    console.log o.codeAnalysis()
+
 
 exports.decorate = (i) ->
   stylus = require 'stylus'

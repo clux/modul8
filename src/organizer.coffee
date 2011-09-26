@@ -29,12 +29,12 @@ toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain 
   prependStr+name
 
 # constructor, private
-Organizer = (@basePoint, @domainPaths, @useLocalTests) ->
+CodeAnalysis = (@basePoint, @domainPaths, @useLocalTests) ->
   @resolveDependencies() #automatically resolves dependency tree on construction, stores in @tree
   return
 
 # resolveDependencies helpers
-Organizer::resolveRequire = (absReq, domain, wasRelative) -> # finds file, reports where it wound it
+CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, reports where it wound it
   # always scan current domain first, but only scan current domain path if require string was relative
   orderedPaths = if wasRelative then [domain] else [domain].concat @domainPaths.filter((e) -> e isnt domain)
   return {absReq: absReq, basePath: path} for path in orderedPaths when exists(path+absReq)
@@ -43,7 +43,7 @@ Organizer::resolveRequire = (absReq, domain, wasRelative) -> # finds file, repor
   throw new Error("require call for #{absReq} not matched on #{errorStr}")
   return
 
-Organizer::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
+CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
   {absReq, basePath} = @resolveRequire(name, domain, isRelative(name))
   code = compile(basePath+absReq)
   code = cutTests(code) if @useLocalTests
@@ -52,11 +52,11 @@ Organizer::loadDependencies = (name, subFolders, domain) -> # compiles code to s
     domain  : basePath
 
 
-# big resolver, called on Organizer instantiation. creates 3 recursive functions within
+# big resolver, called on CodeAnalysis instantiation. creates 3 recursive functions within
 # one to remove cirular parent references in the tree that fn 3 is building
 # one to scan the parent references at each level to make sure no circular refeneces exists in app code
 # and the final (anonymous one) to call detective recursively to find and resolve require calls in current file
-Organizer::resolveDependencies = -> # private
+CodeAnalysis::resolveDependencies = -> # private
   @tree = tree = {name: @basePoint, deps: {}, subFolders: [], domain: @domainPaths[0], level: 0}
 
   uncircularize = (treePos) ->
@@ -84,17 +84,17 @@ Organizer::resolveDependencies = -> # private
     return
   )(tree) # call detective recursively and resolve each require
   uncircularize(tree)
+  #console.log tree
   return
 
 
-# helpers for codeAnalysis
-Organizer::sanitizedTree = () -> # private
+# helpers for print
+CodeAnalysis::sanitizedTree = () -> # private
   m = {}
-  m[@basePoint] = {}
   ((treePos, mPos) ->
     arguments.callee(treePos.deps[dep], mPos[dep]={}) for dep of treePos.deps
     return
-  )(@tree,m[@basePoint])
+  )(@tree,m[@basePoint]={})
   m
 
 getBranchSize = (branch) ->
@@ -103,7 +103,7 @@ getBranchSize = (branch) ->
   i
 
 # public method, returns an npm like dependency tree
-Organizer::codeAnalysis = (hideExtensions=false) ->
+CodeAnalysis::printed = (hideExtensions=false) ->
   lines = []
   ((branch, level, parentAry) ->
     idx = 0
@@ -126,10 +126,10 @@ Organizer::codeAnalysis = (hideExtensions=false) ->
   lines.join('\n')
 
 
-# public method, used by brownie to get the list
-Organizer::codeOrder = -> # must flatten the tree, and order based on
+# public method, used by brownie to get ordered array of code
+CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj = {}
-  obj[@basePoint] = 0
+  obj[@basePoint] = [0, @domainPaths[0]]
   ((treePos) ->
     for name,dep of treePos.deps
       obj[name] = {} if !obj[name]
@@ -139,28 +139,27 @@ Organizer::codeOrder = -> # must flatten the tree, and order based on
     return
   )(@tree) # creates an object of arrays of form [level, domain], so key,val of obj => val = [level, domain]
   ([key,val] for key,val of obj).sort((a,b) -> b[1][1] - a[1][1]).map((e) -> [e[0], e[1][1]]) # returns array of pairs where pair = [name, domain]
-Organizer::writeCodeTree = (target) ->
 
 
 # requiring this gives a function which returns a closured object with access to only the public methods of a bound instance
 # TODO: include some strings to ignore [e.g. stuff from internal that require will handle outside default behaviour]
 module.exports = (basePoint, domains, useLocalTests=false) ->
-  throw new Error("brownie organizer: basePoint required") if !basePoint
-  throw new Error("brownie organizer: domains needed as array, got "+domains) if !domains or !(a instanceof Array)
-  o = new Organizer(basePoint, domain, useLocalTests)
-  r =
-    analyze   : o.codeAnalysis
-    orderCode : o.codeOrder
-
+  throw new Error("brownie code analysis: basePoint required") if !basePoint
+  throw new Error("brownie code analysis: domains needed as array, got "+domains) if !domains or !(a instanceof Array)
+  o = new CodeAnalysis(basePoint, domain, useLocalTests)
+  {
+    print   : o.printed # returns a big string
+    sorted  : o.sorted  # returns array of pairs of form [name, domain]
+  }
 
 
 # tests
 if module is require.main
   clientPath = '/home/clux/repos/deathmatchjs/app/client/'
   sharedPath = '/home/clux/repos/deathmatchjs/app/shared/'
-  o = new Organizer('app.coffee', [clientPath,sharedPath], true)
-  console.log o.codeAnalysis()
-  #console.log o.codeOrder()
+  o = new CodeAnalysis('app.coffee', [clientPath,sharedPath], true)
+  console.log o.printed()
+  console.log o.sorted()
   #console.log o.loadDependencies('app.coffee',[],clientPath)
 
   #s = 'app.coffee'
