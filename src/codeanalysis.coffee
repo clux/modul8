@@ -4,7 +4,7 @@ detective   = require 'detective'
 {compile, objCount, exists}  = require './utils'
 
 # criteria for whether a require string is relative, rather than absolute
-# absolute require strings will scan on the defined require paths (@domainPaths)
+# absolute require strings will scan on the defined require paths (@domains)
 isRelative = (reqStr) -> reqStr[0...2] is './'
 
 # convert relative requires to absolute ones
@@ -21,17 +21,17 @@ toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain 
   prependStr+name
 
 # constructor, private
-CodeAnalysis = (@basePoint, @domainPaths, @useLocalTests) ->
+CodeAnalysis = (@basePoint, @domains, @useLocalTests) ->
   @resolveDependencies() #automatically resolves dependency tree on construction, stores in @tree
   return
 
 # resolveDependencies helpers
 CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, reports where it wound it
   # always scan current domain first, but only scan current domain path if require string was relative
-  orderedPaths = if wasRelative then [domain] else [domain].concat @domainPaths.filter((e) -> e isnt domain)
-  return {absReq: absReq, basePath: path} for path in orderedPaths when exists(path+absReq)
+  scannable = if wasRelative then [@domains[domain]] else [domain].concat(name for name of @domains when name isnt domain)
+  return {absReq, dom} for dom in scannable when exists(@domains[dom]+absReq)
 
-  errorStr = if wasRelative then "the relatively required domain: #{domain}" else "any of the client require domains #{JSON.stringify(@domainPaths)}"
+  errorStr = if wasRelative then "the relatively required domain: #{domain}" else "any of the client require domains #{JSON.stringify(@domains)}"
   throw new Error("require call for #{absReq} not matched on #{errorStr}")
   return
 
@@ -39,20 +39,20 @@ CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, re
 cutTests = (code) -> code.replace(/\n.*require.main[\w\W]*$/, '')
 
 CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
-  {absReq, basePath} = @resolveRequire(name, domain, isRelative(name))
-  code = compile(basePath+absReq)
+  {absReq, dom} = @resolveRequire(name, domain, isRelative(name))
+  code = compile(@domains[dom]+absReq)
   code = cutTests(code) if @useLocalTests
-  r =
+  {
     deps    : (toAbsPath(dep, subFolders) for dep in detective(code)) # convert all require paths to absolutes here
-    domain  : basePath
-
+    domain  : dom
+  }
 
 # big resolver, called on CodeAnalysis instantiation. creates 3 recursive functions within
 # one to remove cirular parent references in the tree that fn 3 is building
 # one to scan the parent references at each level to make sure no circular refeneces exists in app code
 # and the final (anonymous one) to call detective recursively to find and resolve require calls in current file
 CodeAnalysis::resolveDependencies = -> # private
-  @tree = tree = {name: @basePoint, deps: {}, subFolders: [], domain: @domainPaths[0], level: 0}
+  @tree = tree = {name: @basePoint, deps: {}, subFolders: [], domain: 'client', level: 0}
 
   uncircularize = (treePos) ->
     delete treePos.parent # does not have to exist to be cleared
@@ -71,6 +71,7 @@ CodeAnalysis::resolveDependencies = -> # private
 
   ((treePos) =>
     {deps, domain} = @loadDependencies(treePos.name, treePos.subFolders, treePos.domain)
+    console.log "got back:",domain, "passed in:", treePos.domain
     treePos.domain = domain
     for dep in deps
       treePos.deps[dep] = {name : dep, parent: treePos, deps: {}, subFolders: dep.split('/')[0...-1], level: treePos.level+1 }
@@ -79,7 +80,7 @@ CodeAnalysis::resolveDependencies = -> # private
     return
   )(tree) # call detective recursively and resolve each require
   uncircularize(tree)
-  #console.log tree
+  #console.log JSON.stringify tree
   return
 
 
@@ -119,7 +120,7 @@ CodeAnalysis::printed = (hideExtensions=false) ->
 # public method, used by brownie to get ordered array of code
 CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj = {}
-  obj[@basePoint] = [0, @domainPaths[0]]
+  obj[@basePoint] = [0, 'client']
   ((treePos) ->
     for name,dep of treePos.deps
       obj[name] = {} if !obj[name]
@@ -137,7 +138,7 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
 # TODO: include some strings to ignore [e.g. stuff from internal that require will handle outside default behaviour]
 module.exports = (basePoint, domains, useLocalTests=false) ->
   throw new Error("brownie code analysis: basePoint required") if !basePoint
-  throw new Error("brownie code analysis: domains needed as array, got "+domains) if !domains or !(a instanceof Array)
+  throw new Error("brownie code analysis: domains needed as object"+domains) if !domains or !domains.client
   o = new CodeAnalysis(basePoint, domain, useLocalTests)
   {
     print   : o.printed # returns a big string
@@ -151,9 +152,10 @@ module.exports = (basePoint, domains, useLocalTests=false) ->
 
 # tests
 if module is require.main
-  clientPath = '/home/clux/repos/deathmatchjs/app/client/'
-  sharedPath = '/home/clux/repos/deathmatchjs/app/shared/'
-  o = new CodeAnalysis('app.coffee', [clientPath,sharedPath], true)
+  domains =
+    client : '/home/clux/repos/deathmatchjs/app/client/'
+    shared : '/home/clux/repos/deathmatchjs/app/shared/'
+  o = new CodeAnalysis('app.coffee', domains, true)
   console.log o.printed()
   console.log o.sorted()
 

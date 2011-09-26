@@ -1,7 +1,7 @@
 fs          = require 'fs'
 path        = require 'path'
 codeAnalyis = require './codeanalysis'
-{compile, exists, anonWrap, jQueryWrap, objCount, objFirst} = require './utils'
+{compile, exists, anonWrap, jQueryWrap, objCount} = require './utils'
 {uglify, parser} = require 'uglify-js'
 
 # helpers
@@ -57,7 +57,8 @@ bundle = (codeList, o) ->
 
 exports.bake = (i) ->
   throw new Error("brownie needs valid basePoint and domains")  if !i.basePoint or !i.domains
-  throw new Error("brownie needs the first domain to be the location of the basePoint") if !objCount(i.domains) > 0 or !exists(objFirst(i.domains)+i.basePoint)
+  throw new Error("brownie needs the client domain to be the location of the basePoint") if !objCount(i.domains) > 0 or !exists(i.domains.client+i.basePoint)
+  #TODO: requirements on modules?
 
   #reverseDomains = {}
   #reverseDomains[path] = name for name, path of i.domains
