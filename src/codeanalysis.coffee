@@ -31,12 +31,9 @@ CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, re
   scannable = if wasRelative then [@domains[domain]] else [domain].concat(name for name of @domains when name isnt domain)
   return {absReq, dom} for dom in scannable when exists(@domains[dom]+absReq)
 
-  errorStr = if wasRelative then "the relatively required domain: #{domain}" else "any of the client require domains #{JSON.stringify(@domains)}"
-  throw new Error("require call for #{absReq} not matched on #{errorStr}")
-  return
+  throw new Error("brownie code analysis: require references a file which cound not be found #{absReq}")
 
-# if preprocessing should be done on files to avoid pulling in test dependencies TODO: this can eventually use burrito, but not in use by default
-cutTests = (code) -> code.replace(/\n.*require.main[\w\W]*$/, '')
+cutTests = (code) -> code.replace(/\n.*require.main[\w\W]*$/, '') # avoids pulling in test dependencies TODO: this can eventually use burrito, but not in use by default
 
 CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
   {absReq, dom} = @resolveRequire(name, domain, isRelative(name))
@@ -46,6 +43,7 @@ CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code t
     deps    : (toAbsPath(dep, subFolders) for dep in detective(code)) # convert all require paths to absolutes here
     domain  : dom
   }
+
 
 # big resolver, called on CodeAnalysis instantiation. creates 3 recursive functions within
 # one to remove cirular parent references in the tree that fn 3 is building
@@ -69,18 +67,18 @@ CodeAnalysis::resolveDependencies = -> # private
       throw new Error("circular dependency detected: #{chain.join(' <- ')} <- #{dep}") if treePos.name is dep
     return
 
-  ((treePos) =>
-    {deps, domain} = @loadDependencies(treePos.name, treePos.subFolders, treePos.domain)
-    console.log "got back:",domain, "passed in:", treePos.domain
-    treePos.domain = domain
-    for dep in deps
-      treePos.deps[dep] = {name : dep, parent: treePos, deps: {}, subFolders: dep.split('/')[0...-1], level: treePos.level+1 }
-      circularCheck(treePos, dep)
-      arguments.callee.call(@, treePos.deps[dep])
+  # console.log tree
+  ((t) =>
+    {deps, domain} = @loadDependencies(t.name, t.subFolders, t.domain)
+    t.domain = domain
+    for dep in deps #not to be confused with t.deps which is an object, deps from loadDependencies is an array
+      t.deps[dep] = {name : dep, parent: t, deps: {}, subFolders: dep.split('/')[0...-1], level: t.level+1}
+      t.deps[dep].domain = @resolveRequire(dep, t.domain, isRelative(dep)).dom
+      circularCheck(t, dep)
+      arguments.callee.call(@, t.deps[dep])
     return
   )(tree) # call detective recursively and resolve each require
   uncircularize(tree)
-  #console.log JSON.stringify tree
   return
 
 
