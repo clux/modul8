@@ -32,15 +32,11 @@ compile = (fileName) ->
     else
       throw new Error("file: #{fileName} does not have a valid javascript/coffeescript extension")
 
-# these two assume people dont mess with Object.prototype
+# this assumes people dont mess with Object.prototype
 objCount = (obj) ->
   i = 0
   i++ for own key of obj
   i
-
-objFirst = (obj) ->
-  return key for key of obj
-  return null
 
 # simple fs extension to check if a file exists [used to verify require calls' validity]
 exists = (file) ->
@@ -53,7 +49,6 @@ exists = (file) ->
 module.exports =
   compile     : compile
   objCount    : objCount
-  objFirst    : objFirst
   exists      : exists
   cjsWrap     : cjsWrap
   anonWrap    : anonWrap
