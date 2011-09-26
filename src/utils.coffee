@@ -17,6 +17,11 @@ cjsWrap = (code, exportLocation) ->
   end = "if (module.exports) {#{exportLocation} = module.exports;}"
   (start + code + end)
 
+#cjs wrap used to use this, now i dont think i need it anymore
+commonjs = (file, baseDir, baseName) ->
+  code = compile(baseDir+'/'+file).replace(/\n.*require.main[\w\W]*$/, '')  # ignore the if require.main {} part - CHEAPLY chucks end of file (only solution atm)
+  anonWrap(cjsWrap(code, "#{@appName}.#{baseName}.#{file.split(path.extname(file))[0].replace(/\//,'.')}")) # take out extension and replace /->. to find tree
+
 
 compile = (fileName) ->
   switch path.extname(fileName)
@@ -27,33 +32,32 @@ compile = (fileName) ->
     else
       throw new Error("file: #{fileName} does not have a valid javascript/coffeescript extension")
 
-#TODO: this can eventually use burrito, but atm I can require that if people want this feature, then it must be put in the bottom of the file
-cutTests = (code) ->
-  code.replace(/\n.*require.main[\w\W]*$/, '')
+# these two assume people dont mess with Object.prototype
+objCount = (obj) ->
+  i = 0
+  i++ for own key of obj
+  i
 
-listToTree = (list, base) -> # create the object tree from input list of files
-  obj = {}
-  moduleScan = (o, partial) ->
-    f = partial[0]
-    o[f] = {} if !o[f]?
-    return if partial.length is 1
-    moduleScan(o[f], partial[1..])
-  for file in list
+objFirst = (obj) ->
+  return key for key of obj
+  return null
 
-    file = spl[1] if (spl = file.split(base)).length > 0
-    moduleScan(obj, file.replace(/\..*/,'').split('/'))
-  obj
-
-
+# simple fs extension to check if a file exists [used to verify require calls' validity]
+exists = (file) ->
+  try
+    fs.statSync(file)
+    return true
+  catch e
+    return false
 
 module.exports =
   compile     : compile
+  objCount    : objCount
+  objFirst    : objFirst
+  exists      : exists
   cjsWrap     : cjsWrap
   anonWrap    : anonWrap
-  cutTests    : cutTests
   jQueryWrap  : jQueryWrap
-  listToTree  : listToTree
-
 
 if module is require.main
   console.log JSON.stringify listToTree(['/home/e/repos/dmjs/app/client/app.coffee', '/home/e/repos/dmjs/app/client/controllers/user.coffee'], '/home/e/repos/dmjs/app/')

@@ -1,133 +1,84 @@
 fs          = require 'fs'
 path        = require 'path'
-{cjsWrap, compile, anonWrap, jQueryWrap, listToTree} = require './utils'
-organizer   = require './organizer'
+codeAnalyis = require './codeanalysis'
+{compile, exists, anonWrap, jQueryWrap, objCount, objFirst} = require './utils'
+{uglify, parser} = require 'uglify-js'
 
+# helpers
 pullData = (parser, name) -> # parser interface
   throw new Error("#{name}_parser is not a function") if not parser instanceof Function
   parser()
 
-class Brownie # all main behaviour should go in here
-  constructor  : (i) ->
-    @appName        = i.appName ? 'Brownie'
-    @modelParser    = i.modelParser
-    @templateParser = i.templateParser
-    @versionParser  = i.versionParser
-    @basePoint      = i.basePoint ? 'app.coffee'
-    @clientDir      = i.clientDir
-    @sharedDir      = i.sharedDir
-    @internalDir    = i.internalDir
-    @libDir         = i.libDir
-
-    throw new Error("Brownie needs valid basePoint and clientDir") if !@basePoint or !@clientDir
-    #@lib_files        = i.lib_files       ? []
-    #@lib_files_cjs    = i.lib_files_cjs   ? []
-    #@client_files     = i.client_files    ? []
-    #@internal_files   = i.internal_files  ? []
-    #@shared_files     = i.shared_files    ? []
-    dp = []
-    dp.push @moduleDir if @moduleDir # should not include stuff like jQuery, but Spine should be fine...
-    dp.push @clientDir
-    dp.push @sharedDir if @sharedDir
-    @tree = resolver({basePoint: @basePoint, domainPaths: dp})
+minify = (code) -> # minify function, this can potentially also be passed in if we require alternative compilers..
+  uglify.gen_code(uglify.ast_squeeze(uglify.ast_mangle(parser.parse(code))))
 
 
-
-  commonjs : (file, baseDir, baseName) ->
-    code = compile(baseDir+'/'+file).replace(/\n.*require.main[\w\W]*$/, '')  # ignore the if require.main {} part - CHEAPLY chucks end of file (only solution atm)
-    anonWrap(cjsWrap(code, "#{@appName}.#{baseName}.#{file.split(path.extname(file))[0].replace(/\//,'.')}")) # take out extension and replace /->. to find tree
-
-  globalObj   : ->
-      #client    : listToTree(@client_files)
-      #shared    : listToTree(@shared_files)
-      server    : {}
-      internal  : {models: {}, userLocals: {}, versions: {}}
-
-  bake   : (l) ->
-    # create the global window object
-    l.push "#{@appName} = #{JSON.stringify(@globalObj())};"
-    # attach the strings created in the parsers to it
-    l.push "#{@appName}.internal.models = #{pullData(@modelParser,'model')};" if @modelParser
-    l.push "#{@appName}.internal.versions = #{pullData(@versionParser,'version')};" if @versionParser
-    l.push "#{@appName}.internal.templates = #{pullData(@templateParser,'template')};" if @templateParser
-
-    # attach internal require and define code
-    l.push "requireAppName = '#{@appName}';" # otherwise client require doesnt know where to look
-    #l.push (anonWrap(compile('./client/' + file)) for file in ['require.coffee']).join('\n') # these files must come bundled with brownie
-    #l.push (@commonjs(file, 'modules') for file in ['require.coffee']).join('\n')
-
-
-    # attach external libraries (to window) [so they can be required via: spine ?= require('spine')]
-    #if @lib_dir
-    #  l.push (compile(@lib_dir+file) for file in @lib_files).join('\n') # non-commonJS compatible libraries are exported raw (NOT FUNCTION WRAPPED!)
-    #  l.push (@commonjs(file, @lib_dir, 'modules') for file in @lib_files_cjs).join('\n') #CJS ones will be safety wrapped
-
-    # include framework specific code
-    #l.push (compile(@internal_dir + file) for file in @internal_files).join('\n') if @internal_dir
-
-    # include shared code (cant reference non-shared code)
-    #l.push (@commonjs(file, @shared_dir, 'shared') for file in @shared_files).join('\n') if @shared_dir
-
-    # include app code (to be executed on DOMLoaded)
-    #l.push jQueryWrap((@commonjs(file, @client_dir, 'client') for file in @client_files).join('\n')) if @client_dir
-
-    l.join '\n'
-
-
-bundle = (codeList, appName, libraries, parsers) ->
-  l = []
-  # 1. construct the global object
-  # we can ALMOST make do with codeList, we only need to determine what domain these files are on and remove the beginning from that..
-  # though this can be quite hard:
-  # 1. domainPaths can be passed in relatively OR absolutely to Organizer, so simply splitting away this isnt going to work
-  # 2. if passed in relatively and path is ./ then how the fuck do we determine domain from that? => impossible
-  # SOLN: codeList must be an array of dicts: {path: pathrelativetodomain, domain: domainPath[x]}
-
-  #filelist = (c[0] for c in codeList) might have to write a new listToTree that can take these pairs
-
-  l.push "#{appName}.internal.#{name} = #{pullData(parser,name)};" for name, parser of parsers
-
-  # 3. attach require code
-  # 4. attach libraries that were included in list
-  l.push (compile(@libDir+file) for file in @libFiles).join('\n') # non CJS modules are exported RAW (CS files compiled bare, TODO: maybe change?)
-
-  # 5. Attach compiled files from codeList in correct order, and make use of our define implementation to attach it to our export tree
-  defineWrap = (code, exportName, domain) -> "#{appName}.define(function(require, exports, module){#{code}}, exportName, domain);"
-  l.push (defineWrap(compile(file.path), file.exportName, file.domain) for file in codeList).join('\n')
-
-
-#app -> spine, controllers, models
-#models,controllers -> spine
-# => spine gets high rating (included in all of these) => gets included early in bundle
-# but spine ought to have its modules included before itself if we mean to use them...
-# => when WE use them, we require them at the same time as Spine (=>IF we require them, then this is fine (as they would get before))
-# if we use them at the same time but simply Spine = require('Spine') and use Spine.Ajax (then Ajax module does not get required...) BAD
+# IF we call them SpineAjax we must require SpineAjax
+# IF we call them Spine.Ajax we must require Spine.Ajax (which may lead people to believe we can require Spine and reference Spine.Ajax which simply isnt true)
 # SOLN: either:
 #   1. include them in order as libraries and add an arbiter for the whole of spine (since we technically use it as one)
 #   2. explicitly require submodules of spine at the same time as spine was required => order gets correct
 # 2. however comes with the problem of having these spine submodules having a particular name!
-# IF we call them SpineAjax we must require SpineAjax
-# IF we call them Spine.Ajax we must require Spine.Ajax (which may lead people to believe we can require Spine and reference Spine.Ajax which simply isnt true)
+
+bundle = (codeList, o) ->
+  l = []
+  # 0. attach libs if we didnt want to split them into a separate file
+  l.push = (compile(o.libDir+file) for file in o.libFiles).join('\n') if !o.libsOnlyTarget and o.libDir and o.libFiles # concatenate files as is
+
+  # 1. construct the namespace object
+  namespace = {client:{}, internal: {}, shared: {}, modules: {}}  # TODO: userLocals + require use of internals (wont work with codeanalysis - as they are not really files)
+  l.push "var #{o.appName} = #{JSON.stringify(namespace)};"
+
+  # 2. pull in data from parsers
+  l.push "#{o.appName}.internal.#{name} = #{pullData(parser,name)};" for name, parser of o.parsers
+
+  # 3. attach require code
+  l.push "var requireNamespace = '#{o.appName}';" # require needs to know where to look
+  l.push compile('./require.coffee')
+
+  # 4. include framework specific code
+  l.push (compile(o.internalDir + file) for file in o.internalDir).join('\n') if o.internalDir
+
+  # 5. include CommonJS compatible code - wrap each file in a define function for relative requires
+  defineWrap = (code, exportName, domain) -> "#{o.appName}.define(exportName, domain,function(require, exports, module){#{code}});"
+
+  # THESE POINTS HERE FUCK UP A BIT:
+  # each domain should have different rules, modules and shared should not be wrapped in DOMLOADED for instance
+  # => need to rewrite a bit of codeanalysis to make it so that output from sort give me simply the key from the object!
+
+  # 5.a) include modules (these should not be dependant on the App or the DOM)
+  # l.push (defineWrap(compile(osmething), modulename, 'modules') for somethogn in o.modules).join('\n')
+
+  # 5.b) include compiled files from codeList in correct order
+  #l.push jQueryWrap( (defineWrap(compile(file[1]+file[0]), file[0], getDomain(file[1])) for file in codeList).join('\n') )
+
+  l.join '\n'
+
 
 exports.bake = (i) ->
-  throw new Error("brownie: clientDir parameter is required") if !i.clientDir
-  domains = [i.clientDir]
-  domains.push [i.sharedDir] if i.sharedDir
+  throw new Error("brownie needs valid basePoint and domains")  if !i.basePoint or !i.domains
+  throw new Error("brownie needs the first domain to be the location of the basePoint") if !objCount(i.domains) > 0 or !exists(objFirst(i.domains)+i.basePoint)
 
-  o = organizer(i.basePoint, domains)
+  #reverseDomains = {}
+  #reverseDomains[path] = name for name, path of i.domains
+
+  i.appName ?= 'Brownie'
+  ca = codeAnalyis(i.basePoint, i.domains)
+
+  #TODO: should internalDir be in the global require scope? Should perhaps be hidden away? Local files with same name will override requires...
 
   if i.target
-    b = bundle(o.codeOrder(), i.appName ? 'Brownie', i.libs, i.parsers)
-    if i.minify
-      {uglify, parser} = require 'uglify-js'
-      b = uglify.gen_code(uglify.ast_squeeze(uglify.ast_mangle(parser.parse(b))))
-    fs.writeFileSync(i.target, b)
+    c = bundle(ca.sorted(), i)
+    c = minify(c) if i.minify
+    fs.writeFileSync(i.target, c)
 
-  if i.treeTarget
-    fs.writeFileSync(i.treeTarget, o.codeAnalysis())
+    if i.libsOnlyTarget and i.libDir and i.libFiles # => libs where not included in above bundle
+      libs = (compile(i.libDir+file) for file in i.libFiles).join('\n') # concatenate libs as is
+      libs = minify(libs) if i.minifylibs
+      fs.writeFileSync(i.libsOnlyTarget, libs)
 
-  if i.logTree
-    console.log o.codeAnalysis()
+  fs.writeFileSync(i.treeTarget, ca.printed()) if i.treeTarget
+  console.log ca.printed() if i.logTree
 
 
 exports.decorate = (i) ->

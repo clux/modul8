@@ -1,15 +1,7 @@
 fs          = require 'fs'
 path        = require 'path'
 detective   = require 'detective'
-{compile, cutTests} = require './utils'
-
-# simple fs extension to check if a file exists [used to verify require calls' validity]
-exists = (file) ->
-  try
-    fs.statSync(file)
-    return true
-  catch e
-    return false
+{compile, objCount, exists}  = require './utils'
 
 # criteria for whether a require string is relative, rather than absolute
 # absolute require strings will scan on the defined require paths (@domainPaths)
@@ -42,6 +34,9 @@ CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, re
   errorStr = if wasRelative then "the relatively required domain: #{domain}" else "any of the client require domains #{JSON.stringify(@domainPaths)}"
   throw new Error("require call for #{absReq} not matched on #{errorStr}")
   return
+
+# if preprocessing should be done on files to avoid pulling in test dependencies TODO: this can eventually use burrito, but not in use by default
+cutTests = (code) -> code.replace(/\n.*require.main[\w\W]*$/, '')
 
 CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
   {absReq, basePath} = @resolveRequire(name, domain, isRelative(name))
@@ -97,19 +92,14 @@ CodeAnalysis::sanitizedTree = () -> # private
   )(@tree,m[@basePoint]={})
   m
 
-getBranchSize = (branch) ->
-  i = 0
-  i++ for key of branch
-  i
-
 # public method, returns an npm like dependency tree
 CodeAnalysis::printed = (hideExtensions=false) ->
   lines = []
   ((branch, level, parentAry) ->
     idx = 0
-    bSize = getBranchSize(branch)
+    bSize = objCount(branch)
     for key,val of branch
-      hasChildren = getBranchSize(branch[key]) > 0
+      hasChildren = objCount(branch[key]) > 0
       forkChar = if hasChildren then "┬" else "─"
       isLast = ++idx is bSize
       turnChar = if isLast then "└" else "├"
@@ -141,6 +131,8 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   ([key,val] for key,val of obj).sort((a,b) -> b[1][1] - a[1][1]).map((e) -> [e[0], e[1][1]]) # returns array of pairs where pair = [name, domain]
 
 
+
+
 # requiring this gives a function which returns a closured object with access to only the public methods of a bound instance
 # TODO: include some strings to ignore [e.g. stuff from internal that require will handle outside default behaviour]
 module.exports = (basePoint, domains, useLocalTests=false) ->
@@ -153,6 +145,10 @@ module.exports = (basePoint, domains, useLocalTests=false) ->
   }
 
 
+
+
+
+
 # tests
 if module is require.main
   clientPath = '/home/clux/repos/deathmatchjs/app/client/'
@@ -160,7 +156,6 @@ if module is require.main
   o = new CodeAnalysis('app.coffee', [clientPath,sharedPath], true)
   console.log o.printed()
   console.log o.sorted()
-  #console.log o.loadDependencies('app.coffee',[],clientPath)
 
   #s = 'app.coffee'
   #console.log s.split(path.basename(s))[0][0...-1].split('/') #<- problem, need this to return empty array
