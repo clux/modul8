@@ -44,6 +44,8 @@ listToTree = (list, base) -> # create the object tree from input list of files
     moduleScan(obj, file.replace(/\..*/,'').split('/'))
   obj
 
+
+
 module.exports =
   compile     : compile
   cjsWrap     : cjsWrap
