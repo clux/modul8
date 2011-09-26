@@ -1,4 +1,4 @@
-app = @[requireAppName]
+app = window[requireNamespace]
 domains = [app.modules, app.client, app.shared]
 
 makeRequire = (domain, pathName) -> # each module gets its own unique require function based on where it is to be able to resolve better
@@ -29,9 +29,10 @@ resolveRelative = (domain, pathName, relReqStr) ->
   out
 
 
-app.define = (fn, exportName, domain) -> # pass in a fn that expects require, module and exports, this will create/refer these objects/fns correctly
-  exports = app[domain][fileName] #could work, define calls would be structured anyway
+app.define = (exportName, domain, fn) -> # pass in a fn that expects require, module and exports, this will create/refer these objects/fns correctly
+  domain = app[domain]
+  domain[exportName] = {} if !domain[exportName]
   module = {}
-  fn(makeRequire(domain, exportName), module, exports)
-  app.client = module.exports if module.exports
+  fn(makeRequire(domain, exportName), module, domain[exportName])
+  domain[exportName] = module.exports if module.exports
 
