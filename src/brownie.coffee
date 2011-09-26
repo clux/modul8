@@ -22,6 +22,7 @@ minify = (code) -> # minify function, this can potentially also be passed in if 
 
 bundle = (codeList, o) ->
   l = []
+  d = o.domains
   # 0. attach libs if we didnt want to split them into a separate file
   l.push = (compile(o.libDir+file) for file in o.libFiles).join('\n') if !o.libsOnlyTarget and o.libDir and o.libFiles # concatenate files as is
 
@@ -33,24 +34,21 @@ bundle = (codeList, o) ->
   l.push "#{o.appName}.internal.#{name} = #{pullData(parser,name)};" for name, parser of o.parsers
 
   # 3. attach require code
-  l.push "var requireNamespace = '#{o.appName}';" # require needs to know where to look
+  requireConfig =
+    namespace : o.appName
+    domains   : key for key of o.domains
+  l.push "var requireConfig = '#{JSON.stringify(requireConfig)}';" # require needs to know where to look
   l.push compile('./require.coffee')
 
-  # 4. include framework specific code
-  l.push (compile(o.internalDir + file) for file in o.internalDir).join('\n') if o.internalDir
-
-  # 5. include CommonJS compatible code - wrap each file in a define function for relative requires
+  # 4. include CommonJS compatible code - wrap each file in a define function for relative requires
   defineWrap = (code, exportName, domain) -> "#{o.appName}.define(exportName, domain,function(require, exports, module){#{code}});"
 
-  # THESE POINTS HERE FUCK UP A BIT:
-  # each domain should have different rules, modules and shared should not be wrapped in DOMLOADED for instance
-  # => need to rewrite a bit of codeanalysis to make it so that output from sort give me simply the key from the object!
+  # 4.a) include non-client CommonJS modules (these should be independant on the App and the DOM)
+  l.push (defineWrap(compile(d[domain] + name)) for [name, domain] in codeList when domain isnt 'client') # => internal code handled like shared & modules..
 
-  # 5.a) include modules (these should not be dependant on the App or the DOM)
-  # l.push (defineWrap(compile(osmething), modulename, 'modules') for somethogn in o.modules).join('\n')
+  # 4.b) include compiled files from codeList in correct order
+  l.push jQueryWrap((defineWrap(compile(d.client + name)) for [name, domain] in codeList when domain is 'client'))
 
-  # 5.b) include compiled files from codeList in correct order
-  #l.push jQueryWrap( (defineWrap(compile(file[1]+file[0]), file[0], getDomain(file[1])) for file in codeList).join('\n') )
 
   l.join '\n'
 
@@ -59,9 +57,6 @@ exports.bake = (i) ->
   throw new Error("brownie needs valid basePoint and domains")  if !i.basePoint or !i.domains
   throw new Error("brownie needs the client domain to be the location of the basePoint") if !objCount(i.domains) > 0 or !exists(i.domains.client+i.basePoint)
   #TODO: requirements on modules?
-
-  #reverseDomains = {}
-  #reverseDomains[path] = name for name, path of i.domains
 
   i.appName ?= 'Brownie'
   ca = codeAnalyis(i.basePoint, i.domains)
