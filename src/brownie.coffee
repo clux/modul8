@@ -20,51 +20,59 @@ minify = (code) -> # minify function, this can potentially also be passed in if 
 #   2. explicitly require submodules of spine at the same time as spine was required => order gets correct
 # 2. however comes with the problem of having these spine submodules having a particular name!
 
-bundle = (codeList, o) ->
+bundle = (codeList, ns, o) ->
   l = []
   d = o.domains
   # 0. attach libs if we didnt want to split them into a separate file
-  l.push = (compile(o.libDir+file) for file in o.libFiles).join('\n') if !o.libsOnlyTarget and o.libDir and o.libFiles # concatenate files as is
+  if !o.libsOnlyTarget and o.libDir and o.libFiles
+    l.push (compile(o.libDir+file) for file in o.libFiles).join('\n') # concatenate files as is
 
   # 1. construct the namespace object
-  namespace = {client:{}, internal: {}, shared: {}, modules: {}}  # TODO: userLocals + require use of internals (wont work with codeanalysis - as they are not really files)
-  l.push "var #{o.appName} = #{JSON.stringify(namespace)};"
+  nsObj = {} # TODO: userLocals
+  nsObj[name] = {} for [name, path] in o.domains
+  nsObj.data = {}
+  l.push "var #{ns} = #{JSON.stringify(nsObj)};"
 
   # 2. pull in data from parsers
-  l.push "#{o.appName}.internal.#{name} = #{pullData(parser,name)};" for name, parser of o.parsers
+  l.push "#{ns}.data.#{name} = #{pullData(parser,name)};" for name, parser of o.parsers # TODO: should this be requirable?
 
   # 3. attach require code
   requireConfig =
-    namespace : o.appName
-    domains   : key for key of o.domains
-  l.push "var requireConfig = '#{JSON.stringify(requireConfig)}';" # require needs to know where to look
-  l.push compile('./require.coffee')
+    namespace : ns
+    domains   : dom for [dom, path] in o.domains
+    fallback  : o.fallBackFn # if our require fails, give a name to a globally defined fn here that
+  l.push "var requireConfig = '#{JSON.stringify(requireConfig)}';"
+  l.push anonWrap(compile(__dirname + '/require.coffee'))
 
-  # 4. include CommonJS compatible code - wrap each file in a define function for relative requires
-  defineWrap = (code, exportName, domain) -> "#{o.appName}.define(exportName, domain,function(require, exports, module){#{code}});"
+  # 4. include CommonJS compatible code in the order they have to be defined - wrap each file in a define function for relative requires
+  defineWrap = (exportName, domain, code) -> "#{ns}.define('#{exportName}', '#{domain}',function(require, exports, module){#{code}});"
+  domMap = {}
+  domMap[name] = path for [name,path] in o.domains
 
   # 4.a) include non-client CommonJS modules (these should be independant on the App and the DOM)
-  l.push (defineWrap(compile(d[domain] + name)) for [name, domain] in codeList when domain isnt 'client') # => internal code handled like shared & modules..
+  l.push (defineWrap(name, domain, compile(domMap[domain] + name)) for [name, domain] in codeList when domain isnt 'client').join('\n')
 
   # 4.b) include compiled files from codeList in correct order
-  l.push jQueryWrap((defineWrap(compile(d.client + name)) for [name, domain] in codeList when domain is 'client'))
+  l.push o.DOMLoadWrap((defineWrap(name, 'client', compile(domMap.client + name)) for [name, domain] in codeList when domain is 'client').join('\n'))
 
 
   l.join '\n'
 
 
 exports.bake = (i) ->
-  throw new Error("brownie needs valid basePoint and domains")  if !i.basePoint or !i.domains
-  throw new Error("brownie needs the client domain to be the location of the basePoint") if !objCount(i.domains) > 0 or !exists(i.domains.client+i.basePoint)
-  #TODO: requirements on modules?
+  if !i.basePoint or !i.domains
+    throw new Error("brownie needs valid basePoint and domains. Got "+i.basePoint+' and '+JSON.stringify(i.domains))
+  clientDom = path for [name, path] in i.domains when name is 'client'
+  if !i.domains.length > 0 or !exists(clientDom+i.basePoint)
+    throw new Error("brownie needs a client domain, and the basePoint to be contained in the client domain. Tried: "+clientDom+i.basePoint)
 
-  i.appName ?= 'Brownie'
-  ca = codeAnalyis(i.basePoint, i.domains)
+  i.namespace ?= 'Brownie'
+  i.DOMLoadWrap ?= jQueryWrap
 
-  #TODO: should internalDir be in the global require scope? Should perhaps be hidden away? Local files with same name will override requires...
+  ca = codeAnalyis(i.basePoint, i.domains, i.localTests) # domains now array of pairs...
 
   if i.target
-    c = bundle(ca.sorted(), i)
+    c = bundle(ca.sorted(), i.namespace, i)
     c = minify(c) if i.minify
     fs.writeFileSync(i.target, c)
 
