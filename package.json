@@ -1,7 +1,7 @@
 {
   "name": "brownie",
-  "description": "Brownie browser bake- and glazery",
-  "version": "0.1.0",
+  "description": "Bake and glaze your web applications",
+  "version": "0.9.0",
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
   "repository": "git://github.com/clux/brownie",
   "main": "./index.js",
