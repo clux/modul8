@@ -22,22 +22,24 @@ toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain 
 
 # constructor, private
 CodeAnalysis = (@basePoint, @domains, @useLocalTests) ->
+  @domainMap = {}
+  @domainMap[name] = path for [name,path] in @domains
   @resolveDependencies() #automatically resolves dependency tree on construction, stores in @tree
   return
 
 # resolveDependencies helpers
 CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, reports where it wound it
   # always scan current domain first, but only scan current domain path if require string was relative
-  scannable = if wasRelative then [@domains[domain]] else [domain].concat(name for name of @domains when name isnt domain)
-  return {absReq, dom} for dom in scannable when exists(@domains[dom]+absReq)
+  scannable = if wasRelative then [domain] else [domain].concat(name for [name, path] in @domains when name isnt domain)
+  return {absReq, dom} for dom in scannable when exists(@domainMap[dom]+absReq)
 
-  throw new Error("brownie code analysis: require references a file which cound not be found #{absReq}")
+  throw new Error("brownie code analysis: require references a file which cound not be found: #{absReq}")
 
 cutTests = (code) -> code.replace(/\n.*require.main[\w\W]*$/, '') # avoids pulling in test dependencies TODO: this can eventually use burrito, but not in use by default
 
 CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
   {absReq, dom} = @resolveRequire(name, domain, isRelative(name))
-  code = compile(@domains[dom]+absReq)
+  code = compile(@domainMap[dom]+absReq)
   code = cutTests(code) if @useLocalTests
   {
     deps    : (toAbsPath(dep, subFolders) for dep in detective(code)) # convert all require paths to absolutes here
@@ -51,11 +53,6 @@ CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code t
 # and the final (anonymous one) to call detective recursively to find and resolve require calls in current file
 CodeAnalysis::resolveDependencies = -> # private
   @tree = tree = {name: @basePoint, deps: {}, subFolders: [], domain: 'client', level: 0}
-
-  uncircularize = (treePos) ->
-    delete treePos.parent # does not have to exist to be cleared
-    uncircularize(treePos.deps[dep]) for dep of treePos.deps
-    return
 
   circularCheck = (treePos, dep) -> # makes sure no circular references exists for dep going up from current point in tree (tree starts at top)
     requiree = treePos.name
@@ -78,9 +75,7 @@ CodeAnalysis::resolveDependencies = -> # private
       arguments.callee.call(@, t.deps[dep])
     return
   )(tree) # call detective recursively and resolve each require
-  uncircularize(tree)
   return
-
 
 # helpers for print
 CodeAnalysis::sanitizedTree = () -> # private
@@ -136,11 +131,11 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
 # TODO: include some strings to ignore [e.g. stuff from internal that require will handle outside default behaviour]
 module.exports = (basePoint, domains, useLocalTests=false) ->
   throw new Error("brownie code analysis: basePoint required") if !basePoint
-  throw new Error("brownie code analysis: domains needed as object"+domains) if !domains or !domains.client
-  o = new CodeAnalysis(basePoint, domain, useLocalTests)
+  throw new Error("brownie code analysis: domains needed as array of arrays"+domains) if !domains or !domains instanceof Array or !domains[0] instanceof Array
+  o = new CodeAnalysis(basePoint, domains, useLocalTests)
   {
-    print   : o.printed # returns a big string
-    sorted  : o.sorted  # returns array of pairs of form [name, domain]
+    print   : (hideExts) -> o.printed.call(o, hideExts) # returns a big string
+    sorted  : () -> o.sorted.call(o)                    # returns array of pairs of form [name, domain]
   }
 
 
@@ -150,9 +145,10 @@ module.exports = (basePoint, domains, useLocalTests=false) ->
 
 # tests
 if module is require.main
-  domains =
-    client : '/home/clux/repos/deathmatchjs/app/client/'
-    shared : '/home/clux/repos/deathmatchjs/app/shared/'
+  domains = [
+    ['client', '/home/clux/repos/deathmatchjs/app/client/']
+    ['shared', '/home/clux/repos/deathmatchjs/app/shared/']
+  ]
   o = new CodeAnalysis('app.coffee', domains, true)
   console.log o.printed()
   console.log o.sorted()
