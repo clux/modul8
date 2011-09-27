@@ -6,7 +6,7 @@ codeAnalyis = require './codeanalysis'
 
 # helpers
 pullData = (parser, name) -> # parser interface
-  throw new Error("#{name}_parser is not a function") if not parser instanceof Function
+  throw new Error("parser for #{name} is not a function") if not parser instanceof Function
   parser()
 
 minify = (code) -> # minify function, this can potentially also be passed in if we require alternative compilers..
@@ -34,14 +34,14 @@ bundle = (codeList, ns, o) ->
   l.push "var #{ns} = #{JSON.stringify(nsObj)};"
 
   # 2. pull in data from parsers
-  l.push "#{ns}.data.#{name} = #{pullData(parser,name)};" for name, parser of o.parsers # TODO: should this be requirable?
+  l.push "#{ns}.data.#{name} = #{pullData(pull_fn,name)};" for name, pull_fn of o.data # TODO: should this be requirable?
 
   # 3. attach require code
   requireConfig =
     namespace : ns
     domains   : dom for [dom, path] in o.domains
     fallback  : o.fallBackFn # if our require fails, give a name to a globally defined fn here that
-  l.push "var requireConfig = '#{JSON.stringify(requireConfig)}';"
+  l.push "var requireConfig = #{JSON.stringify(requireConfig)};"
   l.push anonWrap(compile(__dirname + '/require.coffee'))
 
   # 4. include CommonJS compatible code in the order they have to be defined - wrap each file in a define function for relative requires
@@ -49,15 +49,17 @@ bundle = (codeList, ns, o) ->
   domMap = {}
   domMap[name] = path for [name,path] in o.domains
 
+  console.log "EXPORTING:",codeList
   # 4.a) include non-client CommonJS modules (these should be independant on the App and the DOM)
+  #console.log "FIRST: non-client", ([name,domain] in codeList when domain isnt 'client')
   l.push (defineWrap(name, domain, compile(domMap[domain] + name)) for [name, domain] in codeList when domain isnt 'client').join('\n')
 
   # 4.b) include compiled files from codeList in correct order
+  #console.log "SECOND: client", ([name,domain] in codeList when domain is 'client')
   l.push o.DOMLoadWrap((defineWrap(name, 'client', compile(domMap.client + name)) for [name, domain] in codeList when domain is 'client').join('\n'))
 
 
   l.join '\n'
-
 
 exports.bake = (i) ->
   if !i.basePoint or !i.domains
@@ -65,11 +67,18 @@ exports.bake = (i) ->
   clientDom = path for [name, path] in i.domains when name is 'client'
   if !i.domains.length > 0 or !exists(clientDom+i.basePoint)
     throw new Error("brownie needs a client domain, and the basePoint to be contained in the client domain. Tried: "+clientDom+i.basePoint)
+  hasData = false
+  for [name,path] in i.domains when name is 'data'
+    hasData = true
+    break
+  if hasData
+    throw new Error("brownie reserves the 'data' domain for pulled in code")
 
   i.namespace ?= 'Brownie'
   i.DOMLoadWrap ?= jQueryWrap
 
-  ca = codeAnalyis(i.basePoint, i.domains, i.localTests) # domains now array of pairs...
+  ca = codeAnalyis(i.basePoint, i.domains, i.localTests)
+  #NB: ca ignores require strings beginning with data::
 
   if i.target
     c = bundle(ca.sorted(), i.namespace, i)

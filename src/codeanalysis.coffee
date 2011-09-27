@@ -42,7 +42,7 @@ CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code t
   code = compile(@domainMap[dom]+absReq)
   code = cutTests(code) if @useLocalTests
   {
-    deps    : (toAbsPath(dep, subFolders) for dep in detective(code)) # convert all require paths to absolutes here
+    deps    : (toAbsPath(dep, subFolders) for dep in detective(code) when !(/^data::/).test(dep)) # convert all require paths to absolutes here - ignore data requires
     domain  : dom
   }
 
@@ -64,6 +64,11 @@ CodeAnalysis::resolveDependencies = -> # private
       throw new Error("circular dependency detected: #{chain.join(' <- ')} <- #{dep}") if treePos.name is dep
     return
 
+  #uncircularize = (t) ->
+  #  delete t.parent
+  #  arguments.callee(t.deps[dep]) for dep of t.deps
+  #  return
+
   # console.log tree
   ((t) =>
     {deps, domain} = @loadDependencies(t.name, t.subFolders, t.domain)
@@ -75,6 +80,7 @@ CodeAnalysis::resolveDependencies = -> # private
       arguments.callee.call(@, t.deps[dep])
     return
   )(tree) # call detective recursively and resolve each require
+  #uncircularize(tree)
   return
 
 # helpers for print
@@ -116,13 +122,13 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj[@basePoint] = [0, 'client']
   ((treePos) ->
     for name,dep of treePos.deps
-      obj[name] = {} if !obj[name]
-      obj[name][0] = Math.max(dep.level, obj[name].level or 0)
+      obj[name] = [] if !obj[name]
+      obj[name][0] = Math.max(dep.level, obj[name][0] or 0)
       obj[name][1] = dep.domain
       arguments.callee(dep)
     return
   )(@tree) # creates an object of arrays of form [level, domain], so key,val of obj => val = [level, domain]
-  ([key,val] for key,val of obj).sort((a,b) -> b[1][1] - a[1][1]).map((e) -> [e[0], e[1][1]]) # returns array of pairs where pair = [name, domain]
+  ([name,ary] for name,ary of obj).sort((a,b) -> b[1][0] - a[1][0]).map((e) -> [e[0], e[1][1]]) # returns array of pairs where pair = [name, domain]
 
 
 
