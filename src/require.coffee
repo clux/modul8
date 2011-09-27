@@ -1,22 +1,22 @@
-app = window[requireConfig.namespace]
+ns = window[requireConfig.namespace]
 domains = requireConfig.domains
-fallback = app.fallback
+fallback = ns.fallback
 DataReg = /^data::/
 isRelative = (reqStr) -> reqStr[0...2] is './'
 
-makeRequire = (domain, pathName) -> # each module gets its own unique require function based on where it is to be able to resolve better
+makeRequire = (dom, pathName) -> # each module gets its own unique require function based on where it is to be able to resolve better
   (reqStr) ->
+    console.log("#{dom}:#{pathName} <- #{reqStr}")
     if DataReg.test(reqStr)
-      data = reqStr.replace(DataReg,'')
-      return app.data[data] if app.data[data]
-      console.error("Unable to resolve data require for data")
+      d = reqStr.replace(DataReg,'')
+      return ns.data[d] if ns.data[d]
+      return console.error("Unable to resolve data require for #{d}")
     if (isRel = isRelative(reqStr))
-      reqStr = resolveRelative(domain, pathName, reqStr[2...])
-    scannable = if isRel then [domain] else [domain].concat domains.filter((e) -> e isnt domain) # look through current first (and only current if relative)
-    return o[reqStr] if o[reqStr] for o in scannable # return first found on our domains
+      reqStr = resolveRelative(dom, pathName, reqStr[2...])
+    scannable = if isRel then [dom] else [dom].concat domains.filter((e) -> e isnt dom) # look through current first (and only current if relative)
+    return ns[o][reqStr] for o in scannable when ns[o][reqStr]
     return fallback(reqStr) if fallback and 'Function' is typeof fallback # else what external require could find
-    console.error("Unable to resolve require for: #{reqStr}")
-    return
+    return console.error("Unable to resolve require for: #{reqStr}")
 
 toAbsPath = (domain, pathName, relReqStr) ->
   folders = pathName.split('/')[0...-1] # slice away the filename
@@ -26,10 +26,14 @@ toAbsPath = (domain, pathName, relReqStr) ->
   folders.concat(relReqStr.split('/')).join('/') # take the remaining path and make the string
 
 
-app.define = (exportName, domain, fn) -> # pass in a fn that expects require, module and exports, this will create/refer these objects/fns correctly
-  domain = app[domain]
-  domain[exportName] = {} if !domain[exportName]
+ns.define = (name, domain, fn) -> # pass in a fn that expects require, module and exports, this will create/refer these objects/fns correctly
+  d = ns[domain]
+  d[name] = {} if !d[name]
   module = {}
-  fn(makeRequire(domain, exportName), module, domain[exportName])
-  domain[exportName] = module.exports if module.exports
+  fn(makeRequire(domain, name), module, d[name])
+  if module.exports
+    delete d[name] # need to properly override it this is to work
+    d[name] = module.exports
+  return
 
+ns.require = makeRequire('client','browser')

@@ -45,17 +45,14 @@ bundle = (codeList, ns, o) ->
   l.push anonWrap(compile(__dirname + '/require.coffee'))
 
   # 4. include CommonJS compatible code in the order they have to be defined - wrap each file in a define function for relative requires
-  defineWrap = (exportName, domain, code) -> "#{ns}.define('#{exportName}', '#{domain}',function(require, exports, module){#{code}});"
+  defineWrap = (exportName, domain, code) -> "#{ns}.define('#{exportName}','#{domain}',function(require, module, exports){#{code}});"
   domMap = {}
   domMap[name] = path for [name,path] in o.domains
 
-  console.log "EXPORTING:",codeList
   # 4.a) include non-client CommonJS modules (these should be independant on the App and the DOM)
-  #console.log "FIRST: non-client", ([name,domain] in codeList when domain isnt 'client')
   l.push (defineWrap(name, domain, compile(domMap[domain] + name)) for [name, domain] in codeList when domain isnt 'client').join('\n')
 
   # 4.b) include compiled files from codeList in correct order
-  #console.log "SECOND: client", ([name,domain] in codeList when domain is 'client')
   l.push o.DOMLoadWrap((defineWrap(name, 'client', compile(domMap.client + name)) for [name, domain] in codeList when domain is 'client').join('\n'))
 
 
