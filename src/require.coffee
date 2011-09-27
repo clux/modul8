@@ -12,7 +12,7 @@ makeRequire = (dom, pathName) -> # each module gets its own unique require funct
       return ns.data[d] if ns.data[d]
       return console.error("Unable to resolve data require for #{d}")
     if (isRel = isRelative(reqStr))
-      reqStr = resolveRelative(dom, pathName, reqStr[2...])
+      reqStr = toAbsPath(dom, pathName, reqStr[2...])
     scannable = if isRel then [dom] else [dom].concat domains.filter((e) -> e isnt dom) # look through current first (and only current if relative)
     return ns[o][reqStr] for o in scannable when ns[o][reqStr]
     return fallback(reqStr) if fallback and 'Function' is typeof fallback # else what external require could find

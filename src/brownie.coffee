@@ -59,8 +59,9 @@ bundle = (codeList, ns, o) ->
   l.join '\n'
 
 exports.bake = (i) ->
-  if !i.basePoint or !i.domains
-    throw new Error("brownie needs valid basePoint and domains. Got "+i.basePoint+' and '+JSON.stringify(i.domains))
+  if !i.domains
+    throw new Error("brownie needs valid basePoint and domains. Got "+JSON.stringify(i.domains))
+  i.basePoint ?= 'app.coffee'
   clientDom = path for [name, path] in i.domains when name is 'client'
   if !i.domains.length > 0 or !exists(clientDom+i.basePoint)
     throw new Error("brownie needs a client domain, and the basePoint to be contained in the client domain. Tried: "+clientDom+i.basePoint)
@@ -87,8 +88,8 @@ exports.bake = (i) ->
       libs = minify(libs) if i.minifylibs
       fs.writeFileSync(i.libsOnlyTarget, libs)
 
-  fs.writeFileSync(i.treeTarget, ca.printed()) if i.treeTarget
-  console.log ca.printed() if i.logTree
+  fs.writeFileSync(i.treeTarget, ca.print()) if i.treeTarget
+  console.log ca.print() if i.logTree
 
 
 exports.decorate = (i) ->
