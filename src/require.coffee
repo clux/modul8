@@ -18,7 +18,8 @@ makeRequire = (dom, pathName) -> # each module gets its own unique require funct
     if isRel
       scannable = [dom] # only look through domain we are in if relative require
     else if DomReg.test(reqStr)
-      scannable = [reqStr.match(DomReq)[1]] # only look through the specified domain if using domain specific require
+      scannable = [reqStr.match(DomReg)[1]] # only look through the specified domain if using domain specific require
+      reqStr = reqStr.split('::')[1]
 
     return ns[o][reqStr] for o in scannable when ns[o][reqStr]
     return fallback(reqStr) if fallback and 'Function' is typeof fallback # else what external require could find

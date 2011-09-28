@@ -93,40 +93,34 @@ CodeAnalysis::resolveDependencies = -> # private
   return
 
 # helpers for print
-CodeAnalysis::sanitizedTree = () -> # private
-  m = {}
-  ((t, mPos) ->
-    arguments.callee(obj, mPos[obj.name]={}) for dep,obj of t.deps
-    return
-  )(@tree,m[@basePoint]={})
-  m
-
 objCount = (obj) ->
   i = 0
   i++ for own key of obj
   i
 
+formatName = (name, hideExt, withDom, dom) ->
+  n = if hideExt then name.split('.')[0] else name
+  n = dom+'::'+n if withDom
+  n
+
 # public method, returns an npm like dependency tree
-CodeAnalysis::printed = (hideExtensions) ->
-  lines = []
+CodeAnalysis::printed = (hideExts, showDomain) ->
+  lines = [formatName(@basePoint, hideExts, showDomain, 'client')]
   ((branch, level, parentAry) ->
     idx = 0
-    bSize = objCount(branch)
-    for key,val of branch
-      hasChildren = objCount(branch[key]) > 0
-      forkChar = if hasChildren then "┬" else "─"
+    bSize = objCount(branch.deps)
+    for key, {name, deps, domain} of branch.deps
+      hasChildren = objCount(deps) > 0
+      forkChar = if hasChildren then "┬" else "─" # this char only occurs near the leaf
       isLast = ++idx is bSize
       turnChar = if isLast then "└" else "├"
+      indent = ((if parentAry[i] then " " else "│")+"  " for i in [0...level]).join('') # extra double whitespace correspond to double dash used to connect
 
-      indents = []
-      if level > 1
-        indents.push((if parentAry[i] then " " else "│")+"  ") for i in [1...level] # extra double whitespace correspond to double dash used to connect
-
-      nkey = if hideExtensions then key.split('.')[0] else key
-      lines.push(if level <= 0 then nkey else indents.join('')+turnChar+"──"+forkChar+nkey)
-      arguments.callee(branch[key], level+1, parentAry.concat(isLast)) #recurse into key's tree (NB: parentAry.length === level)
+      displayName = formatName(name, hideExts, showDomain, domain)
+      lines.push indent+turnChar+"──"+forkChar+displayName
+      arguments.callee(branch.deps[key], level+1, parentAry.concat(isLast)) if hasChildren #recurse into key's dependency tree keeping track of parent lines
     return
-  )(@sanitizedTree(), 0, [])
+  )(@tree, 0, [])
   lines.join('\n')
 
 
@@ -153,8 +147,8 @@ module.exports = (basePoint, domains, useLocalTests=false) ->
   throw new Error("brownie code analysis: domains needed as array of arrays"+domains) if !domains or !domains instanceof Array or !domains[0] instanceof Array
   o = new CodeAnalysis(basePoint, domains, useLocalTests)
   {
-    print   : (hideExts=false) -> o.printed.call(o, hideExts) # returns a big string
-    sorted  : () -> o.sorted.call(o)                          # returns array of pairs of form [name, domain]
+    printed : (extSuffix=false, domPrefix=false) -> o.printed.call(o, extSuffix, domPrefix) # returns a big string
+    sorted  : () -> o.sorted.call(o)                                                        # returns array of pairs of form [name, domain]
   }
 
 
