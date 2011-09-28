@@ -48,6 +48,7 @@ brownie.bake
  - `target`         File to write to (must be referenced by your template).
  - `minify`         Pass the the output file through UglifyJS before writing to disk. Defaults to false.
  - `domains`        Array of pairs of form [nameofdomain, pathtodomain] in the order they should be scanned. Think of these as your require paths on the browser. You can define as many/few as you want, but you need at least a 'client' domain.
+ We use an array for this interface rather than an object because order may become important. At the moment, all non-client code gets included first, then all the client code.
  - `data`           Object of form key,val == name, pull_fn. This will make the output of the pull_fn requireable on the browser under 'data::name'. Useful for generating dynamic (app specific) data in the targetjs.
  - `basePoint`      Base file where your app is launched. Defaults to 'app.coffee'. It must lie on the 'client' domain.
  - `namespace`      Global object to export everything to. Defaults to 'Brownie'.
