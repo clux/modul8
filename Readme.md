@@ -47,17 +47,18 @@ brownie.bake
 
  - `target`         File to write to (must be referenced by your template).
  - `minify`         Pass the the output file through UglifyJS before writing to disk. Defaults to false.
- - `domains`        Array of pairs of form [nameofdomain, pathtodomain] in the order they should be scanned. Think of these as your require paths on the browser.
+ - `domains`        Array of pairs of form [nameofdomain, pathtodomain] in the order they should be scanned. Think of these as your require paths on the browser. You can define as many/few as you want, but you need at least a 'client' domain.
  - `data`           Object of form key,val == name, pull_fn. This will make the output of the pull_fn requireable on the browser under 'data::name'. Useful for generating dynamic (app specific) data in the targetjs.
- - `basePoint`      Base file where your app is launched. Defaults to 'app.coffee'.
+ - `basePoint`      Base file where your app is launched. Defaults to 'app.coffee'. It must lie on the 'client' domain.
  - `namespace`      Global object to export everything to. Defaults to 'Brownie'.
  - `libDir`         Directory to find external libraries that you wish to include outside of the require system.
  - `libFiles`       List of files to include in order. Note: libDir+libFiles[i] must exist for all i.
  - `libsOnlyTarget` Optional file to write lib files to. Makes the output of brownie quickly distinguishable from your big libraries, and people won't have to redownload that part of the code everytime you change your app code.
  - `treeTarget`     Where to write the current prettified require tree to. Useful for code analysis. Optional.
+ - `logTree`        Boolean to determine if you want the prettified dependency passed to console.log. Default false.
  - `DOMLoadWrap`    Optional function which wraps a code string in a function that executes once the DOMContentLoaded event fires. Defaults to a jQuery wrapper.
- - `localTests`     Bool to determine whether to chuck the if module is require.main bit of a file. Useful if you write tests in the same file and run them when the module is run standalone.
-NB: Please use localTests with caution at the moment. it chucks indiscriminately if require.main is referenced in your code.
+ - `localTests`     Bool to determine whether to chuck the standalone module code before bundling/looking for dependencies. Avoids pulling in test dependencies or test code.
+ It is a bit raw at the moment, as it indiscriminately chucks everything including the point 'require.main' is referenced in your code. Enable with caution for now.
 
 ### Glazing - Compiling stylesheets
 In rapid development. The API will look something like this.
