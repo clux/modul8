@@ -1,2 +1,1 @@
-
-module.exports = require('./src/brownie.coffee');
+module.exports = require('./lib/brownie.js');
