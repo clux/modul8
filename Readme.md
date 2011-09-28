@@ -84,6 +84,25 @@ There are four different ways to use require:
  It is there to allow requiring of data that was passed in through the `data` option to `bake`. This domain is reserved so that brownie knows to exclude looking for these files during codeanalysis.
 
 
+### require libraries
+If you want consistency, then you might want to be able to ditch your dependence on global variables altogether.
+There are ways you could do this, but they all seem unoptimal given what we are used to.
+
+One way is creating an arbiter for jQuery on the client path with `exports.$ = window.jQuery` in it. This means you can use `$ = require('libs.coffee').$`
+from inside your app code - and it libs will show up in your dependency tree. However, the client domain is not executed before `DOMContentLoaded` fires, which often is listened to by jQuery.
+If you want to include fallback script loading in the arbiter - and you write a separate DOMLoadWrap function to deal - then this it still introduces a dealy on when your fallback executes.
+Alternatively, you can put it on another domain specifically for this, and `require('newdom::libs.coffee').$` to avoid this, but it's a lot to type for whats normally available.
+
+Another way is to create a data function to `bake`.
+
+```coffee
+brownie.bake
+  #normal options
+  data : {'$'  :  -> 'window.jQuery'}
+```
+Now you can simply `$ = require('data::$')`
+
+
 
 ### Glazing - Compiling stylesheets
 In rapid development. The API will look something like this.
