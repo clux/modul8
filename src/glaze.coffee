@@ -1,3 +1,5 @@
+fs          = require 'fs'
+path        = require 'path'
 
 module.exports = (i) ->
   stylus = require 'stylus'
