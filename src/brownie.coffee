@@ -1,7 +1,7 @@
 fs          = require 'fs'
 path        = require 'path'
 codeAnalyis = require './codeanalysis'
-{compile, exists, anonWrap, jQueryWrap, objCount} = require './utils'
+{compile, exists, anonWrap, jQueryWrap} = require './utils'
 {uglify, parser} = require 'uglify-js'
 
 # helpers
