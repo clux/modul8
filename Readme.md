@@ -61,6 +61,23 @@ brownie.bake
  - `localTests`     Bool to determine whether to chuck the standalone module code before bundling/looking for dependencies. Avoids pulling in test dependencies or test code.
  It is a bit raw at the moment, as it indiscriminately chucks everything including the point 'require.main' is referenced in your code. Enable with caution for now.
 
+### Notes on require()
+
+There are fevn different ways you can require things.
+ - **Globally**       I.e. `require('subfolder/module.js')`. Here all the require paths (the domains) will be scanned for a matching subfolder and a module.js inside it.
+ Global requires always starts searching on the domain you are currently at. If you were inside module.js and a sibling file in that folder existed as 'module2.js' then
+ if you wanted to require that in the same way, i.e. `require('subfolder/module2.js')` even though you are doing it from inside the subfolder.
+
+ - **Relatively**     Alternatively, you could write `require('./module.js')` to indicate that you are looking only inside this folder on this domain. You can also go up from subfolder via
+ `require('./../basemodule.js')` to get a basemodule.js in the parent directory from module.js. You can keep chaining '../' to go up a directory, but you cannot write a folder name then go up again.
+ I.e. `require('./../subfolder/../subfolder/../basemodule.js')` is not legal in brownie even though it is technically correct syntax.
+
+ - **Domain Specific**  `require('shared::fileonsharedpath.js')`. `::`  it cue to brownie that it will look only in the domain named what's before that string. Otherwise it works like global requires.
+ Domain specific + relative is either non-sensical (if cross domain), or unnecessary (if same origin domain) as relative require only looks in the current domain anyway.
+
+ - **Data domain**      `require('data::datakey')`. This emulates the domain specific require with the fixed 'data' domain. This domain is reserved and does not actually have to have a path.
+ It is there to allow requiring of data that was passed in through the data bake option. This needs to be fixed so that brownie knows to exclude looking for these files during codeanalysis.
+
 ### Glazing - Compiling stylesheets
 In rapid development. The API will look something like this.
 
