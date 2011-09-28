@@ -63,66 +63,42 @@ bundle = (codeList, ns, o) ->
 
   l.join '\n'
 
-exports.bake = (i) ->
-  if !i.domains
-    throw new Error("brownie needs valid basePoint and domains. Got "+JSON.stringify(i.domains))
-  i.basePoint ?= 'app.coffee'
-  clientDom = path for [name, path] in i.domains when name is 'client'
-  if !i.domains.length > 0 or !exists(clientDom+i.basePoint)
-    throw new Error("brownie needs a client domain, and the basePoint to be contained in the client domain. Tried: "+clientDom+i.basePoint)
+module.exports = (o) ->
+  if !o.domains
+    throw new Error("brownie needs valid basePoint and domains. Got "+JSON.stringify(o.domains))
+  o.basePoint ?= 'app.coffee'
+  clientDom = path for [name, path] in o.domains when name is 'client'
+  if !o.domains.length > 0 or !exists(clientDom+o.basePoint)
+    throw new Error("brownie needs a client domain, and the basePoint to be contained in the client domain. Tried: "+clientDom+o.basePoint)
   hasData = false
-  for [name,path] in i.domains when name is 'data'
+  for [name,path] in o.domains when name is 'data'
     hasData = true
     break
   if hasData
     throw new Error("brownie reserves the 'data' domain for pulled in code")
 
-  i.namespace ?= 'Brownie'
-  i.DOMLoadWrap ?= jQueryWrap
+  o.namespace ?= 'Brownie'
+  o.DOMLoadWrap ?= jQueryWrap
 
-  ca = codeAnalyis(i.basePoint, i.domains, i.localTests)
+  ca = codeAnalyis(o.basePoint, o.domains, o.localTests)
 
-  if i.target
-    c = bundle(ca.sorted(), i.namespace, i)
-    if i.minify
-      if i.minifier
-        throw new Error("brownie requires a function as a minifier") if !i.minifier instanceof Function
-        c = i.minifier(c)
+  if o.target
+    c = bundle(ca.sorted(), o.namespace, o)
+    if o.minify
+      if o.minifier
+        throw new Error("brownie requires a function as a minifier") if !o.minifier instanceof Function
+        c = o.minifier(c)
       else
         c = minify(c)
-    fs.writeFileSync(i.target, c)
+    fs.writeFileSync(o.target, c)
 
-    if i.libsOnlyTarget and i.libDir and i.libFiles # => libs where not included in above bundle
-      libs = (compile(i.libDir+file) for file in i.libFiles).join('\n') # concatenate libs as is
-      libs = minify(libs) if i.minifylibs
-      fs.writeFileSync(i.libsOnlyTarget, libs)
+    if o.libsOnlyTarget and o.libDir and o.libFiles # => libs where not included in above bundle
+      libs = (compile(o.libDir+file) for file in o.libFiles).join('\n') # concatenate libs as is
+      libs = minify(libs) if o.minifylibs
+      fs.writeFileSync(o.libsOnlyTarget, libs)
 
-  if i.treeTarget or i.logTree
-    tree = ca.printed(i.extSuffix, i.domPrefix)
-    fs.writeFileSync(i.treeTarget, tree) if i.treeTarget
-    console.log tree if i.logTree
+  if o.treeTarget or o.logTree
+    tree = ca.printed(o.extSuffix, o.domPrefix)
+    fs.writeFileSync(o.treeTarget, tree) if o.treeTarget
+    console.log tree if o.logTree
 
-
-exports.decorate = (i) ->
-  stylus = require 'stylus'
-  nib = require 'nib'
-
-  stylus(fs.readFileSync(i.input, 'utf8'))
-  .set('compress',i.minify)
-  .set('filename',i.input)
-  #.use(nib())
-  #.include(nib.path)
-  #.include(options.nibs)
-  .render (err, css) ->
-    if (err) then throw New Error(err)
-
-    if i.minify
-      uglifycss = require 'uglifycss'
-      options =
-        maxLineLen: 0
-        expandVars: false
-        cuteComments: false
-      css = uglifycss.processString(css, options)
-
-    return css if !i.target
-    fs.writeFileSync(i.target, css)
