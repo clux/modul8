@@ -76,11 +76,15 @@ exports.bake = (i) ->
   i.DOMLoadWrap ?= jQueryWrap
 
   ca = codeAnalyis(i.basePoint, i.domains, i.localTests)
-  #NB: ca ignores require strings beginning with data::
 
   if i.target
     c = bundle(ca.sorted(), i.namespace, i)
-    c = minify(c) if i.minify
+    if i.minify
+      if i.minifier
+        throw new Error("brownie requires a function as a minifier") if !i.minifier instanceof Function
+        c = i.minifier(c)
+      else
+        c = minify(c)
     fs.writeFileSync(i.target, c)
 
     if i.libsOnlyTarget and i.libDir and i.libFiles # => libs where not included in above bundle
@@ -88,8 +92,10 @@ exports.bake = (i) ->
       libs = minify(libs) if i.minifylibs
       fs.writeFileSync(i.libsOnlyTarget, libs)
 
-  fs.writeFileSync(i.treeTarget, ca.print()) if i.treeTarget
-  console.log ca.print() if i.logTree
+  if i.treeTarget or i.logTree
+    tree = ca.printed(i.extSuffix, i.domPrefix)
+    fs.writeFileSync(i.treeTarget, tree) if i.treeTarget
+    console.log tree if i.logTree
 
 
 exports.decorate = (i) ->
