@@ -1,7 +1,7 @@
 fs          = require 'fs'
 path        = require 'path'
 detective   = require 'detective'
-{compile, objCount, exists}  = require './utils'
+{compile, exists}  = require './utils'
 
 # criteria for whether a require string is relative, rather than absolute
 # absolute require strings will scan on the defined require paths (@domains)
@@ -91,6 +91,11 @@ CodeAnalysis::sanitizedTree = () -> # private
     return
   )(@tree,m[@basePoint]={})
   m
+
+objCount = (obj) ->
+  i = 0
+  i++ for own key of obj
+  i
 
 # public method, returns an npm like dependency tree
 CodeAnalysis::printed = (hideExtensions=false) ->
