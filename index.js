@@ -1,1 +1,2 @@
-module.exports = require('./lib/brownie.js');
+exports.bake = require('./lib/bake.js');
+exports.glaze = require('./lib/glaze.js')
