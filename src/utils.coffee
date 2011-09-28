@@ -2,13 +2,6 @@ path        = require 'path'
 fs          = require 'fs'
 coffee      = require 'coffee-script'
 
-# code wrapper helpers
-jQueryWrap = (code) -> # default DOMLoadWrap
-  '$(function(){'+code+'});'
-
-anonWrap = (code) ->
-  '(function(){'+code+'})();'
-
 # internal compile shortcut
 compile = (fileName) ->
   switch path.extname(fileName)
@@ -30,6 +23,4 @@ exists = (file) ->
 module.exports =
   compile     : compile
   exists      : exists
-  anonWrap    : anonWrap
-  jQueryWrap  : jQueryWrap
 

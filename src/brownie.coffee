@@ -1,7 +1,7 @@
 fs          = require 'fs'
 path        = require 'path'
 codeAnalyis = require './codeanalysis'
-{compile, exists, anonWrap, jQueryWrap} = require './utils'
+{compile, exists} = require './utils'
 {uglify, parser} = require 'uglify-js'
 
 # helpers
@@ -12,6 +12,11 @@ pullData = (parser, name) -> # parser interface
 minify = (code) -> # minify function, this can potentially also be passed in if we require alternative compilers..
   uglify.gen_code(uglify.ast_squeeze(uglify.ast_mangle(parser.parse(code))))
 
+jQueryWrap = (code) -> # default DOMLoadWrap
+  '$(function(){'+code+'});'
+
+anonWrap = (code) ->
+  '(function(){'+code+'})();'
 
 # IF we call them SpineAjax we must require SpineAjax
 # IF we call them Spine.Ajax we must require Spine.Ajax (which may lead people to believe we can require Spine and reference Spine.Ajax which simply isnt true)
@@ -25,7 +30,7 @@ bundle = (codeList, ns, o) ->
   d = o.domains
   # 0. attach libs if we didnt want to split them into a separate file
   if !o.libsOnlyTarget and o.libDir and o.libFiles
-    l.push (compile(o.libDir+file) for file in o.libFiles).join('\n') # concatenate files as is
+    l.push (compile(o.libDir+file) for file in o.libFiles).join('\n') # concatenate lib files as is
 
   # 1. construct the namespace object
   nsObj = {} # TODO: userLocals
