@@ -29,20 +29,28 @@ CodeAnalysis = (@basePoint, @domains, @useLocalTests) ->
 
 # resolveDependencies helpers
 CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, reports where it wound it
+  orig = absReq
   # always scan current domain first, but only scan current domain path if require string was relative
-  scannable = if wasRelative then [domain] else [domain].concat(name for [name, path] in @domains when name isnt domain)
+  scannable = [domain].concat(name for [name, path] in @domains when name isnt domain)
+  if wasRelative
+    scannable = [domain]
+  else if (dataReg = /^(.*)::/).test(absReq)
+    scannable = [absReq.match(dataReg)[1]]
+    absReq = absReq.split('::')[1]
+
   return {absReq, dom} for dom in scannable when exists(@domainMap[dom]+absReq)
 
-  throw new Error("brownie code analysis: require references a file which cound not be found: #{absReq}")
+  throw new Error("brownie code analysis: require references a file which cound not be found: #{orig}, we looked in #{scannable} for #{absReq}")
 
-cutTests = (code) -> code.replace(/\n.*require.main[\w\W]*$/, '') # avoids pulling in test dependencies TODO: this can eventually use burrito, but not in use by default
+cutTests = (code) -> code.replace(/\n.*require.main[\w\W]*$/, '') # avoids pulling in test dependencies TODO:? this can eventually use burrito if popular, but for now this is fine.
 
 CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
+  # we will only get name as absolute names because we convert everything that comes in 4 lines below (and initial is basePoint)
   {absReq, dom} = @resolveRequire(name, domain, isRelative(name))
   code = compile(@domainMap[dom]+absReq)
   code = cutTests(code) if @useLocalTests
   {
-    deps    : (toAbsPath(dep, subFolders) for dep in detective(code) when !(/^data::/).test(dep)) # convert all require paths to absolutes here - ignore data requires
+    deps    : (toAbsPath(dep, subFolders) for dep in detective(code) when !(/^data::/).test(dep)) # convert all require paths to absolutes immediately so we dont have to deal
     domain  : dom
   }
 
@@ -73,6 +81,7 @@ CodeAnalysis::resolveDependencies = -> # private
   ((t) =>
     {deps, domain} = @loadDependencies(t.name, t.subFolders, t.domain)
     t.domain = domain
+    t.name = t.name.replace(/^(.*::)/,'') # can now safely remove domain:: part from domain specific requires (note the key of the deps object retains full value)
     for dep in deps #not to be confused with t.deps which is an object, deps from loadDependencies is an array
       t.deps[dep] = {name : dep, parent: t, deps: {}, subFolders: dep.split('/')[0...-1], level: t.level+1}
       t.deps[dep].domain = @resolveRequire(dep, t.domain, isRelative(dep)).dom
@@ -86,8 +95,8 @@ CodeAnalysis::resolveDependencies = -> # private
 # helpers for print
 CodeAnalysis::sanitizedTree = () -> # private
   m = {}
-  ((treePos, mPos) ->
-    arguments.callee(treePos.deps[dep], mPos[dep]={}) for dep of treePos.deps
+  ((t, mPos) ->
+    arguments.callee(obj, mPos[obj.name]={}) for dep,obj of t.deps
     return
   )(@tree,m[@basePoint]={})
   m
@@ -98,7 +107,7 @@ objCount = (obj) ->
   i
 
 # public method, returns an npm like dependency tree
-CodeAnalysis::printed = (hideExtensions=false) ->
+CodeAnalysis::printed = (hideExtensions) ->
   lines = []
   ((branch, level, parentAry) ->
     idx = 0
@@ -127,26 +136,25 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj[@basePoint] = [0, 'client']
   ((treePos) ->
     for name,dep of treePos.deps
-      obj[name] = [] if !obj[name]
-      obj[name][0] = Math.max(dep.level, obj[name][0] or 0)
-      obj[name][1] = dep.domain
+      obj[dep.name] = [] if !obj[dep.name]
+      obj[dep.name][0] = Math.max(dep.level, obj[dep.name][0] or 0)
+      obj[dep.name][1] = dep.domain
       arguments.callee(dep)
     return
   )(@tree) # creates an object of arrays of form [level, domain], so key,val of obj => val = [level, domain]
-  ([name,ary] for name,ary of obj).sort((a,b) -> b[1][0] - a[1][0]).map((e) -> [e[0], e[1][1]]) # returns array of pairs where pair = [name, domain]
-
+  # This line converts to (sortable) array, then sorts by level, then maps to array of pairs of form [name, domain] (where we take out the domain:: part of name)
+  ([name,ary] for name,ary of obj).sort((a,b) -> b[1][0] - a[1][0]).map((e) -> [e[0], e[1][1]])
 
 
 
 # requiring this gives a function which returns a closured object with access to only the public methods of a bound instance
-# TODO: include some strings to ignore [e.g. stuff from internal that require will handle outside default behaviour]
 module.exports = (basePoint, domains, useLocalTests=false) ->
   throw new Error("brownie code analysis: basePoint required") if !basePoint
   throw new Error("brownie code analysis: domains needed as array of arrays"+domains) if !domains or !domains instanceof Array or !domains[0] instanceof Array
   o = new CodeAnalysis(basePoint, domains, useLocalTests)
   {
-    print   : (hideExts) -> o.printed.call(o, hideExts) # returns a big string
-    sorted  : () -> o.sorted.call(o)                    # returns array of pairs of form [name, domain]
+    print   : (hideExts=false) -> o.printed.call(o, hideExts) # returns a big string
+    sorted  : () -> o.sorted.call(o)                          # returns array of pairs of form [name, domain]
   }
 
 

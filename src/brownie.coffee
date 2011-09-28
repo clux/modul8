@@ -34,7 +34,7 @@ bundle = (codeList, ns, o) ->
   l.push "var #{ns} = #{JSON.stringify(nsObj)};"
 
   # 2. pull in data from parsers
-  l.push "#{ns}.data.#{name} = #{pullData(pull_fn,name)};" for name, pull_fn of o.data # TODO: should this be requirable?
+  l.push "#{ns}.data.#{name} = #{pullData(pull_fn,name)};" for name, pull_fn of o.data
 
   # 3. attach require code
   requireConfig =

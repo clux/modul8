@@ -7,7 +7,7 @@
  but brownie compiles everything in such a way that you won't need to.
  Brownie is implemented with CoffeeScript for [NodeJS](http://nodejs.org).
 
-# version 1.0 almost ready to go!
+### version 1.0 almost ready to go!
 
 ## Features
 
@@ -51,7 +51,7 @@ brownie.bake
  We use an array for this interface rather than an object because order may become important. At the moment, all non-client code gets included first, then all the client code.
  - `data`           Object of form key,val == name, pull_fn. This will make the output of the pull_fn requireable on the browser under 'data::name'. Useful for generating dynamic (app specific) data in the targetjs.
  - `basePoint`      Base file where your app is launched. Defaults to 'app.coffee'. It must lie on the 'client' domain.
- - `namespace`      Global object to export everything to. Defaults to 'Brownie'.
+ - `namespace`      Global object to export everything to. Defaults to 'Brownie'. Unless you go digging in the output source, this should never need to be referenced directly.
  - `libDir`         Directory to find external libraries that you wish to include outside of the require system.
  - `libFiles`       List of files to include in order. Note: libDir+libFiles[i] must exist for all i.
  - `libsOnlyTarget` Optional file to write lib files to. Makes the output of brownie quickly distinguishable from your big libraries, and people won't have to redownload that part of the code everytime you change your app code.
@@ -63,20 +63,22 @@ brownie.bake
 
 ### Notes on require()
 
-There are fevn different ways you can require things.
+There are four different ways to use require:
  - **Globally**       I.e. `require('subfolder/module.js')`. Here all the require paths (the domains) will be scanned for a matching subfolder and a module.js inside it.
  Global requires always starts searching on the domain you are currently at. If you were inside module.js and a sibling file in that folder existed as 'module2.js' then
- if you wanted to require that in the same way, i.e. `require('subfolder/module2.js')` even though you are doing it from inside the subfolder.
+ if you wanted to require that in the same way, i.e. `require('subfolder/module2.js')` even though you are doing it from inside subfolder.
 
  - **Relatively**     Alternatively, you could write `require('./module.js')` to indicate that you are looking only inside this folder on this domain. You can also go up from subfolder via
- `require('./../basemodule.js')` to get a basemodule.js in the parent directory from module.js. You can keep chaining '../' to go up a directory, but you cannot write a folder name then go up again.
- I.e. `require('./../subfolder/../subfolder/../basemodule.js')` is not legal in brownie even though it is technically correct syntax.
+ `require('./../basemodule.js')` to get a basemodule.js in the parent directory from module.js. You can keep chaining on '../' to go up one more directory, but you cannot write a folder name then go up again.
+ I.e. `require('./../subfolder/../basemodule.js')` **is not legal** in brownie even though it is technically correct syntax.
 
- - **Domain Specific**  `require('shared::fileonsharedpath.js')`. `::`  it cue to brownie that it will look only in the domain named what's before that string. Otherwise it works like global requires.
- Domain specific + relative is either non-sensical (if cross domain), or unnecessary (if same origin domain) as relative require only looks in the current domain anyway.
+ - **Domain Specific**  `require('shared::fileonsharedpath.js')`. When seeing `::`, it tells brownie to only look in the domain named what's before that string. Otherwise it works like global requires.
+ Domain specific + relative is either non-sensical (if cross domain - folder structure between domains is lost on the browser side), or unnecessary (if same origin domain) as relative require only looks in the current domain anyway.
 
- - **Data domain**      `require('data::datakey')`. This emulates the domain specific require with the fixed 'data' domain. This domain is reserved and does not actually have to have a path.
- It is there to allow requiring of data that was passed in through the data bake option. This needs to be fixed so that brownie knows to exclude looking for these files during codeanalysis.
+ - **Data Domain**      `require('data::datakey')`. This emulates the domain specific require using the fixed 'data' domain. This domain is reserved and does not actually need (nor allow) a physical path.
+ It is there to allow requiring of data that was passed in through the `data` option to `bake`. This domain is reserved so that brownie knows to exclude looking for these files during codeanalysis.
+
+
 
 ### Glazing - Compiling stylesheets
 In rapid development. The API will look something like this.

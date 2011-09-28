@@ -1,10 +1,11 @@
 var QQ = {"client":{},"shared":{},"data":{}};
 var requireConfig = {"namespace":"QQ","domains":["client","shared"]};
-(function(){var DataReg, domains, fallback, isRelative, makeRequire, ns, toAbsPath;
+(function(){var DataReg, DomReg, domains, fallback, isRelative, makeRequire, ns, toAbsPath;
 ns = window[requireConfig.namespace];
 domains = requireConfig.domains;
 fallback = ns.fallback;
-DataReg = /^data::/;
+DataReg = /^data::(.*)/;
+DomReg = /^(.*)::/;
 isRelative = function(reqStr) {
   return reqStr.slice(0, 2) === './';
 };
@@ -13,7 +14,7 @@ makeRequire = function(dom, pathName) {
     var d, isRel, o, scannable, _i, _len;
     console.log("" + dom + ":" + pathName + " <- " + reqStr);
     if (DataReg.test(reqStr)) {
-      d = reqStr.replace(DataReg, '');
+      d = reqStr.match(DataReg)[1];
       if (ns.data[d]) {
         return ns.data[d];
       }
@@ -22,9 +23,14 @@ makeRequire = function(dom, pathName) {
     if ((isRel = isRelative(reqStr))) {
       reqStr = toAbsPath(dom, pathName, reqStr.slice(2));
     }
-    scannable = isRel ? [dom] : [dom].concat(domains.filter(function(e) {
+    scannable = [dom].concat(domains.filter(function(e) {
       return e !== dom;
     }));
+    if (isRel) {
+      scannable = [dom];
+    } else if (DomReg.test(reqStr)) {
+      scannable = [reqStr.match(DomReq)[1]];
+    }
     for (_i = 0, _len = scannable.length; _i < _len; _i++) {
       o = scannable[_i];
       if (ns[o][reqStr]) {
