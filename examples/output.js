@@ -1,5 +1,4 @@
-var QQ = {"client":{},"shared":{},"data":{}};
-var requireConfig = {"namespace":"QQ","domains":["client","shared"]};
+var QQ = {"client":{},"shared":{},"data":{}};var requireConfig = {"namespace":"QQ","domains":["client","shared"]};
 (function(){var DataReg, DomReg, domains, fallback, isRelative, makeRequire, ns, toAbsPath;
 ns = window[requireConfig.namespace];
 domains = requireConfig.domains;
@@ -29,7 +28,8 @@ makeRequire = function(dom, pathName) {
     if (isRel) {
       scannable = [dom];
     } else if (DomReg.test(reqStr)) {
-      scannable = [reqStr.match(DomReq)[1]];
+      scannable = [reqStr.match(DomReg)[1]];
+      reqStr = reqStr.split('::')[1];
     }
     for (_i = 0, _len = scannable.length; _i < _len; _i++) {
       o = scannable[_i];
@@ -76,7 +76,7 @@ divides = require('./calc.coffee').divides;
 exports.isLeapYear = function(yr) {
   return divides(yr, 4) && (!divides(yr, 100) || divides(yr, 400));
 };});
-QQ.define('bigthing/sub2.coffee','client',function(require, module, exports){module.exports = function(str) {
+(function(){QQ.define('bigthing/sub2.coffee','client',function(require, module, exports){module.exports = function(str) {
   return console.log(str);
 };});
 QQ.define('helper.coffee','client',function(require, module, exports){module.exports = function(str) {
@@ -99,4 +99,4 @@ console.log('2001?', v.isLeapYear(2001));
 console.log('2002?', v.isLeapYear(2002));
 console.log('2003?', v.isLeapYear(2003));
 console.log('2004?', v.isLeapYear(2004));
-console.log('2100?', v.isLeapYear(2100));});
+console.log('2100?', v.isLeapYear(2100));});})();
