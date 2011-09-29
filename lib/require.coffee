@@ -43,4 +43,4 @@ ns.define = (name, domain, fn) -> # pass in a fn that expects require, module an
     d[name] = module.exports
   return
 
-ns.require = makeRequire('client','browser') # for testing..
+ns.require = makeRequire(requireConfig.main,'browser') # for testing..

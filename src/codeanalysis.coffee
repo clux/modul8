@@ -21,7 +21,7 @@ toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain 
   prependStr+name
 
 # constructor, private
-CodeAnalysis = (@basePoint, @domains, @useLocalTests) ->
+CodeAnalysis = (@basePoint, @domains, @mainDomain, @useLocalTests) ->
   @resolveDependencies() #automatically resolves dependency tree on construction, stores in @tree
   return
 
@@ -58,7 +58,7 @@ CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code t
 # one to scan the parent references at each level to make sure no circular refeneces exists in app code
 # and the final (anonymous one) to call detective recursively to find and resolve require calls in current file
 CodeAnalysis::resolveDependencies = -> # private
-  @tree = tree = {name: @basePoint, deps: {}, subFolders: [], domain: 'client', level: 0}
+  @tree = tree = {name: @basePoint, deps: {}, subFolders: [], domain: @mainDomain, level: 0}
 
   circularCheck = (treePos, dep) -> # makes sure no circular references exists for dep going up from current point in tree (tree starts at top)
     requiree = treePos.name
@@ -103,7 +103,7 @@ formatName = (name, extSuffix, domPrefix, dom) ->
 
 # public method, returns an npm like dependency tree
 CodeAnalysis::printed = (extSuffix=false, domPrefix=false) ->
-  lines = [formatName(@basePoint, extSuffix, domPrefix, 'client')]
+  lines = [formatName(@basePoint, extSuffix, domPrefix, @mainDomain)]
   ((branch, level, parentAry) ->
     idx = 0
     bSize = objCount(branch.deps)
@@ -125,7 +125,7 @@ CodeAnalysis::printed = (extSuffix=false, domPrefix=false) ->
 # public method, used by brownie to get ordered array of code
 CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj = {}
-  obj[@basePoint] = [0, 'client']
+  obj[@basePoint] = [0, @mainDomain]
   ((t) ->
     for name,dep of t.deps
       obj[dep.name] = [] if !obj[dep.name]
@@ -140,10 +140,10 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
 
 
 # requiring this gives a function which returns a closured object with access to only the public methods of a bound instance
-module.exports = (basePoint, domains, useLocalTests=false) ->
+module.exports = (basePoint, domains, mainDomain, useLocalTests=false) ->
   throw new Error("brownie code analysis: basePoint required") if !basePoint
-  throw new Error("brownie code analysis: domains needed as array of arrays"+domains) if !domains or !domains instanceof Array or !domains[0] instanceof Array
-  o = new CodeAnalysis(basePoint, domains, useLocalTests)
+  throw new Error("brownie code analysis: domains needed, and needs to contain specified mainDomain #{mainDomain}. Got #{domains}") if !domains or !domains[mainDomain]
+  o = new CodeAnalysis(basePoint, domains, mainDomain, useLocalTests)
   {
     printed : -> o.printed.apply(o, arguments)   # returns a big string
     sorted  : -> o.sorted.apply(o, arguments)    # returns array of pairs of form [name, domain]
@@ -159,7 +159,7 @@ if module is require.main
   domains =
     'client' : '/home/clux/repos/deathmatchjs/app/client/'
     'shared' : '/home/clux/repos/deathmatchjs/app/shared/'
-  o = module.exports('app.coffee', domains, true)
+  o = module.exports('app.coffee', domains, 'client', true)
   console.log o.printed()
   console.log o.sorted()
 

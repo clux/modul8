@@ -1,6 +1,6 @@
-app
-├───helper
-├──┬bigthing/sub1
-│  └───bigthing/sub2
-└──┬validation
-   └───calc
+app::main
+├───app::helper
+├──┬app::bigthing/sub1
+│  └───app::bigthing/sub2
+└──┬shared::validation
+   └───shared::calc

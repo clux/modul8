@@ -44,6 +44,7 @@ bundle = (codeList, ns, o) ->
   requireConfig =
     namespace : ns
     domains   : name for name of o.domains
+    main      : o.mainDomain
     fallback  : o.fallBackFn # if our require fails, give a name to a globally defined fn here that
   l.push "var requireConfig = #{JSON.stringify(requireConfig)};"
   l.push anonWrap(compile(__dirname + '/require.coffee'))
@@ -51,28 +52,28 @@ bundle = (codeList, ns, o) ->
   # 4. include CommonJS compatible code in the order they have to be defined - wrap each file in a define function for relative requires
   defineWrap = (exportName, domain, code) -> "#{ns}.define('#{exportName}','#{domain}',function(require, module, exports){#{code}});"
 
-  # 4.a) include non-client CommonJS modules (these should be independant on the App and the DOM)
-  l.push (defineWrap(name, domain, compile(o.domains[domain] + name)) for [name, domain] in codeList when domain isnt 'client').join('\n')
+  # 4.a) include non-main CommonJS modules (these should be independent on both the App and the DOM)
+  l.push (defineWrap(name, domain, compile(o.domains[domain] + name)) for [name, domain] in codeList when domain isnt o.mainDomain).join('\n')
 
-  # 4.b) include compiled files from codeList in correct order
-  l.push o.DOMLoadWrap((defineWrap(name, 'client', compile(o.domains.client + name)) for [name, domain] in codeList when domain is 'client').join('\n'))
-
+  # 4.b) include main CommonJS modules (these will be wait for DOMContentLoaded and and should contain main application code)
+  l.push o.DOMLoadWrap((defineWrap(name, domain, compile(o.domains[domain] + name)) for [name, domain] in codeList when domain is o.mainDomain).join('\n'))
 
   l.join '\n'
 
 module.exports = (o) ->
   if !o.domains
     throw new Error("brownie needs domains parameter. Got "+JSON.stringify(o.domains))
-  o.basePoint ?= 'app.coffee'
-  if !exists(o.domains.client+o.basePoint)
-    throw new Error("brownie needs a client domain, and the basePoint to be contained in the client domain. Tried: "+clientDom+o.basePoint)
+  o.basePoint ?= 'main.coffee'
+  o.mainDomain ?= 'app'
+  if !exists(o.domains[o.mainDomain]+o.basePoint)
+    throw new Error("brownie needs a mainDomain, and the basePoint to be contained in this domain. Tried: "+o.domains[o.mainDomain]+o.basePoint)
   if o.domains.data
     throw new Error("brownie reserves the 'data' domain for pulled in code")
 
   o.namespace ?= 'Brownie'
   o.DOMLoadWrap ?= jQueryWrap
 
-  ca = codeAnalyis(o.basePoint, o.domains, o.localTests)
+  ca = codeAnalyis(o.basePoint, o.domains, o.mainDomain, o.localTests)
 
   if o.target
     o.minifier ?= minify
