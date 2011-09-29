@@ -93,9 +93,10 @@ There are four different ways to use require:
 Global variable are evil, and should be kept to a minimum. We know this. This is were a require system shines, but it is not going to help you get rid of global usage altogether.
 
 This is a warning for you who may be tempted to try to get rid of all references to global variables altogether.
-This is indeed _possible_, but it does not mean the variable are going away; you'll just go through something else.
+This is indeed _possible_, but it does not mean the variable are going away; you'll just go through something else - so beginning to shadow these variable for personal use is error prone.
 
-By using an arbiter for jQuery (for instance), i.e. having a file on some domain path with `exports.$ = window.jQuery` in it. This means you can use `$ = require('file.js').$`
+But say you really want to do it. You could use an arbiter for jQuery (for instance), i.e. having a file on some domain path with `exports.$ = window.jQuery` in it.
+This means you can use `$ = require('file.js').$` and everything will be explicitly defined.
 
 Think about what this is trying to accomplish. By having all requires of jQuery explicit you know exactly what parts of your code depend on it, which is good.
 Problem is, it is unnecssary; you should already know this. Only a small part of your code should directly rely on DOM libraries.
@@ -104,9 +105,9 @@ Sure, it may promote readibility to show your jQuery requires, but ultimately yo
 
 #### My advice is:
 When working with these libraries, think about the behaviour you are defining:
-- non-request interactivity - you should write a jQuery plugin.
-- request interactivity - you should use controllers/views + above plugins.
-- calculations before DOM manipulation - you should make a standalone calulation module that should work on its own - call it at above stages.
+- non-request based interactivity - you should write a jQuery plugin (include these as libFiles)
+- request based interactivity - you should use controllers/views + above plugins.
+- calculations needed DOM manipulation - you should make a standalone calulation module that should work on its own - call it at appropriate stages above.
 
 #### Ultimately
 - Do not blend all the above behaviour together in one file.
