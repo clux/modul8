@@ -63,17 +63,17 @@ bundle = (codeList, ns, o) ->
 module.exports = (o) ->
   if !o.domains
     throw new Error("brownie needs domains parameter. Got "+JSON.stringify(o.domains))
-  o.basePoint ?= 'main.coffee'
+  o.entryPoint ?= 'main.coffee'
   o.mainDomain ?= 'app'
-  if !exists(o.domains[o.mainDomain]+o.basePoint)
-    throw new Error("brownie needs a mainDomain, and the basePoint to be contained in this domain. Tried: "+o.domains[o.mainDomain]+o.basePoint)
+  if !exists(o.domains[o.mainDomain]+o.entryPoint)
+    throw new Error("brownie needs a mainDomain, and the entryPoint to be contained in this domain. Tried: "+o.domains[o.mainDomain]+o.entryPoint)
   if o.domains.data
     throw new Error("brownie reserves the 'data' domain for pulled in code")
 
   o.namespace ?= 'Brownie'
   o.DOMLoadWrap ?= jQueryWrap
 
-  ca = codeAnalyis(o.basePoint, o.domains, o.mainDomain, o.localTests)
+  ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, o.localTests)
 
   if o.target
     o.minifier ?= minify

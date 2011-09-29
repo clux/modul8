@@ -21,7 +21,7 @@ toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain 
   prependStr+name
 
 # constructor, private
-CodeAnalysis = (@basePoint, @domains, @mainDomain, @useLocalTests) ->
+CodeAnalysis = (@entryPoint, @domains, @mainDomain, @useLocalTests) ->
   @resolveDependencies() #automatically resolves dependency tree on construction, stores in @tree
   return
 
@@ -43,7 +43,7 @@ CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, re
 cutTests = (code) -> code.replace(/\n.*require.main[\w\W]*$/, '') # avoids pulling in test dependencies TODO:? this can eventually use burrito if popular, but for now this is fine.
 
 CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
-  # we will only get name as absolute names because we convert everything that comes in 4 lines below (and initial is basePoint)
+  # we will only get name as absolute names because we convert everything that comes in 4 lines below (and initial is entryPoint)
   {absReq, dom} = @resolveRequire(name, domain, isRelative(name))
   code = compile(@domains[dom]+absReq)
   code = cutTests(code) if @useLocalTests
@@ -58,13 +58,13 @@ CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code t
 # one to scan the parent references at each level to make sure no circular refeneces exists in app code
 # and the final (anonymous one) to call detective recursively to find and resolve require calls in current file
 CodeAnalysis::resolveDependencies = -> # private
-  @tree = tree = {name: @basePoint, deps: {}, subFolders: [], domain: @mainDomain, level: 0}
+  @tree = tree = {name: @entryPoint, deps: {}, subFolders: [], domain: @mainDomain, level: 0}
 
   circularCheck = (treePos, dep) -> # makes sure no circular references exists for dep going up from current point in tree (tree starts at top)
     requiree = treePos.name
     chain = [dep]
     loop
-      return if treePos.parent is undefined # got all the way to @basePoint without finding self => good
+      return if treePos.parent is undefined # got all the way to @entryPoint without finding self => good
       chain.push treePos.name
       treePos = treePos.parent # follow the chain up
       throw new Error("circular dependency detected: #{chain.join(' <- ')} <- #{dep}") if treePos.name is dep
@@ -103,7 +103,7 @@ formatName = (name, extSuffix, domPrefix, dom) ->
 
 # public method, returns an npm like dependency tree
 CodeAnalysis::printed = (extSuffix=false, domPrefix=false) ->
-  lines = [formatName(@basePoint, extSuffix, domPrefix, @mainDomain)]
+  lines = [formatName(@entryPoint, extSuffix, domPrefix, @mainDomain)]
   ((branch, level, parentAry) ->
     idx = 0
     bSize = objCount(branch.deps)
@@ -125,7 +125,7 @@ CodeAnalysis::printed = (extSuffix=false, domPrefix=false) ->
 # public method, used by brownie to get ordered array of code
 CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj = {}
-  obj[@basePoint] = [0, @mainDomain]
+  obj[@entryPoint] = [0, @mainDomain]
   ((t) ->
     for name,dep of t.deps
       obj[dep.name] = [] if !obj[dep.name]
@@ -140,10 +140,10 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
 
 
 # requiring this gives a function which returns a closured object with access to only the public methods of a bound instance
-module.exports = (basePoint, domains, mainDomain, useLocalTests=false) ->
-  throw new Error("brownie code analysis: basePoint required") if !basePoint
+module.exports = (entryPoint, domains, mainDomain, useLocalTests=false) ->
+  throw new Error("brownie code analysis: entryPoint required") if !entryPoint
   throw new Error("brownie code analysis: domains needed, and needs to contain specified mainDomain #{mainDomain}. Got #{domains}") if !domains or !domains[mainDomain]
-  o = new CodeAnalysis(basePoint, domains, mainDomain, useLocalTests)
+  o = new CodeAnalysis(entryPoint, domains, mainDomain, useLocalTests)
   {
     printed : -> o.printed.apply(o, arguments)   # returns a big string
     sorted  : -> o.sorted.apply(o, arguments)    # returns array of pairs of form [name, domain]
