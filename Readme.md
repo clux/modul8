@@ -22,7 +22,7 @@
   - compilation only pulls in what is explicitly required - no need to ever manipulate your include list
   - application specific data can be pulled into the compilation process and the result is also required on the browser
   - minimizes browser global usage -> attaches you application data to the namespaced `window.(namespace || 'Brownie')`
-  - ideal for single page web applications - only 2/3 HTTP requests to get all your data
+  - ideal for single page web applications - only 2 or 3 HTTP requests to get all your data
 
 ## Installation
 
@@ -53,16 +53,16 @@ brownie.bake({
  We use an array for this interface rather than an object because order may become important. At the moment, all non-client code gets included first, then all the client code.
  - `mainDomain`     What key in above domains parameter is the main domain? Default 'app'.
  - `data`           Object of form key,val == name, pullFn. This will make the output of the pullFn requireable on the browser under 'data::name'. Useful for generating dynamic (app specific) data in the targetjs.
- - `entryPoint`     Name of the main file from which your app is launched. Defaults to 'app.coffee'. It must lie on the 'mainDomain'.
+ - `entryPoint`     Name of the main file from which your app is launched. Defaults to 'main.coffee'. It must lie on the 'mainDomain'.
  - `namespace`      Global variable to encapsulate browser state to. Defaults to 'Brownie'. Unless you go digging in the output source, this should never need to be referenced directly.
  - `libDir`         Directory to find external libraries that you wish to include outside of the require system.
  - `libFiles`       List of files to include in order. Note: libDir+libFiles[i] must exist for all i.
  - `libsOnlyTarget` Optional file to write lib files to. This makes the output of brownie quickly distinguishable from your big libraries, and people won't have to redownload that part of the code everytime you change your app code.
  - `minify`         Whether to pass the the output file through a minifier before writing to disk. Defaults to false.
  - `minifier`       What minifier to use. Supply a `(codeStr) -> minifiedStr` function. Defaults to [UglifyJS](http://github.com/mishoo/UglifyJS).
- - `DOMLoadWrap`    DOMContentLoaded wrapper function. It defaults to a `(code) -> "$(function(){"+code+"});"` function (commonly known as the jQuery wrapper). Lacking jQuery; supply your function of choice.
+ - `DOMLoadWrap`    DOMContentLoaded wrapper function. It defaults to the famous `(code) -> "$(function(){"+code+"});"` function - commonly known as the jQuery wrapper. Lacking jQuery; supply your function of choice.
  - `localTests`     Bool to determine whether to chuck the standalone module code before bundling/looking for dependencies. Avoids pulling in test dependencies or test code.
- It is a bit raw at the moment, as it indiscriminately chucks everything including the point 'require.main' is referenced in your code. Enable with caution.
+ It is a bit raw at the moment, as it indiscriminately chucks everything from and including the line where 'require.main' is referenced in your code. Enable with caution for now.
 
 
 There are also 4 optional booleans for configuring the prettified require tree:

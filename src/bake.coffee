@@ -1,7 +1,7 @@
 fs          = require 'fs'
 path        = require 'path'
 codeAnalyis = require './codeanalysis'
-{compile, exists} = require './utils'
+{compile, exists, cutTests} = require './utils'
 {uglify, parser} = require 'uglify-js'
 
 # helpers
@@ -51,11 +51,14 @@ bundle = (codeList, ns, o) ->
   # 4. include CommonJS compatible code in the order they have to be defined - wrap each file in a define function for relative requires
   defineWrap = (exportName, domain, code) -> "#{ns}.define('#{exportName}','#{domain}',function(require, module, exports){#{code}});"
 
+  # 4. CommonJS compatible code may include tests inside each file. If it does, remove it.
+  tc = if o.localTests then cutTests else (a) -> a
+
   # 4.a) include non-main CommonJS modules (these should be independent on both the App and the DOM)
-  l.push (defineWrap(name, domain, compile(o.domains[domain] + name)) for [name, domain] in codeList when domain isnt o.mainDomain).join('\n')
+  l.push (defineWrap(name, domain, tc(compile(o.domains[domain] + name))) for [name, domain] in codeList when domain isnt o.mainDomain).join('\n')
 
   # 4.b) include main CommonJS modules (these will be wait for DOMContentLoaded and and should contain main application code)
-  l.push o.DOMLoadWrap((defineWrap(name, domain, compile(o.domains[domain] + name)) for [name, domain] in codeList when domain is o.mainDomain).join('\n'))
+  l.push o.DOMLoadWrap((defineWrap(name, domain, tc(compile(o.domains[domain] + name))) for [name, domain] in codeList when domain is o.mainDomain).join('\n'))
 
   l.join '\n'
 
