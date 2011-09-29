@@ -1,6 +1,5 @@
 ns = window[requireConfig.namespace]
 domains = requireConfig.domains
-fallback = ns.fallback
 DataReg = /^data::(.*)/
 DomReg = /^(.*)::/
 isRelative = (reqStr) -> reqStr[0...2] is './'
@@ -22,7 +21,6 @@ makeRequire = (dom, pathName) -> # each module gets its own unique require funct
       reqStr = reqStr.split('::')[1]
 
     return ns[o][reqStr] for o in scannable when ns[o][reqStr]
-    return fallback(reqStr) if fallback and 'Function' is typeof fallback # else what external require could find
     return console.error("Unable to resolve require for: #{reqStr}")
 
 toAbsPath = (domain, pathName, relReqStr) ->

@@ -45,7 +45,6 @@ bundle = (codeList, ns, o) ->
     namespace : ns
     domains   : name for name of o.domains
     main      : o.mainDomain
-    fallback  : o.fallBackFn # if our require fails, give a name to a globally defined fn here that
   l.push "var requireConfig = #{JSON.stringify(requireConfig)};"
   l.push anonWrap(compile(__dirname + '/require.coffee'))
 
