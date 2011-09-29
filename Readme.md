@@ -10,11 +10,6 @@
  The style bundler, `brownie.glaze`, is in production for the moment, but its aims are similar.
 
 
- The module system in brownie is inspired by [RequireJS](http://requirejs.org/), and should indeed be compatible with this,
- but brownie compiles everything in such a way that you won't need to.
-
-
-
 ## Bake Features
   - client-side require
   - compiles CommonJS compatible JavaScript or CoffeeScript
