@@ -1,7 +1,7 @@
 fs          = require 'fs'
 path        = require 'path'
 detective   = require 'detective'
-{compile, exists}  = require './utils'
+{compile, exists, cutTests}  = require './utils'
 
 # criteria for whether a require string is relative, rather than absolute
 # absolute require strings will scan on the defined require paths (@domains)
@@ -40,7 +40,6 @@ CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, re
 
   throw new Error("brownie code analysis: require references a file which cound not be found: #{orig}, we looked in #{scannable} for #{absReq}")
 
-cutTests = (code) -> code.replace(/\n.*require.main[\w\W]*$/, '') # avoids pulling in test dependencies TODO:? this can eventually use burrito if popular, but for now this is fine.
 
 CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
   # we will only get name as absolute names because we convert everything that comes in 4 lines below (and initial is entryPoint)

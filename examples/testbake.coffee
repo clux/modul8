@@ -11,6 +11,7 @@ brownie.bake
   minifier    : (code) -> code.replace(/\n/,'')       # can possibly be improved
   minify      : true
   domPrefix   : true
+  localTests  : true
 
 
 # To generate this examples output (if you modified it, just run this script: coffee testbake.coffe [or compile it to javascript first and node testbake.js])

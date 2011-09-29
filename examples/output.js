@@ -1,8 +1,7 @@
 var QQ = {"app":{},"shared":{},"data":{}};var requireConfig = {"namespace":"QQ","domains":["app","shared"],"main":"app"};
-(function(){var DataReg, DomReg, domains, fallback, isRelative, makeRequire, ns, toAbsPath;
+(function(){var DataReg, DomReg, domains, isRelative, makeRequire, ns, toAbsPath;
 ns = window[requireConfig.namespace];
 domains = requireConfig.domains;
-fallback = ns.fallback;
 DataReg = /^data::(.*)/;
 DomReg = /^(.*)::/;
 isRelative = function(reqStr) {
@@ -35,9 +34,6 @@ makeRequire = function(dom, pathName) {
       if (ns[o][reqStr]) {
         return ns[o][reqStr];
       }
-    }
-    if (fallback && 'Function' === typeof fallback) {
-      return fallback(reqStr);
     }
     return console.error("Unable to resolve require for: " + reqStr);
   };
@@ -78,7 +74,8 @@ exports.isLeapYear = function(yr) {
 (function(){QQ.define('bigthing/sub2.coffee','app',function(require, module, exports){module.exports = function(str) {
   return console.log(str);
 };});
-QQ.define('helper.coffee','app',function(require, module, exports){module.exports = function(str) {
+QQ.define('helper.coffee','app',function(require, module, exports){var testRunner;
+module.exports = function(str) {
   return console.log(str);
 };});
 QQ.define('bigthing/sub1.coffee','app',function(require, module, exports){var sub2;

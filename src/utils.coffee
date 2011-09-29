@@ -20,7 +20,12 @@ exists = (file) ->
   catch e
     return false
 
+# avoids pulling in test dependencies and test code
+cutTests = (code) -> code.replace(/\n.*require.main[\w\W]*$/, '')
+#TODO:? this can eventually use burrito if popular, but for now this is fine.
+
 module.exports =
   compile     : compile
   exists      : exists
+  cutTests    : cutTests
 
