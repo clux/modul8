@@ -18,12 +18,6 @@ jQueryWrap = (code) -> # default DOMLoadWrap
 anonWrap = (code) ->
   '(function(){'+code+'})();'
 
-# IF we call them SpineAjax we must require SpineAjax
-# IF we call them Spine.Ajax we must require Spine.Ajax (which may lead people to believe we can require Spine and reference Spine.Ajax which simply isnt true)
-# SOLN: either:
-#   1. include them in order as libraries and add an arbiter for the whole of spine (since we technically use it as one)
-#   2. explicitly require submodules of spine at the same time as spine was required => order gets correct
-# 2. however comes with the problem of having these spine submodules having a particular name!
 
 bundle = (codeList, ns, o) ->
   l = []
