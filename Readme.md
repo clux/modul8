@@ -89,9 +89,9 @@ There are four different ways to use require:
  - **Data Domain**:     I.e. `require('data::datakey')`. The data domain is special. It is there to allow requiring of data that was passed in through the `data` option to `bake`.
  It does not arise from physical files, and will not show up in the dependency tree. It is simply data you have attached deliberately.
 
- **Note** that none of these forms requires file extensions explicitly stated, although you can (except for the data domain which has no files).
- While resolving (on the server), Brownie will try first the name, then try to append .js, finally try to append .coffee. If any of these resolve it will be included.
- Obviously more chance for overlap if you do not use it (e.g. dont keep .js and .coffee versions in the same folder or you will become frustrated fast).
+ **Note** File extensions are never required, but you can include them for specificity (except for on the data domain).
+ While resolving (on the server), Brownie will try first the name, then try to append .js to the string, finally try to append .coffee. If any of these resolve it will be included.
+ This means there's more chance for overlap if you omit the extensions: so _do not keep .js and .coffee versions in the same folder_ or you will become frustrated fast).
 
 ## Notes on the data domain
 This is the main entry point for plugins. Here are some appropriate things that it is useful for:
