@@ -34,28 +34,29 @@ via npm: coming
 ```coffee
 brownie = require 'brownie'
 brownie.bake
+  target    : dir+'/public/js/target.js'
   domains   : [
     ['shared',  dir+'/app/shared/']
     ['client',  dir+'/app/client/']
   ]
   libDir    : dir+'/app/client/lib/'
   libFiles  : ['jquery.js', 'history.js']
-  target    : dir+'/public/js/target.js'
+
   minify    : environment is 'production'
 ```
 ### Options
 
  - `target`         File to write to (must be referenced by your template).
- - `minify`         Pass the the output file through [UglifyJS](http://github.com/mishoo/UglifyJS) before writing to disk. Defaults to false.
- - `minifier`       Pass in a function mapping a code string to a minified code string if you are not satisfied with UglifyJS compression/obfuscation.
  - `domains`        Array of pairs of form [nameofdomain, pathtodomain] in the order they should be scanned. Think of these as your require paths on the browser. You can define as many/few as you want, but you need at least a 'client' domain.
  We use an array for this interface rather than an object because order may become important. At the moment, all non-client code gets included first, then all the client code.
- - `data`           Object of form key,val == name, pull_fn. This will make the output of the pull_fn requireable on the browser under 'data::name'. Useful for generating dynamic (app specific) data in the targetjs.
+  - `data`           Object of form key,val == name, pull_fn. This will make the output of the pull_fn requireable on the browser under 'data::name'. Useful for generating dynamic (app specific) data in the targetjs.
  - `basePoint`      Base file where your app is launched. Defaults to 'app.coffee'. It must lie on the 'client' domain.
  - `namespace`      Global object to export everything to. Defaults to 'Brownie'. Unless you go digging in the output source, this should never need to be referenced directly.
  - `libDir`         Directory to find external libraries that you wish to include outside of the require system.
  - `libFiles`       List of files to include in order. Note: libDir+libFiles[i] must exist for all i.
  - `libsOnlyTarget` Optional file to write lib files to. Makes the output of brownie quickly distinguishable from your big libraries, and people won't have to redownload that part of the code everytime you change your app code.
+ - `minify`         Pass the the output file through [UglifyJS](http://github.com/mishoo/UglifyJS) before writing to disk. Defaults to false.
+ - `minifier`       Pass in a function mapping a code string to a minified code string if you are not satisfied with UglifyJS compression/obfuscation.
  - `DOMLoadWrap`    Optional function which wraps a code string in a function that executes once the DOMContentLoaded event fires. Defaults to a jQuery wrapper.
  - `localTests`     Bool to determine whether to chuck the standalone module code before bundling/looking for dependencies. Avoids pulling in test dependencies or test code.
  It is a bit raw at the moment, as it indiscriminately chucks everything including the point 'require.main' is referenced in your code. Enable with caution for now.
