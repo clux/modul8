@@ -22,7 +22,7 @@
   - compilation only pulls in what is explicitly required - no need to ever manipulate your include list
   - application specific data can be pulled into the compilation process and the result is also required on the browser
   - minimizes browser global usage -> attaches you application data to the namespaced `window.(namespace || 'Brownie')`
-  - ideal for single page web applications - only 2 or 3 HTTP requests to get all your data
+  - ideal for single page web applications - only 1 or 2 HTTP requests to get all your code + possibly templates
 
 ## Installation
 
@@ -89,6 +89,16 @@ There are four different ways to use require:
  - **Data Domain**:     I.e. `require('data::datakey')`. The data domain is special. It is there to allow requiring of data that was passed in through the `data` option to `bake`.
  It does not arise from physical files, and will not show up in the dependency tree. It is simply data you have attached deliberately.
 
+## Notes on the data domain
+This is the main entry point for plugins. Here are some appropriate things that it is useful for:
+
+- 1a. exporting all your templates to data::templates.
+- 1b. exporting template versions to data::versions to make sure cached templates are up to date (if not, you could $.get them as you needed)
+- 2.  exporting model structure to data::models to avoid duplicating mongoose (say) logic
+- 3.  exporting applications default options for drop downs to data::defaults
+
+All you have to do to use this is either directly attach the data you have, or build a simple parser to make things browser friendly.
+
 ## Modularity Warnings
 Global variable are evil, and should be kept to a minimum. We know this. This is were a require system shines, but it is not going to help you get rid of global usage altogether.
 
@@ -106,18 +116,22 @@ Sure, it may promote readibility to show your jQuery requires, but ultimately yo
 #### My advice is:
 When working with these libraries, think about the behaviour you are defining:
 
-- non-request based interactivity - you should write a jQuery plugin (include these as libFiles)
+- non-request based interactivity - it is almost always better to write a plugin (include these as libFiles)
 - request based interactivity - you should use controllers/views + above plugins.
-- calculations needed DOM manipulation - you should make a standalone calulation module that should work on its own - call it at appropriate stages above.
+- calculations needed for DOM manipulation - you should make a standalone calulation module that should work on its own - call it at appropriate stages above.
+
+This way if something breaks, you should be easily able to narrow down the problem to a UI one, a flow error or a calculation error. Debugging => 3 times easier.
 
 #### Ultimately
 - Do not blend all the above behaviour together in one file.
-- Limit the domains you use global variables.
+- Limit the domains you reference global variables.
 - Split independent code onto different domains.
-- Enforce good unwritten rules of modularity: don't try to make circular dependencies work, analyse your require tree.
+- Always keep looking at your code and try to figure out if you defining multiple types of behaviour somewhere. If you are, split it up.
+- Enforce good unwritten rules of modularity: don't try to make circular dependencies work, analyse your require tree. If you are requiring the same library from every file, chances are you are doing something wrong.
 
-Do this and you will save yourself the trouble of later having to learn from your mistakes the hard way.
-**Use Brownie**
+Decouple your code this way and you will save yourself the trouble of later having to learn from your mistakes the hard way.
+
+We hope brownie will help you achieve tasty tasty modularity.
 
 ## Comments and Feedback
 Brownie is still a relatively fresh project of mine. Feel free to give me traditional github feedback or help out.
