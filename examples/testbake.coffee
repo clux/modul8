@@ -3,10 +3,9 @@ dir = __dirname
 brownie.bake
   namespace   : 'QQ'
   target      : './output.js'
-  domains     : [
-    ['client',  dir+'/app_code/']
-    ['shared',  dir+'/shared_code/']
-  ]
+  domains     :
+    'client'    :  dir+'/app_code/'
+    'shared'    :  dir+'/shared_code/'
   treeTarget  : './treetarget.txt'
   DOMLoadWrap : (code) -> "(function(){"+code+"})();" # wont actually hold off for DOMContent, but this is how you would write a wrapper function
   minifier    : (code) -> code.replace(/\n/,'')       # my minifier is better than yours

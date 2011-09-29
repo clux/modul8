@@ -43,7 +43,7 @@ bundle = (codeList, ns, o) ->
   # 3. attach require code
   requireConfig =
     namespace : ns
-    domains   : dom for [dom, path] in o.domains
+    domains   : name for name of o.domains
     fallback  : o.fallBackFn # if our require fails, give a name to a globally defined fn here that
   l.push "var requireConfig = #{JSON.stringify(requireConfig)};"
   l.push anonWrap(compile(__dirname + '/require.coffee'))
@@ -75,18 +75,16 @@ module.exports = (o) ->
   ca = codeAnalyis(o.basePoint, o.domains, o.localTests)
 
   if o.target
+    o.minifier ?= minify
+    throw new Error("brownie requires a function as a minifier") if !o.minifier instanceof Function
+
     c = bundle(ca.sorted(), o.namespace, o)
-    if o.minify
-      if o.minifier
-        throw new Error("brownie requires a function as a minifier") if !o.minifier instanceof Function
-        c = o.minifier(c)
-      else
-        c = minify(c)
+    c = o.minifier(c) if o.minify
     fs.writeFileSync(o.target, c)
 
     if o.libsOnlyTarget and o.libDir and o.libFiles # => libs where not included in above bundle
       libs = (compile(o.libDir+file) for file in o.libFiles).join('\n') # concatenate libs as is
-      libs = minify(libs) if o.minifylibs
+      libs = o.minifier(libs) if o.minifylibs
       fs.writeFileSync(o.libsOnlyTarget, libs)
 
   if o.treeTarget or o.logTree

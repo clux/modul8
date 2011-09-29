@@ -7,7 +7,7 @@ isRelative = (reqStr) -> reqStr[0...2] is './'
 
 makeRequire = (dom, pathName) -> # each module gets its own unique require function based on where it is to be able to resolve better
   (reqStr) ->
-    console.log("#{dom}:#{pathName} <- #{reqStr}")
+    #console.log("#{dom}:#{pathName} <- #{reqStr}")
     if DataReg.test(reqStr)
       d = reqStr.match(DataReg)[1]
       return ns.data[d] if ns.data[d]
@@ -43,4 +43,4 @@ ns.define = (name, domain, fn) -> # pass in a fn that expects require, module an
     d[name] = module.exports
   return
 
-ns.require = makeRequire('client','browser')
+ns.require = makeRequire('client','browser') # for testing..

@@ -1,6 +1,6 @@
-app.coffee
-├───helper.coffee
-├──┬bigthing/sub1.coffee
-│  └───bigthing/sub2.coffee
-└──┬validation.coffee
-   └───calc.coffee
+app
+├───helper
+├──┬bigthing/sub1
+│  └───bigthing/sub2
+└──┬validation
+   └───calc
