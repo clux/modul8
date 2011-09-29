@@ -1,4 +1,4 @@
-{divides} = require('./calc.coffee') # CoffeeScript destructuring assignment
+{divides} = require('./calc') # CoffeeScript destructuring assignment
 
 
 exports.isLeapYear = (yr) ->

@@ -75,7 +75,7 @@ There are also 4 optional booleans for configuring the prettified require tree:
 
 There are four different ways to use require:
 
- - **Globally**:        I.e. `require('subfolder/module.js')`. This will scan all the domains (except data) for a matching structure, starting the search at your current location.
+ - **Globally**:        I.e. `require('subfolder/module')`. This will scan all the domains (except data) for a matching structure, starting the search at your current location.
  A gloabl require does not care about your current location.
 
  - **Relatively**:      I.e. `require('./module.js')`. This will scan only the current domain and the current folder
@@ -89,6 +89,10 @@ There are four different ways to use require:
  - **Data Domain**:     I.e. `require('data::datakey')`. The data domain is special. It is there to allow requiring of data that was passed in through the `data` option to `bake`.
  It does not arise from physical files, and will not show up in the dependency tree. It is simply data you have attached deliberately.
 
+ **Note** that none of these forms requires file extensions explicitly stated, although you can (except for the data domain which has no files).
+ While resolving (on the server), Brownie will try first the name, then try to append .js, finally try to append .coffee. If any of these resolve it will be included.
+ Obviously more chance for overlap if you do not use it (e.g. dont keep .js and .coffee versions in the same folder or you will become frustrated fast).
+
 ## Notes on the data domain
 This is the main entry point for plugins. Here are some appropriate things that it is useful for:
 
@@ -99,39 +103,43 @@ This is the main entry point for plugins. Here are some appropriate things that 
 
 All you have to do to use this is either directly attach the data you have, or build a simple parser to make things browser friendly.
 
-## Modularity Warnings
-Global variable are evil, and should be kept to a minimum. We know this. This is were a require system shines, but it is not going to help you get rid of global usage altogether.
+## Modularity Notes
+Global variable are evil, and should be kept to a minimum. We know this, and this is were a require system really shines, but it is not going to help you get rid of global usage altogether.
+However, it is possible to make yourself completely independent of globals!
 
-This is a warning for you who may be tempted to try to get rid of all references to global variables altogether.
-This is indeed _possible_, but it does not mean the variable are going away; you'll just go through something else - so beginning to shadow these variable for personal use is error prone.
+You could dedicate your life to a life of non-CommonJS celibacy, or, more sensibly, you could make arbiters for all your old libraries.
+jQuery for instance, could be exported through another jQuery.js file with `module.exports = window.jQuery; delete window.jQuery; delete window.$` in its body.
+This means you can use `$ = require('jQuery')` so everything will be explicitly defined, plus you've deleted the global shortcuts so that you will know when you forgot to require.
 
-But say you really want to do it. You could use an arbiter for jQuery (for instance), i.e. having a file on some domain path with `exports.$ = window.jQuery` in it.
-This means you can use slightly ugly `$ = require('file.js').$` and everything will be explicitly defined.
+Clearly this as some advantages. By having all requires of jQuery explicitly defined you know exactly what parts of your code depend on it. It will show up in your require tree, and
+you will quickly identify what code is actually DOM dependent, and what isnt or shouldnt be.
 
-Think about what this is trying to accomplish. By having all requires of jQuery explicit you know exactly what parts of your code depend on it, which is good.
-Problem is, it is unnecssary; you should already know this. Only a small part of your code should directly rely on DOM libraries.
-This is the reason brownie only lets at most one domain wait for the DOM.
-Sure, it may promote readibility to show your jQuery requires, but ultimately your real problem is how you actually use it.
+Brownie already does some of this for you anyway, it allows at most your mainDomain to wait for the DOM. If you can figure out how to separate on the domain level, then you are already
+good on your way to resolving spaghetti hell. Perhaps coupling this remaining domain tightly with jQuery isnt _that_ bad. Probably not. But by not having it available everywhere,
+it is easier to see what actually needs it and what doesn't. Who knows, maybe we can make some smarter MVC or MVC like frameworks with this in mind.
 
-#### My advice is:
-When working with these libraries, think about the behaviour you are defining:
+Anyway. With jQuery you have bigger modularity issues to think of, for that:
+#### My advice is
+Think about the behaviour you are defining, if it is
 
-- non-request based interactivity - it is almost always better to write a plugin (include these as libFiles)
-- request based interactivity - you should use controllers/views + above plugins.
+- non-request based DOM interactivity - it is almost always better to write a plugin (include these as libFiles)
+- request based DOM interactivity - you should use controllers/views + above plugins and or possibly more DOM plugins.
 - calculations needed for DOM manipulation - you should make a standalone calulation module that should work on its own - call it at appropriate stages above.
 
-This way if something breaks, you should be easily able to narrow down the problem to a UI one, a flow error or a calculation error. Debugging => 3 times easier.
+This way if something breaks, you should be easily able to narrow down the problem to a UI error, a flow error, or a calculation error. Debugging => 3 times easier.
 
 #### Ultimately
-- Do not blend all the above behaviour together in one file.
+Brownie just provides a lot of basic rules for helping build maintainable code.
+You need to always remember to:
+
+- Not blend all the above behaviour together in one file.
 - Limit the domains you reference global variables.
 - Split independent code onto different domains.
 - Always keep looking at your code and try to figure out if you defining multiple types of behaviour somewhere. If you are, split it up.
-- Enforce good unwritten rules of modularity: don't try to make circular dependencies work, analyse your require tree. If you are requiring the same library from every file, chances are you are doing something wrong.
+- Enforce basic rules of JavaScript modularity: don't try to make circular dependencies work, analyse your require tree. If you are requiring the same library from every file, chances are you are doing something wrong.
 
 Decouple your code this way and you will save yourself the trouble of later having to learn from your mistakes the hard way.
-
-We hope brownie will help you achieve tasty tasty modularity.
+Hopefully, Brownie can help.
 
 ## Comments and Feedback
 Brownie is still a relatively fresh project of mine. Feel free to give me traditional github feedback or help out.

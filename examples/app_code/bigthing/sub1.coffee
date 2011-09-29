@@ -1,4 +1,4 @@
-sub2 = require('./sub2.coffee') # relative require
+sub2 = require('./sub2') # relative require
 
 # we can attach properties on exports if we want to export an object
 # alternatively, we can attach anything directly to module.exports
