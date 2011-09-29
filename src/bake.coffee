@@ -27,14 +27,13 @@ anonWrap = (code) ->
 
 bundle = (codeList, ns, o) ->
   l = []
-  d = o.domains
   # 0. attach libs if we didnt want to split them into a separate file
   if !o.libsOnlyTarget and o.libDir and o.libFiles
     l.push (compile(o.libDir+file) for file in o.libFiles).join('\n') # concatenate lib files as is
 
   # 1. construct the namespace object
   nsObj = {} # TODO: userLocals
-  nsObj[name] = {} for [name, path] in o.domains
+  nsObj[name] = {} for name of o.domains
   nsObj.data = {}
   l.push "var #{ns} = #{JSON.stringify(nsObj)};"
 
@@ -51,30 +50,23 @@ bundle = (codeList, ns, o) ->
 
   # 4. include CommonJS compatible code in the order they have to be defined - wrap each file in a define function for relative requires
   defineWrap = (exportName, domain, code) -> "#{ns}.define('#{exportName}','#{domain}',function(require, module, exports){#{code}});"
-  domMap = {}
-  domMap[name] = path for [name,path] in o.domains
 
   # 4.a) include non-client CommonJS modules (these should be independant on the App and the DOM)
-  l.push (defineWrap(name, domain, compile(domMap[domain] + name)) for [name, domain] in codeList when domain isnt 'client').join('\n')
+  l.push (defineWrap(name, domain, compile(o.domains[domain] + name)) for [name, domain] in codeList when domain isnt 'client').join('\n')
 
   # 4.b) include compiled files from codeList in correct order
-  l.push o.DOMLoadWrap((defineWrap(name, 'client', compile(domMap.client + name)) for [name, domain] in codeList when domain is 'client').join('\n'))
+  l.push o.DOMLoadWrap((defineWrap(name, 'client', compile(o.domains.client + name)) for [name, domain] in codeList when domain is 'client').join('\n'))
 
 
   l.join '\n'
 
 module.exports = (o) ->
   if !o.domains
-    throw new Error("brownie needs valid basePoint and domains. Got "+JSON.stringify(o.domains))
+    throw new Error("brownie needs domains parameter. Got "+JSON.stringify(o.domains))
   o.basePoint ?= 'app.coffee'
-  clientDom = path for [name, path] in o.domains when name is 'client'
-  if !o.domains.length > 0 or !exists(clientDom+o.basePoint)
+  if !exists(o.domains.client+o.basePoint)
     throw new Error("brownie needs a client domain, and the basePoint to be contained in the client domain. Tried: "+clientDom+o.basePoint)
-  hasData = false
-  for [name,path] in o.domains when name is 'data'
-    hasData = true
-    break
-  if hasData
+  if o.domains.data
     throw new Error("brownie reserves the 'data' domain for pulled in code")
 
   o.namespace ?= 'Brownie'

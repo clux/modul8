@@ -22,8 +22,6 @@ toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain 
 
 # constructor, private
 CodeAnalysis = (@basePoint, @domains, @useLocalTests) ->
-  @domainMap = {}
-  @domainMap[name] = path for [name,path] in @domains
   @resolveDependencies() #automatically resolves dependency tree on construction, stores in @tree
   return
 
@@ -31,14 +29,14 @@ CodeAnalysis = (@basePoint, @domains, @useLocalTests) ->
 CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, reports where it wound it
   orig = absReq
   # always scan current domain first, but only scan current domain path if require string was relative
-  scannable = [domain].concat(name for [name, path] in @domains when name isnt domain)
+  scannable = [domain].concat(name for name of @domains when name isnt domain)
   if wasRelative
     scannable = [domain]
   else if (dataReg = /^(.*)::/).test(absReq)
     scannable = [absReq.match(dataReg)[1]]
     absReq = absReq.split('::')[1]
 
-  return {absReq, dom} for dom in scannable when exists(@domainMap[dom]+absReq)
+  return {absReq, dom} for dom in scannable when exists(@domains[dom]+absReq)
 
   throw new Error("brownie code analysis: require references a file which cound not be found: #{orig}, we looked in #{scannable} for #{absReq}")
 
@@ -47,7 +45,7 @@ cutTests = (code) -> code.replace(/\n.*require.main[\w\W]*$/, '') # avoids pulli
 CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
   # we will only get name as absolute names because we convert everything that comes in 4 lines below (and initial is basePoint)
   {absReq, dom} = @resolveRequire(name, domain, isRelative(name))
-  code = compile(@domainMap[dom]+absReq)
+  code = compile(@domains[dom]+absReq)
   code = cutTests(code) if @useLocalTests
   {
     deps    : (toAbsPath(dep, subFolders) for dep in detective(code) when !(/^data::/).test(dep)) # convert all require paths to absolutes immediately so we dont have to deal
@@ -158,10 +156,9 @@ module.exports = (basePoint, domains, useLocalTests=false) ->
 
 # tests
 if module is require.main
-  domains = [
-    ['client', '/home/clux/repos/deathmatchjs/app/client/']
-    ['shared', '/home/clux/repos/deathmatchjs/app/shared/']
-  ]
+  domains =
+    'client' : '/home/clux/repos/deathmatchjs/app/client/'
+    'shared' : '/home/clux/repos/deathmatchjs/app/shared/'
   o = new CodeAnalysis('app.coffee', domains, true)
   console.log o.printed()
   console.log o.sorted()
