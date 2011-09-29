@@ -96,14 +96,14 @@ objCount = (obj) ->
   i++ for own key of obj
   i
 
-formatName = (name, hideExt, withDom, dom) ->
-  n = if hideExt then name.split('.')[0] else name
-  n = dom+'::'+n if withDom
+formatName = (name, extSuffix, domPrefix, dom) ->
+  n = if extSuffix then name else name.split('.')[0]
+  n = dom+'::'+n if domPrefix
   n
 
 # public method, returns an npm like dependency tree
-CodeAnalysis::printed = (hideExts, showDomain) ->
-  lines = [formatName(@basePoint, hideExts, showDomain, 'client')]
+CodeAnalysis::printed = (extSuffix=false, domPrefix=false) ->
+  lines = [formatName(@basePoint, extSuffix, domPrefix, 'client')]
   ((branch, level, parentAry) ->
     idx = 0
     bSize = objCount(branch.deps)
@@ -114,7 +114,7 @@ CodeAnalysis::printed = (hideExts, showDomain) ->
       turnChar = if isLast then "└" else "├"
       indent = ((if parentAry[i] then " " else "│")+"  " for i in [0...level]).join('') # extra double whitespace correspond to double dash used to connect
 
-      displayName = formatName(name, hideExts, showDomain, domain)
+      displayName = formatName(name, extSuffix, domPrefix, domain)
       lines.push indent+turnChar+"──"+forkChar+displayName
       arguments.callee(branch.deps[key], level+1, parentAry.concat(isLast)) if hasChildren #recurse into key's dependency tree keeping track of parent lines
     return
@@ -126,8 +126,8 @@ CodeAnalysis::printed = (hideExts, showDomain) ->
 CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj = {}
   obj[@basePoint] = [0, 'client']
-  ((treePos) ->
-    for name,dep of treePos.deps
+  ((t) ->
+    for name,dep of t.deps
       obj[dep.name] = [] if !obj[dep.name]
       obj[dep.name][0] = Math.max(dep.level, obj[dep.name][0] or 0)
       obj[dep.name][1] = dep.domain
@@ -145,8 +145,8 @@ module.exports = (basePoint, domains, useLocalTests=false) ->
   throw new Error("brownie code analysis: domains needed as array of arrays"+domains) if !domains or !domains instanceof Array or !domains[0] instanceof Array
   o = new CodeAnalysis(basePoint, domains, useLocalTests)
   {
-    printed : (extSuffix=false, domPrefix=false) -> o.printed.call(o, extSuffix, domPrefix) # returns a big string
-    sorted  : () -> o.sorted.call(o)                                                        # returns array of pairs of form [name, domain]
+    printed : -> o.printed.apply(o, arguments)   # returns a big string
+    sorted  : -> o.sorted.apply(o, arguments)    # returns array of pairs of form [name, domain]
   }
 
 
@@ -159,16 +159,10 @@ if module is require.main
   domains =
     'client' : '/home/clux/repos/deathmatchjs/app/client/'
     'shared' : '/home/clux/repos/deathmatchjs/app/shared/'
-  o = new CodeAnalysis('app.coffee', domains, true)
+  o = module.exports('app.coffee', domains, true)
   console.log o.printed()
   console.log o.sorted()
 
-  #s = 'app.coffee'
-  #console.log s.split(path.basename(s))[0][0...-1].split('/') #<- problem, need this to return empty array
-  #i.e. might have split around the domain name as well!, but will that work?
-  #technically, each name SHOULD NOT INCLUDE MORE THAN ITS RELATIVE PATH: FIX SO THAT THIS IS RIGHT
-
-  #console.log exists "/home/clux/repos/deathmatchjs/app/client/"+'app.coffee' #weird
   return # dont define more stuff
 
 
