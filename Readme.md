@@ -96,15 +96,16 @@ This is a warning for you who may be tempted to try to get rid of all references
 This is indeed _possible_, but it does not mean the variable are going away; you'll just go through something else - so beginning to shadow these variable for personal use is error prone.
 
 But say you really want to do it. You could use an arbiter for jQuery (for instance), i.e. having a file on some domain path with `exports.$ = window.jQuery` in it.
-This means you can use `$ = require('file.js').$` and everything will be explicitly defined.
+This means you can use slightly ugly `$ = require('file.js').$` and everything will be explicitly defined.
 
 Think about what this is trying to accomplish. By having all requires of jQuery explicit you know exactly what parts of your code depend on it, which is good.
 Problem is, it is unnecssary; you should already know this. Only a small part of your code should directly rely on DOM libraries.
-This is the reason brownie, by default, only lets one domain wait for the DOM.
+This is the reason brownie only lets at most one domain wait for the DOM.
 Sure, it may promote readibility to show your jQuery requires, but ultimately your real problem is how you actually use it.
 
 #### My advice is:
 When working with these libraries, think about the behaviour you are defining:
+
 - non-request based interactivity - you should write a jQuery plugin (include these as libFiles)
 - request based interactivity - you should use controllers/views + above plugins.
 - calculations needed DOM manipulation - you should make a standalone calulation module that should work on its own - call it at appropriate stages above.
