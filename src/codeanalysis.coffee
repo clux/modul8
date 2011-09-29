@@ -36,7 +36,11 @@ CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, re
     scannable = [absReq.match(dataReg)[1]]
     absReq = absReq.split('::')[1]
 
-  return {absReq, dom} for dom in scannable when exists(@domains[dom]+absReq)
+  for dom in scannable
+    # try raw require, then with coffee extension, then js extension
+    return {absReq, dom} if exists(@domains[dom]+absReq)
+    return {absReq: absReq+'.js', dom: dom} if exists(@domains[dom]+absReq+'.js')
+    return {absReq: absReq+'.coffee', dom: dom} if exists(@domains[dom]+absReq+'.coffee')
 
   throw new Error("brownie code analysis: require references a file which cound not be found: #{orig}, we looked in #{scannable} for #{absReq}")
 
@@ -49,6 +53,7 @@ CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code t
   {
     deps    : (toAbsPath(dep, subFolders) for dep in detective(code) when !(/^data::/).test(dep)) # convert all require paths to absolutes immediately so we dont have to deal
     domain  : dom
+    absReq  : absReq
   }
 
 
@@ -76,8 +81,9 @@ CodeAnalysis::resolveDependencies = -> # private
 
   # console.log tree
   ((t) =>
-    {deps, domain} = @loadDependencies(t.name, t.subFolders, t.domain)
+    {deps, domain, absReq} = @loadDependencies(t.name, t.subFolders, t.domain)
     t.domain = domain
+    t.name = absReq
     t.name = t.name.replace(/^(.*::)/,'') # can now safely remove domain:: part from domain specific requires (note the key of the deps object retains full value)
     for dep in deps #not to be confused with t.deps which is an object, deps from loadDependencies is an array
       t.deps[dep] = {name : dep, parent: t, deps: {}, subFolders: dep.split('/')[0...-1], level: t.level+1}
@@ -134,7 +140,7 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
     return
   )(@tree) # creates an object of arrays of form [level, domain], so key,val of obj => val = [level, domain]
   # This line converts to (sortable) array, then sorts by level, then maps to array of pairs of form [name, domain] (where we take out the domain:: part of name)
-  ([name,ary] for name,ary of obj).sort((a,b) -> b[1][0] - a[1][0]).map((e) -> [e[0], e[1][1]])
+  a = ([name,ary] for name,ary of obj).sort((a,b) -> b[1][0] - a[1][0]).map((e) -> [e[0], e[1][1]])
 
 
 

@@ -29,6 +29,7 @@ makeRequire = function(dom, pathName) {
       scannable = [reqStr.match(DomReg)[1]];
       reqStr = reqStr.split('::')[1];
     }
+    reqStr = reqStr.split('.')[0];
     for (_i = 0, _len = scannable.length; _i < _len; _i++) {
       o = scannable[_i];
       if (ns[o][reqStr]) {
@@ -61,32 +62,32 @@ ns.define = function(name, domain, fn) {
   }
 };
 ns.require = makeRequire(requireConfig.main, 'browser');})();
-QQ.define('calc.coffee','shared',function(require, module, exports){module.exports = {
+QQ.define('calc','shared',function(require, module, exports){module.exports = {
   divides: function(d, n) {
     return !(d % n);
   }
 };});
-QQ.define('validation.coffee','shared',function(require, module, exports){var divides;
-divides = require('./calc.coffee').divides;
+QQ.define('validation','shared',function(require, module, exports){var divides;
+divides = require('./calc').divides;
 exports.isLeapYear = function(yr) {
   return divides(yr, 4) && (!divides(yr, 100) || divides(yr, 400));
 };});
-(function(){QQ.define('bigthing/sub2.coffee','app',function(require, module, exports){module.exports = function(str) {
+(function(){QQ.define('bigthing/sub2','app',function(require, module, exports){module.exports = function(str) {
   return console.log(str);
 };});
-QQ.define('helper.coffee','app',function(require, module, exports){var testRunner;
+QQ.define('helper','app',function(require, module, exports){var testRunner;
 module.exports = function(str) {
   return console.log(str);
 };});
-QQ.define('bigthing/sub1.coffee','app',function(require, module, exports){var sub2;
-sub2 = require('./sub2.coffee');
+QQ.define('bigthing/sub1','app',function(require, module, exports){var sub2;
+sub2 = require('./sub2');
 exports.doComplex = function(str) {
   return sub2(str + ' (now the job is easy <sub1/>)');
 };});
-QQ.define('main.coffee','app',function(require, module, exports){var b, helper, v;
-helper = require('helper.coffee');
+QQ.define('main','app',function(require, module, exports){var b, helper, v;
+helper = require('helper');
 helper('hello from app via helper');
-b = require('bigthing/sub1.coffee');
+b = require('bigthing/sub1');
 b.doComplex('app calls up to sub1');
 v = require('validation.coffee');
 console.log('2004 isLeapYear?', v.isLeapYear(2004));});})();

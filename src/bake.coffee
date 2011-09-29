@@ -55,10 +55,10 @@ bundle = (codeList, ns, o) ->
   tc = if o.localTests then cutTests else (a) -> a
 
   # 4.a) include non-main CommonJS modules (these should be independent on both the App and the DOM)
-  l.push (defineWrap(name, domain, tc(compile(o.domains[domain] + name))) for [name, domain] in codeList when domain isnt o.mainDomain).join('\n')
+  l.push (defineWrap(name.split('.')[0], domain, tc(compile(o.domains[domain] + name))) for [name, domain] in codeList when domain isnt o.mainDomain).join('\n')
 
   # 4.b) include main CommonJS modules (these will be wait for DOMContentLoaded and and should contain main application code)
-  l.push o.DOMLoadWrap((defineWrap(name, domain, tc(compile(o.domains[domain] + name))) for [name, domain] in codeList when domain is o.mainDomain).join('\n'))
+  l.push o.DOMLoadWrap((defineWrap(name.split('.')[0], domain, tc(compile(o.domains[domain] + name))) for [name, domain] in codeList when domain is o.mainDomain).join('\n'))
 
   l.join '\n'
 

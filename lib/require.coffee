@@ -19,6 +19,7 @@ makeRequire = (dom, pathName) -> # each module gets its own unique require funct
     else if DomReg.test(reqStr)
       scannable = [reqStr.match(DomReg)[1]] # only look through the specified domain if using domain specific require
       reqStr = reqStr.split('::')[1]
+    reqStr = reqStr.split('.')[0] # ignore extensions
 
     return ns[o][reqStr] for o in scannable when ns[o][reqStr]
     return console.error("Unable to resolve require for: #{reqStr}")
