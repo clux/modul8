@@ -1,4 +1,4 @@
-var QQ = {"client":{},"shared":{},"data":{}};var requireConfig = {"namespace":"QQ","domains":["client","shared"]};
+var QQ = {"app":{},"shared":{},"data":{}};var requireConfig = {"namespace":"QQ","domains":["app","shared"],"main":"app"};
 (function(){var DataReg, DomReg, domains, fallback, isRelative, makeRequire, ns, toAbsPath;
 ns = window[requireConfig.namespace];
 domains = requireConfig.domains;
@@ -64,7 +64,7 @@ ns.define = function(name, domain, fn) {
     d[name] = module.exports;
   }
 };
-ns.require = makeRequire('client', 'browser');})();
+ns.require = makeRequire(requireConfig.main, 'browser');})();
 QQ.define('calc.coffee','shared',function(require, module, exports){module.exports = {
   divides: function(d, n) {
     return !(d % n);
@@ -75,18 +75,18 @@ divides = require('./calc.coffee').divides;
 exports.isLeapYear = function(yr) {
   return divides(yr, 4) && (!divides(yr, 100) || divides(yr, 400));
 };});
-(function(){QQ.define('bigthing/sub2.coffee','client',function(require, module, exports){module.exports = function(str) {
+(function(){QQ.define('bigthing/sub2.coffee','app',function(require, module, exports){module.exports = function(str) {
   return console.log(str);
 };});
-QQ.define('helper.coffee','client',function(require, module, exports){module.exports = function(str) {
+QQ.define('helper.coffee','app',function(require, module, exports){module.exports = function(str) {
   return console.log(str);
 };});
-QQ.define('bigthing/sub1.coffee','client',function(require, module, exports){var sub2;
+QQ.define('bigthing/sub1.coffee','app',function(require, module, exports){var sub2;
 sub2 = require('./sub2.coffee');
 exports.doComplex = function(str) {
   return sub2(str + ' (now the job is easy <sub1/>)');
 };});
-QQ.define('app.coffee','client',function(require, module, exports){var b, helper, v;
+QQ.define('main.coffee','app',function(require, module, exports){var b, helper, v;
 helper = require('helper.coffee');
 helper('hello from app via helper');
 b = require('bigthing/sub1.coffee');
