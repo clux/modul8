@@ -116,17 +116,22 @@ you will quickly identify what code is actually DOM dependent, and what isnt or 
 
 Brownie already does some of this for you anyway, it allows at most your mainDomain to wait for the DOM. If you can figure out how to separate on the domain level, then you are already
 good on your way to resolving spaghetti hell. Perhaps coupling this remaining domain tightly with jQuery isnt _that_ bad. Probably not. But by not having it available everywhere,
-it is easier to see what actually needs it and what doesn't. Who knows, maybe we can make some smarter MVC or MVC like frameworks with this in mind.
+it is easier to see what actually needs it and what doesn't. Who knows, maybe we can make some smarter or more elegant MVC or MVC like frameworks with such things in mind.
 
-Anyway. With jQuery you have bigger modularity issues to think of, for that:
+An extra point here to note is that most of the time you will want to require the plugin extended jQuery, not just the basic version. `require('jQuery')` does not imply extensions.
+However, all jQuery plugins have extend a global variable, so they can all be listed on the libFiles list in order. Thus, since all required code, including our arbiter,
+is added after libFiles, require will always fetch the extended version. So this is sort of okay. You dont really want every plugin to show up at every point in the require tree anyway,
+so it's good that it's happening only once, but you also have no control of this code from inside your app.
+
+Anyway. With jQuery you have bigger modularity issues to battle with than these, for those still struggling with these:
 #### My advice is
-Think about the behaviour you are defining, if it is
+Think about the behaviour you are defining, if it is for
 
 - non-request based DOM interactivity - it is almost always better to write a plugin (include these as libFiles)
 - request based DOM interactivity - you should use controllers/views + above plugins and or possibly more DOM plugins.
 - calculations needed for DOM manipulation - you should make a standalone calulation module that should work on its own - call it at appropriate stages above.
 
-This way if something breaks, you should be easily able to narrow down the problem to a UI error, a flow error, or a calculation error. Debugging => 3 times easier.
+This way if something breaks, you should be easily able to narrow down the problem to a UI error, a flow error, or a calculation error. => Debugging becomes 3 times easier.
 
 #### Ultimately
 Brownie just provides a lot of basic rules for helping build maintainable code.
