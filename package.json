@@ -12,7 +12,7 @@
     "coffee-script": ">= 1.1.2",
     "uglify-js": ">= 1.1.0",
     "detective": ">= 0.0.3",
-    "stylus": ">= 0.15.4",
+    "stylus": ">= 0.16.0",
     "nib": ">= 0.2.0"
   },
   "devDependencies": {},
