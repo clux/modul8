@@ -3,16 +3,18 @@ dir = __dirname
 brownie.bake
   namespace   : 'QQ'
   target      : './output.js'
-  domains     :  # basePoint.mainDomain not defined => brownie will look for 'main.coffee' in the 'app' domain
+  domains     :
     app         :  dir+'/app_code/'
     shared      :  dir+'/shared_code/'
   treeTarget  : './treetarget.txt'
-  DOMLoadWrap : (code) -> "(function(){"+code+"})();" # wont actually hold off for DOMContent, but this is how you would write a wrapper function
-  minifier    : (code) -> code.replace(/\n/,'')       # can possibly be improved
+  DOMLoadWrap : (code) -> "(function(){"+code+"})();"
+  minifier    : (code) -> code.replace(/\n/,'')
   minify      : true
   domPrefix   : true
   localTests  : true
 
+# NB: basePoint and mainDomain not defined here
+# => brownie will look for 'main.coffee' in the 'app' domain.
 
-# To generate this examples output (if you modified it, just run this script: coffee testbake.coffe [or compile it to javascript first and node testbake.js])
+# To regenerate output, just run this script
 
