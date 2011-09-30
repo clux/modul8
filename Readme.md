@@ -1,28 +1,28 @@
 # Brownie - Bake and glaze web applications
 
- Brownie is a modularity enforcing code and style bundler for [NodeJS](http://nodejs.org) web applications.
- The code bundler, `brownie.bake`, will dynamically pull in dependencies from multiple domains and compile the dynamically ordered set of dependencies
- down to a single browser compatible JavaScript file. It compiles CommonJS modules written in JavaScript or CoffeeScript, in such a way that they remain
- fully compatible with NodeJS whenever they do not reference browser only dependencies (e.g. the DOM, non-CommonJS browser libs).
- This compatibility opens up for shared code domains that can be required by both the server and the client seemlessly, but dont be alarmed, what code
- gets pulled is loggable as an npm like dependency tree.
+ Brownie is a modularity enforcing code and style bundler for JavaScript web applications.
+ The code bundler, `brownie.bake`, will dynamically pull in dependencies from multiple domains and compile and combine the dynamically ordered set of dependencies
+ into a single browser compatible JavaScript file. This means your application can consist entirely of (synchronous) JavaScript/CoffeeScript CommonJS modules, and your code
+ can be used verbatim on the server as long as it does not reference browser only dependencies like the DOM. Brownie strongly encourages such sharing of code by allowing several
+ _require domains_ on the client - represented by different paths on the server. Code from your main app domain will pull in depencenies from the other domains as needed, and
+ your client code will be callbackless and smooth. What code gets pulled in is loggable as an npm like dependency tree.
 
- The style bundler, `brownie.glaze`, is in production for the moment, but its aims are similar.
-
+ The style bundler, `brownie.glaze`, has similar aims regarding modularity, but is still in heavy production.
 
 ## Bake Features
-  - client-side require
+  - client-side require without extra callbacks
   - compiles CommonJS compatible JavaScript or CoffeeScript
-  - compilation of application code is dynamic and based only on an input of the entry point
-  - non-CommonJS compatible files can be listed in the order they should be included (before the rest of the app)
+  - compilation of application code is dynamic and based only on the entry point and its dependency tree
+  - non-CommonJS compatible files can be listed in the order they should be included (will be before the rest of the app)
   - CommonJS modules can work in both NodeJS and the browser if they do not reference external dependencies
   - low footprint - only ~70 lines pre-pended to the compiled file (no extra file to include - no assumed dependencies)
   - enforces modularity best practices (no circular dependencies allowed from the start, and helps analyse your require tree)
   - require tree is displayed in the style of `npm list`
-  - compilation only pulls in what is explicitly required - no need to ever manipulate your include list
+  - only pulls in what is explicitly required - no need to ever manipulate your include list
   - application specific data can be pulled into the compilation process and the result is also required on the browser
-  - minimizes browser global usage -> attaches you application data to the namespaced `window.(namespace || 'Brownie')`
+  - minimizes browser global usage -> attaches your application data to the namespaced `window.(namespace || 'Brownie')`
   - ideal for single page web applications - only 1 or 2 HTTP requests to get all your code + possibly templates
+  - Can bundle your code separately from your web server code with a short Cakefile
 
 ## Installation
 
@@ -50,11 +50,10 @@ brownie.bake({
 
  - `target`         File to write to (must be referenced by your template).
  - `domains`        Object of form domainName, domainPath in no particular order. Think of these as your require paths on the browser. You can define as many/few as you want, but you need at least one 'main' domain.
- We use an array for this interface rather than an object because order may become important. At the moment, all non-client code gets included first, then all the client code.
- - `mainDomain`     What key in above domains parameter is the main domain? Default 'app'.
+ - `mainDomain`     Specifies what key in above domains parameter is the main domain name. Default is 'app'.
  - `data`           Object of form key,val == name, pullFn. This will make the output of the pullFn requireable on the browser under 'data::name'. Useful for generating dynamic (app specific) data in the targetjs.
  - `entryPoint`     Name of the main file from which your app is launched. Defaults to 'main.coffee'. It must lie on the 'mainDomain'.
- - `namespace`      Global variable to encapsulate browser state to. Defaults to 'Brownie'. Unless you go digging in the output source, this should never need to be referenced directly.
+ - `namespace`      Global variable to encapsulate browser code into. Defaults to 'Brownie'. Unless you go digging in the output source, this should never need to be referenced directly.
  - `libDir`         Directory to find external libraries that you wish to include outside of the require system.
  - `libFiles`       List of files to include in order. Note: libDir+libFiles[i] must exist for all i.
  - `libsOnlyTarget` Optional file to write lib files to. This makes the output of brownie quickly distinguishable from your big libraries, and people won't have to redownload that part of the code everytime you change your app code.
@@ -67,7 +66,7 @@ brownie.bake({
 
 There are also 4 optional booleans for configuring the prettified require tree:
  - `treeTarget`     Where to write the current prettified require tree to. Useful for code analysis. Not set by default.
- - `logTree`        Boolean to determine if you want the prettified dependency passed to console.log. Default false. If neither treeTarget nor logTree is set, then the remaining values are discarded.
+ - `logTree`        Boolean to determine if you want the prettified dependency passed to console.log. Default false. If neither treeTarget nor logTree is set, then the remaining options are meaningless.
  - `extSuffix`      Boolean to determine whether the extension name is suffixed to the name of each file in the require tree. Default false.
  - `domPrefix`      Boolean to determine whether the domain of the file is prefixed to the name of each file in the require tree. Default false.
 
@@ -75,7 +74,7 @@ There are also 4 optional booleans for configuring the prettified require tree:
 
 There are four different ways to use require:
 
- - **Globally**:        I.e. `require('subfolder/module')`. This will scan all the domains (except data) for a matching structure, starting the search at your current location.
+ - **Globally**:        I.e. `require('subfolder/module.js')`. This will scan all the domains (except data) for a matching structure, starting the search at your current location.
  A gloabl require does not care about your current location.
 
  - **Relatively**:      I.e. `require('./module.js')`. This will scan only the current domain and the current folder
@@ -90,8 +89,9 @@ There are four different ways to use require:
  It does not arise from physical files, and will not show up in the dependency tree. It is simply data you have attached deliberately.
 
  **Note** File extensions are never required, but you can include them for specificity (except for on the data domain).
- While resolving (on the server), Brownie will try first the name, then try to append .js to the string, finally try to append .coffee. If any of these resolve it will be included.
- This means there's more chance for overlap if you omit the extensions: so _do not keep .js and .coffee versions in the same folder_ or you will become frustrated fast).
+ While resolving (on the server), Brownie will try first the name, then try to append .js to the string, finally try to append .coffee. If any of these resolve it will be included, otherwise
+ the search moves on to the next require path if applicable.This means there's more chance for overlap if you omit the extensions.
+ In other words, **DO NOT** omit extensions and keep .js and .coffee versions in the same folder or you will quickly become very frustrated.
 
 ## Notes on the data domain
 This is the main entry point for plugins. Here are some appropriate things that it is useful for:
@@ -105,46 +105,44 @@ All you have to do to use this is either directly attach the data you have, or b
 
 ## Modularity Notes
 Global variable are evil, and should be kept to a minimum. We know this, and this is were a require system really shines, but it is not going to help you get rid of global usage altogether.
-However, it is possible to make yourself completely independent of globals!
+However, it is possible to make yourself almost completely independent of globals!
 
-You could dedicate your life to a life of non-CommonJS celibacy, or, more sensibly, you could make arbiters for all your old libraries.
+The obvious way is to lead a life of strict CommonJS adherence, or, more sensibly, you could make arbiters for all your old libraries.
 jQuery for instance, could be exported through another jQuery.js file with `module.exports = window.jQuery; delete window.jQuery; delete window.$` in its body.
 This means you can use `$ = require('jQuery')` so everything will be explicitly defined, plus you've deleted the global shortcuts so that you will know when you forgot to require.
 
 Clearly this as some advantages. By having all requires of jQuery explicitly defined you know exactly what parts of your code depend on it. It will show up in your require tree, and
-you will quickly identify what code is actually DOM dependent, and what isnt or shouldnt be.
+you will quickly identify what code is actually DOM dependent, and what isn't or shouldn't be.
 
 Brownie already does some of this for you anyway, it allows at most your mainDomain to wait for the DOM. If you can figure out how to separate on the domain level, then you are already
-good on your way to resolving spaghetti hell. Perhaps coupling this remaining domain tightly with jQuery isnt _that_ bad. Probably not. But by not having it available everywhere,
-it is easier to see what actually needs it and what doesn't. Who knows, maybe we can make some smarter or more elegant MVC or MVC like frameworks with such things in mind.
+good on your way to resolving spaghetti hell. Perhaps by having jQuery available everywhere on that domain isnt _that_ bad. Probably not, but by not having it available by default,
+it is easier to see what actually needs it and what doesn't, and it becomes harder to accidentally introduce dependencies in areas that should not have them.
 
-An extra point here to note is that most of the time you will want to require the plugin extended jQuery, not just the basic version. `require('jQuery')` does not imply extensions.
-However, all jQuery plugins have extend a global variable, so they can all be listed on the libFiles list in order. Thus, since all required code, including our arbiter,
-is added after libFiles, require will always fetch the extended version. So this is sort of okay. You dont really want every plugin to show up at every point in the require tree anyway,
-so it's good that it's happening only once, but you also have no control of this code from inside your app.
+An extra ting to note is that jQuery plugins work generally with the global jQuery variable, so they should be normally loaded as libFiles. This ensures `require('jQuery')` gets the
+fully extended version you want.
 
-Anyway. With jQuery you have bigger modularity issues to battle with than these, for those still struggling with these:
+Anyway. With jQuery you have bigger modularity issues to battle with than this, for those still struggling with spaghetti hell:
 #### My advice is
 Think about the behaviour you are defining, if it is for
 
-- non-request based DOM interactivity - it is almost always better to write a plugin (include these as libFiles)
-- request based DOM interactivity - you should use controllers/views + above plugins and or possibly more DOM plugins.
+- non-request based DOM interactivity - it is almost always better to write a plugin
+- request based DOM interactivity - you should use controllers/views and call above plugins.
 - calculations needed for DOM manipulation - you should make a standalone calulation module that should work on its own - call it at appropriate stages above.
 
-This way if something breaks, you should be easily able to narrow down the problem to a UI error, a flow error, or a calculation error. => Debugging becomes 3 times easier.
+This way if something breaks, you should be easily able to narrow down the problem to a UI error, a signaling error, or a calculation error. => Debugging becomes up to 3 times easier.
 
 #### Ultimately
-Brownie just provides a lot of basic rules for helping build maintainable code.
-You need to always remember to:
+Brownie just tries to facilitate the building of maintainable code.
+To actually build maintainable code, you need to always stay vigilant and remember to:
 
-- Not blend all the above behaviour together in one file.
-- Limit the domains you reference global variables.
-- Split independent code onto different domains.
-- Always keep looking at your code and try to figure out if you defining multiple types of behaviour somewhere. If you are, split it up.
+- Not blend multiple types of behaviour together in one file.
+- Limit the areas from which you reference global variables.
+- Look for opportunities to move independent code onto different domains.
+- Look for opportunities to refactor code to make bits of it independent.
 - Enforce basic rules of JavaScript modularity: don't try to make circular dependencies work, analyse your require tree. If you are requiring the same library from every file, chances are you are doing something wrong.
 
 Decouple your code this way and you will save yourself the trouble of later having to learn from your mistakes the hard way.
-Hopefully, Brownie can help.
+
 
 ## Comments and Feedback
 Brownie is still a relatively fresh project of mine. Feel free to give me traditional github feedback or help out.
