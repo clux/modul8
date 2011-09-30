@@ -2,20 +2,25 @@ fs          = require 'fs'
 path        = require 'path'
 stylus      = require 'stylus'
 nib         = require 'nib'
+{exists}    = require './utils'
+
+read = (name) ->
+  fs.readFileSync(name, 'utf8')
 
 module.exports = (o) ->
-  throw new Error('brownie glaze requires a target and an entryPoint') if !o.target
+  throw new Error('brownie glaze requires a target and an entryPoint') if !o.target or !o.entryPoint
+  throw new Error('brownie glaze: entryPoint not found: tried: '+o.entryPoint) if !exists(o.entryPoint)
 
-  stylus(fs.readFileSync(o.input, 'utf8'))
+  stylus(read(o.entryPoint))
   .set('compress',o.minify)
-  .set('filename',o.input)
+  .set('filename',o.entryPoint)
   #.use(nib())
   #.include(nib.path)
   #.include(options.nibs)
   .render (err, css) ->
-    if (err) then throw New Error(err)
+    if (err) then throw new Error(err)
 
-    if i.minify
+    if o.minify
       uglifycss = require 'uglifycss'
       options =
         maxLineLen: 0
