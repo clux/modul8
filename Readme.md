@@ -26,7 +26,7 @@
 
 ## Installation
 
-via npm: coming
+via npm: `npm install brownie`
 
 
 # Baking / Code Bundling
