@@ -29,7 +29,7 @@
 via npm: coming
 
 
-# Baking - Compiling scripts
+# Baking / Code Bundling
 
 ### Usage
 ```js
@@ -151,7 +151,7 @@ Brownie is still a relatively fresh project of mine. Feel free to give me tradit
 The `bake` API is, in my opinion, pretty much done.
 However, the CSS bundling implementation - `glaze` - is still up in the air.
 ...
-# Glazing - Compiling stylesheets
+# Glazing / Style bundling
 In development. The API will look something like this.
 
 ```coffee

@@ -3,14 +3,18 @@
   "description": "Modularity enforcing code and style bundler for web applications",
   "version": "0.1.0",
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
-  "repository": "git://github.com/clux/brownie",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/clux/brownie.git"
+  },
   "main": "./index.js",
   "dependencies": {
     "coffee-script": ">= 1.1.2",
     "uglify-js": ">= 1.1.0",
     "detective": ">= 0.0.3"
   },
-  "devDependencies": {
-  },
-  "engines": { "node": ">= 0.4.8" }
+  "devDependencies": {},
+  "engines": {
+    "node": ">= 0.4.8"
+  }
 }
