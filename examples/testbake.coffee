@@ -11,7 +11,7 @@ brownie.bake
   minifier    : (code) -> code.replace(/\n/,'')
   minify      : true
   domPrefix   : true
-  localTests  : true
+  localTests  : true # app::helper has inlined tests
 
 # NB: basePoint and mainDomain not defined here
 # => brownie will look for 'main.coffee' in the 'app' domain.

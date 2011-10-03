@@ -2,13 +2,16 @@ path        = require 'path'
 fs          = require 'fs'
 coffee      = require 'coffee-script'
 
+
+read = (name) -> fs.readFileSync(name, 'utf8')
+
 # internal compile shortcut
 compile = (fileName) ->
   switch path.extname(fileName)
     when '.js'
-      fs.readFileSync(fileName, 'utf8')
+      read(fileName)
     when '.coffee'
-      coffee.compile(fs.readFileSync(fileName, 'utf8'),{bare:true}) # all coffee files must be wrapped later
+      coffee.compile(read(fileName),{bare:true}) # all coffee files must be wrapped later
     else
       throw new Error("file: #{fileName} does not have a valid javascript/coffeescript extension")
 
@@ -20,12 +23,17 @@ exists = (file) ->
   catch e
     return false
 
+
+
 # avoids pulling in test dependencies and test code
-cutTests = (code) -> code.replace(/\n.*require.main[\w\W]*$/, '')
-#TODO:? this can eventually use burrito if popular, but for now this is fine.
+cutTests = (code) ->
+  #TODO:? this can eventually use burrito if popular, but for now this is fine.
+  code.replace(/\n.*require.main[\w\W]*$/, '')
+
 
 module.exports =
   compile     : compile
   exists      : exists
   cutTests    : cutTests
+  read        : read
 
