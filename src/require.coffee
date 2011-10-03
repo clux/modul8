@@ -27,8 +27,8 @@ makeRequire = (dom, pathName) -> # each module gets its own unique require funct
 toAbsPath = (domain, pathName, relReqStr) ->
   folders = pathName.split('/')[0...-1] # slice away the filename
   while relReqStr[0...3] is '../'
-    folders = folders[0...-1] # slice away the top folder every time it is required
-    relReqStr = relReqStr[3...]
+    folders = folders[0...-1] # slice away the top folder at each iteration
+    relReqStr = relReqStr[3...] # continue parsing the string
   folders.concat(relReqStr.split('/')).join('/') # take the remaining path and make the string
 
 

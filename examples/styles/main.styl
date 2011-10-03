@@ -1,12 +1,11 @@
-//@import 'nib/reset'
-//@import 'nib/buttons'
-
-//@import 'inputnib'
-//@import 'selectmenu'
-//@import 'boilerplate.css'
-
 @import 'boilerplate'
-boilerplate()
+boilerplate-start()
+
+@import 'typography'
+@import 'forms'
+@import 'layout'
+@import 'navigation'
+@import 'color'
 
 
 //end reset stylesheet
@@ -22,12 +21,12 @@ body
   color bodycol
   line-height 1.25em
   background-color darken(bgcol,25%)
-  
+
 h1,h2,h3,h4,h5,h6
   text-shadow #000 1px 1px 1px
   font-weight bold
   color hcol
-  
+
 a,input
   color linkcol
   text-decoration none
@@ -37,3 +36,5 @@ a,input
 a:visited
   color linkcol
 
+
+boilerplate-finish()
