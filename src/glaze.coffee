@@ -4,7 +4,7 @@ stylus      = require 'stylus'
 nib         = require 'nib'
 {exists,read}    = require './utils'
 
-minifier = (css) ->
+minify = (css) ->
   uglifycss = require 'uglifycss'
   uglifycss.processString css,
     maxLineLen: 0
@@ -19,7 +19,7 @@ module.exports = (o) ->
   throw new Error('brownie glaze: entryPoint not found: tried: '+o.entryPoint) if !exists(o.entryPoint)
 
   stylus(read(o.entryPoint))
-  .set('compress',o.minify)
+  #.set('compress',o.minify) # stylus only does basic whitespace removal, does not remove comments
   .set('filename',o.entryPoint)
   .use(nib())
   .import('nib')
@@ -28,12 +28,11 @@ module.exports = (o) ->
   .render (err, css) ->
     throw err if err
 
-    #if o.minify
-    #  minifier = o.minifier ? minifier
-    #  throw new Error("brownie glaze: minifier must be a function") if !minifier instanceof Function
-    #  css = minifier(css)
-
-
+    if o.minify
+      minifier = o.minifier ? minify
+      minifier = minifier
+      throw new Error("brownie glaze: minifier must be a function") if !minifier instanceof Function
+      css = minifier(css)
 
     return css if !o.target
     fs.writeFileSync(o.target, css)

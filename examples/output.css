@@ -195,19 +195,39 @@ input:invalid, textarea:invalid { background-color: #f0dddd; }
 
 table { border-collapse: collapse; border-spacing: 0; }
 
-
 /* =============================================================================
  Primary styles
  Author:
  ========================================================================== */
-
-
-
-
-
-
-
-
+body {
+  font: normal 100% Arial, Verdana, sans-serif;
+  color: #ccc9be;
+  line-height: 1.25em;
+  background-color: #001f00;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-shadow: #000 1px 1px 1px;
+  font-weight: bold;
+  color: #ddd;
+}
+a,
+input {
+  color: #cf7;
+  text-decoration: none;
+}
+a:hover,
+input:hover {
+  color: #efa;
+  cursor: pointer;
+}
+a:visited {
+  color: #cf7;
+}
 /* =============================================================================
  Non-semantic helper classes
  Please define your styles before this section.
@@ -273,33 +293,4 @@ img { max-width: 100% !important; }
 @page { margin: 0.5cm; }
 p, h2, h3 { orphans: 3; widows: 3; }
 h2, h3{ page-break-after: avoid; }
-}
-body {
-  font: normal 100% Arial, Verdana, sans-serif;
-  color: #ccc9be;
-  line-height: 1.25em;
-  background-color: #001f00;
-}
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  text-shadow: #000 1px 1px 1px;
-  font-weight: bold;
-  color: #ddd;
-}
-a,
-input {
-  color: #cf7;
-  text-decoration: none;
-}
-a:hover,
-input:hover {
-  color: #efa;
-  cursor: pointer;
-}
-a:visited {
-  color: #cf7;
 }
