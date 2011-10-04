@@ -6,7 +6,7 @@ codeAnalyis = require './codeanalysis'
 
 # helpers
 pullData = (parser, name) -> # parser interface
-  throw new Error("parser for #{name} is not a function") if not parser instanceof Function
+  throw new Error("brownie.bake data value supplied for #{name} is not a function") if not parser instanceof Function
   parser()
 
 minify = (code) -> # minify function, this can potentially also be passed in if we require alternative compilers..
@@ -23,7 +23,7 @@ bundle = (codeList, ns, o) ->
   l = []
   # 0. attach libs if we didnt want to split them into a separate file
   if !o.libsOnlyTarget and o.libDir and o.libFiles
-    l.push (compile(o.libDir+file) for file in o.libFiles).join('\n') # concatenate lib files as is
+    l.push (compile(o.libDir+file,false) for file in o.libFiles).join('\n') # concatenate lib files as is - safetywrap .coffee files
 
   # 1. construct the namespace object
   nsObj = {} # TODO: userLocals
@@ -58,13 +58,13 @@ bundle = (codeList, ns, o) ->
 
 module.exports = (o) ->
   if !o.domains
-    throw new Error("brownie needs domains parameter. Got "+JSON.stringify(o.domains))
+    throw new Error("brownie.bake needs domains parameter. Got "+JSON.stringify(o.domains))
   o.entryPoint ?= 'main.coffee'
   o.mainDomain ?= 'app'
   if !exists(o.domains[o.mainDomain]+o.entryPoint)
-    throw new Error("brownie needs a mainDomain, and the entryPoint to be contained in this domain. Tried: "+o.domains[o.mainDomain]+o.entryPoint)
+    throw new Error("brownie.bake needs a mainDomain, and the entryPoint to be contained in this domain. Tried: "+o.domains[o.mainDomain]+o.entryPoint)
   if o.domains.data
-    throw new Error("brownie reserves the 'data' domain for pulled in code")
+    throw new Error("brownie.bake reserves the 'data' domain for pulled in code")
 
   o.namespace ?= 'Brownie'
   o.DOMLoadWrap ?= jQueryWrap
@@ -73,14 +73,14 @@ module.exports = (o) ->
 
   if o.target
     o.minifier ?= minify
-    throw new Error("brownie requires a function as a minifier") if !o.minifier instanceof Function
+    throw new Error("brownie.bake requires a function as a minifier") if !o.minifier instanceof Function
 
     c = bundle(ca.sorted(), o.namespace, o)
     c = o.minifier(c) if o.minify
     fs.writeFileSync(o.target, c)
 
     if o.libsOnlyTarget and o.libDir and o.libFiles # => libs where not included in above bundle
-      libs = (compile(o.libDir+file) for file in o.libFiles).join('\n') # concatenate libs as is
+      libs = (compile(o.libDir+file, false) for file in o.libFiles).join('\n') # concatenate libs as is - safetywrap .coffee files
       libs = o.minifier(libs) if o.minifylibs
       fs.writeFileSync(o.libsOnlyTarget, libs)
 
@@ -89,3 +89,4 @@ module.exports = (o) ->
     fs.writeFileSync(o.treeTarget, tree) if o.treeTarget
     console.log tree if o.logTree
 
+  return

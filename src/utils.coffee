@@ -6,12 +6,12 @@ coffee      = require 'coffee-script'
 read = (name) -> fs.readFileSync(name, 'utf8')
 
 # internal compile shortcut
-compile = (fileName) ->
+compile = (fileName, bare=true) ->
   switch path.extname(fileName)
     when '.js'
       read(fileName)
     when '.coffee'
-      coffee.compile(read(fileName),{bare:true}) # all coffee files must be wrapped later
+      coffee.compile(read(fileName),{bare}) # all coffee files must be wrapped later by default (libs get extra wrapper)
     else
       throw new Error("file: #{fileName} does not have a valid javascript/coffeescript extension")
 

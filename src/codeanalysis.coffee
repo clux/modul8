@@ -20,12 +20,12 @@ toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain 
   prependStr = if folderStr then folderStr+'/' else ''
   prependStr+name
 
-# constructor, private
+# constructor
 CodeAnalysis = (@entryPoint, @domains, @mainDomain, @useLocalTests) ->
   @resolveDependencies() #automatically resolves dependency tree on construction, stores in @tree
   return
 
-# resolveDependencies helpers
+# helpers for resolveDependencies
 CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, reports where it wound it
   orig = absReq
   # always scan current domain first, but only scan current domain path if require string was relative
@@ -42,7 +42,7 @@ CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, re
     return {absReq: absReq+'.js', dom: dom} if exists(@domains[dom]+absReq+'.js')
     return {absReq: absReq+'.coffee', dom: dom} if exists(@domains[dom]+absReq+'.coffee')
 
-  throw new Error("brownie code analysis: require references a file which cound not be found: #{orig}, we looked in #{scannable} for #{absReq}")
+  throw new Error("brownie.bake code analysis: require references a file which cound not be found: #{orig}, we looked in #{scannable} for #{absReq}")
 
 
 CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
@@ -62,7 +62,7 @@ CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code t
 # one to scan the parent references at each level to make sure no circular refeneces exists in app code
 # and the final (anonymous one) to call detective recursively to find and resolve require calls in current file
 CodeAnalysis::resolveDependencies = -> # private
-  @tree = tree = {name: @entryPoint, deps: {}, subFolders: [], domain: @mainDomain, level: 0}
+  @tree = {name: @entryPoint, deps: {}, subFolders: [], domain: @mainDomain, level: 0}
 
   circularCheck = (treePos, dep) -> # makes sure no circular references exists for dep going up from current point in tree (tree starts at top)
     requiree = treePos.name
@@ -71,15 +71,9 @@ CodeAnalysis::resolveDependencies = -> # private
       return if treePos.parent is undefined # got all the way to @entryPoint without finding self => good
       chain.push treePos.name
       treePos = treePos.parent # follow the chain up
-      throw new Error("circular dependency detected: #{chain.join(' <- ')} <- #{dep}") if treePos.name is dep
+      throw new Error("brownie.bake code analysis revealed a circular dependency: #{chain.join(' <- ')} <- #{dep}") if treePos.name is dep
     return
 
-  #uncircularize = (t) ->
-  #  delete t.parent
-  #  arguments.callee(t.deps[dep]) for dep of t.deps
-  #  return
-
-  # console.log tree
   ((t) =>
     {deps, domain, absReq} = @loadDependencies(t.name, t.subFolders, t.domain)
     t.domain = domain
@@ -91,8 +85,7 @@ CodeAnalysis::resolveDependencies = -> # private
       circularCheck(t, dep)
       arguments.callee.call(@, t.deps[dep])
     return
-  )(tree) # call detective recursively and resolve each require
-  #uncircularize(tree)
+  )(@tree) # call detective recursively and resolve each require
   return
 
 # helpers for print
@@ -146,48 +139,11 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
 
 # requiring this gives a function which returns a closured object with access to only the public methods of a bound instance
 module.exports = (entryPoint, domains, mainDomain, useLocalTests=false) ->
-  throw new Error("brownie code analysis: entryPoint required") if !entryPoint
-  throw new Error("brownie code analysis: domains needed, and needs to contain specified mainDomain #{mainDomain}. Got #{domains}") if !domains or !domains[mainDomain]
+  throw new Error("brownie.bake code analysis: entryPoint required") if !entryPoint
+  throw new Error("brownie.bake code analysis: domains needed, and needs to contain specified mainDomain #{mainDomain}. Got #{domains}") if !domains or !domains[mainDomain]
   o = new CodeAnalysis(entryPoint, domains, mainDomain, useLocalTests)
   {
     printed : -> o.printed.apply(o, arguments)   # returns a big string
     sorted  : -> o.sorted.apply(o, arguments)    # returns array of pairs of form [name, domain]
   }
 
-
-
-
-
-
-# tests
-if module is require.main
-  domains =
-    'client' : '/home/clux/repos/deathmatchjs/app/client/'
-    'shared' : '/home/clux/repos/deathmatchjs/app/shared/'
-  o = module.exports('app.coffee', domains, 'client', true)
-  console.log o.printed()
-  console.log o.sorted()
-
-  return # dont define more stuff
-
-
-if module is require.main
-  reqPoint = 'models/user'
-  name = './event'
-  #console.log reqFolders
-  #console.log toAbsPath(name, reqFolders)
-
-  tree =
-    name : 'app'
-    deps :
-      'A'  :
-        name : 'A'
-        deps : { 'F':{name:'F',deps:{}},  'G':{name:'G',deps:{}}  ,  'H':{name:'H',deps:{'Z':{name:'Z', deps:{  'WWW':{name:'W',deps:{}}   }}}},  'underWWW':{name:'underWWW',deps:{}}   }
-      'B'  :
-        name : 'B'
-        deps : {'C': {name:'C', deps: {'E':{name:'E',deps:{}}}  }, 'D' :{name:'D', deps: {}} }
-  console.log JSON.stringify sanitizeTree tree
-
-  #smallTree = sanitizeTree tree
-  #console.log getReadableDep(smallTree)
-  return
