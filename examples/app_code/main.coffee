@@ -7,8 +7,13 @@ b = require('bigthing/sub1')
 
 b.doComplex('app calls up to sub1')
 
+
 v = require('validation.coffee')
 # wont be found on clients require path
 # but will be found on the shared path
 
 console.log('2004 isLeapYear?', v.isLeapYear(2004))
+
+
+m = monolith; # external libraries will be available as before
+console.log "monolith:",monolith

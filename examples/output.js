@@ -1,4 +1,8 @@
-var QQ = {"app":{},"shared":{},"data":{}};var requireConfig = {"namespace":"QQ","domains":["app","shared"],"main":"app"};
+(function(){  window.monolith = "I am a huge library";
+})()
+
+var QQ = {"app":{},"shared":{},"data":{}};
+var requireConfig = {"namespace":"QQ","domains":["app","shared"],"main":"app"};
 (function(){var DataReg, DomReg, domains, isRelative, makeRequire, ns, toAbsPath;
 ns = window[requireConfig.namespace];
 domains = requireConfig.domains;
@@ -72,7 +76,7 @@ divides = require('./calc').divides;
 exports.isLeapYear = function(yr) {
   return divides(yr, 4) && (!divides(yr, 100) || divides(yr, 400));
 };});
-(function(){QQ.define('bigthing/sub2','app',function(require, module, exports){module.exports = function(str) {
+QQ.define('bigthing/sub2','app',function(require, module, exports){module.exports = function(str) {
   return console.log(str);
 };});
 QQ.define('helper','app',function(require, module, exports){var testRunner;
@@ -82,12 +86,14 @@ module.exports = function(str) {
 QQ.define('bigthing/sub1','app',function(require, module, exports){var sub2;
 sub2 = require('./sub2');
 exports.doComplex = function(str) {
-  return sub2(str + ' (now the job is easy <sub1/>)');
+  return sub2(str + ' (sub1 added this, passing to sub2)');
 };});
-QQ.define('main','app',function(require, module, exports){var b, helper, v;
-helper = require('helper');
+QQ.define('main','app',function(require, module, exports){var b, helper, m, v;
+helper = require('./helper');
 helper('hello from app via helper');
 b = require('bigthing/sub1');
 b.doComplex('app calls up to sub1');
 v = require('validation.coffee');
-console.log('2004 isLeapYear?', v.isLeapYear(2004));});})();
+console.log('2004 isLeapYear?', v.isLeapYear(2004));
+m = monolith;
+console.log(monolith);});

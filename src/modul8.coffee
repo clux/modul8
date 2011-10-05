@@ -1,7 +1,10 @@
+bundle = require('./bundle.coffee')
+
+
 #process.chdir(self.options['working directory']);
 currEnv = process.env.NODE_ENV or 'development'
 
-module.exports = start
+
 obj = {} # changed by all objects below
 
 Modul8 = ->
@@ -17,13 +20,16 @@ Modul8::in = (env) ->
   @
 
 Modul8::pre = (fn) ->
-  return @ if !@environmentMatches
-  obj.pre.push fn
+  obj.pre.push fn if @environmentMatches
   @
 
 Modul8::post = (fn) ->
-  return @ if !@environmentMatches
-  obj.post.push fn
+  obj.post.push fn if @environmentMatches
+  @
+
+
+Modul8::set = (key, val) ->
+  obj.options[key] = val if @environmentMatches
   @
 
 
@@ -34,6 +40,7 @@ start = (entry) ->
     domains     : {}
     pre         : []
     post        : []
+    options     : {}
     entryPoint  : entry
   new Modul8()
 
@@ -67,7 +74,7 @@ Domains::add = (key, val, primary) ->
     obj.domains[key] = val
     if !obj.hasDomains
       obj.hasDomains = true
-      obj.mainDomain = val
+      obj.mainDomain = key
   @
 
 
@@ -89,11 +96,6 @@ Libraries::target = (target) ->
 
 Libraries::path = (dir) ->
   obj.libDir = dir if @environmentMatches
-  @
-
-Libraries::domloader = (fn) ->
-  if @environmentMatches
-    obj.DOMLoadWrap = fn
   @
 
 
@@ -122,20 +124,24 @@ Analysis::suffix = (suffix) ->
 Modul8::compile = (target) ->
   return @ if !@environmentMatches
   obj.target = target
-  console.log obj
+  bundle(obj)
+  return # end chaining here if environmentMatches
 
 
-modul8 =
-  minifier:->
-  testcutter:->
+module.exports = start
 
 if module is require.main
+  modul8 =
+    minifier:->
+    testcutter:->
   start('app.cs')
+    .set('domloader', (code) -> code)
+    .set('namespace', 'QQ')
+    #.set('working directory', path)
     .libraries()
       .list(['jQuery.js','history.js'])
       .path('/app/client/libs/')
       .target('dm-libs.js')
-      .domloader((code) -> code)
     .domains()
       .add('app', '/app/client/')
       .add('shared', '/app/shared/')
