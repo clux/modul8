@@ -1,12 +1,12 @@
 fs          = require 'fs'
 path        = require 'path'
-codeAnalyis = require './codeanalysis'
+codeAnalyis = require './analysis'
 {compile, exists, cutTests} = require './utils'
 {uglify, parser} = require 'uglify-js'
 
 # helpers
 pullData = (parser, name) -> # parser interface
-  throw new Error("brownie.bake data value supplied for #{name} is not a function") if not parser instanceof Function
+  throw new Error("modul8::data got a value supplied for #{name} which is not a function") if not parser instanceof Function
   parser()
 
 minify = (code) -> # minify function, this can potentially also be passed in if we require alternative compilers..
@@ -58,22 +58,22 @@ bundle = (codeList, ns, o) ->
 
 module.exports = (o) ->
   if !o.domains
-    throw new Error("brownie.bake needs domains parameter. Got "+JSON.stringify(o.domains))
+    throw new Error("modul8 requires domains specified. Got "+JSON.stringify(o.domains))
   o.entryPoint ?= 'main.coffee'
   o.mainDomain ?= 'app'
   if !exists(o.domains[o.mainDomain]+o.entryPoint)
-    throw new Error("brownie.bake needs a mainDomain, and the entryPoint to be contained in this domain. Tried: "+o.domains[o.mainDomain]+o.entryPoint)
+    throw new Error("modul8 requires the entryPoint to be contained in the first domain. Could not find: "+o.domains[o.mainDomain]+o.entryPoint)
   if o.domains.data
-    throw new Error("brownie.bake reserves the 'data' domain for pulled in code")
+    throw new Error("modul8 reserves the 'data' domain for pulled in code")
 
-  o.namespace ?= 'Brownie'
+  o.namespace ?= 'M8'
   o.DOMLoadWrap ?= jQueryWrap
 
   ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, o.localTests)
 
   if o.target
     o.minifier ?= minify
-    throw new Error("brownie.bake requires a function as a minifier") if !o.minifier instanceof Function
+    throw new Error("modul8 requires a function as a minifier") if !o.minifier instanceof Function
 
     c = bundle(ca.sorted(), o.namespace, o)
     c = o.minifier(c) if o.minify
