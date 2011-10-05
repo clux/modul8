@@ -27,6 +27,7 @@
 ## Installation
 
 via npm: `npm install brownie`
+Master branch should be avoided as it is generally unstable.
 
 
 # Baking / Code Bundling

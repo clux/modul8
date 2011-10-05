@@ -50,6 +50,7 @@ CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code t
   {absReq, dom} = @resolveRequire(name, domain, isRelative(name))
   code = compile(@domains[dom]+absReq)
   code = cutTests(code) if @useLocalTests
+  #TODO: apply PRE-processing middleware here
   {
     deps    : (toAbsPath(dep, subFolders) for dep in detective(code) when !(/^data::/).test(dep)) # convert all require paths to absolutes immediately so we dont have to deal
     domain  : dom
@@ -101,7 +102,7 @@ formatName = (name, extSuffix, domPrefix, dom) ->
 
 # public method, returns an npm like dependency tree
 CodeAnalysis::printed = (extSuffix=false, domPrefix=false) ->
-  lines = [formatName(@entryPoint, extSuffix, domPrefix, @mainDomain)]
+  lines = [formatName(@entryPoint, extSuffix, domPrefix, @mainDomain])
   ((branch, level, parentAry) ->
     idx = 0
     bSize = objCount(branch.deps)
