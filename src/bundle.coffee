@@ -1,16 +1,12 @@
 fs          = require 'fs'
 path        = require 'path'
 codeAnalyis = require './analysis'
-{compile, exists, cutTests} = require './utils'
-{uglify, parser} = require 'uglify-js'
+{compile, exists} = require './utils'
 
 # helpers
 pullData = (parser, name) -> # parser interface
   throw new Error("modul8::data got a value supplied for #{name} which is not a function") if not parser instanceof Function
   parser()
-
-minify = (code) -> # minify function, this can potentially also be passed in if we require alternative compilers..
-  uglify.gen_code(uglify.ast_squeeze(uglify.ast_mangle(parser.parse(code))))
 
 jQueryWrap = (code) -> # default DOMLoadWrap
   '$(function(){'+code+'});'
@@ -18,6 +14,13 @@ jQueryWrap = (code) -> # default DOMLoadWrap
 anonWrap = (code) ->
   '(function(){'+code+'})();'
 
+
+compose = (funcs) ->
+ ->
+    args = [].slice.call(arguments)
+    for fn in [funcs.length-1..0]
+      args = [fn.apply(@, args)]
+    args[0]
 
 bundle = (codeList, ns, o) ->
   l = []
@@ -45,14 +48,14 @@ bundle = (codeList, ns, o) ->
   # 4. include CommonJS compatible code in the order they have to be defined - wrap each file in a define function for relative requires
   defineWrap = (exportName, domain, code) -> "#{ns}.define('#{exportName}','#{domain}',function(require, module, exports){#{code}});"
 
-  # 4. CommonJS compatible code may include tests inside each file. If it does, remove it.
-  tc = if o.localTests then cutTests else (a) -> a
+  # 4. Apply all pre-processing middleware here
+  mw = if o.pre then compose(o.pre) else (a) -> a
 
   # 4.a) include non-main CommonJS modules (these should be independent on both the App and the DOM)
-  l.push (defineWrap(name.split('.')[0], domain, tc(compile(o.domains[domain] + name))) for [name, domain] in codeList when domain isnt o.mainDomain).join('\n')
+  l.push (defineWrap(name.split('.')[0], domain, mw(compile(o.domains[domain] + name))) for [name, domain] in codeList when domain isnt o.mainDomain).join('\n')
 
   # 4.b) include main CommonJS modules (these will be wait for DOMContentLoaded and and should contain main application code)
-  l.push o.DOMLoadWrap((defineWrap(name.split('.')[0], domain, tc(compile(o.domains[domain] + name))) for [name, domain] in codeList when domain is o.mainDomain).join('\n'))
+  l.push o.DOMLoadWrap((defineWrap(name.split('.')[0], domain, mw(compile(o.domains[domain] + name))) for [name, domain] in codeList when domain is o.mainDomain).join('\n'))
 
   l.join '\n'
 
@@ -76,12 +79,14 @@ module.exports = (o) ->
     throw new Error("modul8 requires a function as a minifier") if !o.minifier instanceof Function
 
     c = bundle(ca.sorted(), o.namespace, o)
-    c = o.minifier(c) if o.minify
+    mw = if o.post then compose(o.post) else (a) -> (a)
+    c = mw(c)
     fs.writeFileSync(o.target, c)
 
     if o.libsOnlyTarget and o.libDir and o.libFiles # => libs where not included in above bundle
+      #TODO: only write this file if it hasnt changed!!!
       libs = (compile(o.libDir+file, false) for file in o.libFiles).join('\n') # concatenate libs as is - safetywrap .coffee files
-      libs = o.minifier(libs) if o.minifylibs
+      libs = mw(c)
       fs.writeFileSync(o.libsOnlyTarget, libs)
 
   if o.treeTarget or o.logTree

@@ -91,6 +91,11 @@ Libraries::path = (dir) ->
   obj.libDir = dir if @environmentMatches
   @
 
+Libraries::domloader = (fn) ->
+  if @environmentMatches
+    obj.DOMLoadWrap = fn
+  @
+
 
 
 Modul8::analysis = () ->
@@ -130,6 +135,7 @@ if module is require.main
       .list(['jQuery.js','history.js'])
       .path('/app/client/libs/')
       .target('dm-libs.js')
+      .domloader((code) -> code)
     .domains()
       .add('app', '/app/client/')
       .add('shared', '/app/shared/')
