@@ -1,15 +1,21 @@
-# Brownie - Bake and glaze web applications
+# Modul8 - web application modularity
 
- Brownie is a modularity enforcing code and style bundler for JavaScript web applications.
- The code bundler, `brownie.bake`, will dynamically pull in dependencies from multiple domains and compile and combine the dynamically ordered set of dependencies
+ Modul8 is a modularity enforcing code packager for JavaScript web applications.
+ It will dynamically pull in dependencies from multiple paths and compile and combine the dynamically ordered set of dependencies
  into a single browser compatible JavaScript file. This means your application can consist entirely of (synchronous) JavaScript/CoffeeScript CommonJS modules, and your code
- can be used verbatim on the server as long as it does not reference browser only dependencies like the DOM. Brownie strongly encourages such sharing of code by allowing several
- _require domains_ on the client - represented by different paths on the server. Code from your main app domain will pull in depencenies from the other domains as needed, and
- your client code will be callbackless and smooth. What code gets pulled in is loggable as an npm like dependency tree.
+ can be used verbatim on the server as long as it does not reference browser only dependencies like the DOM.
+
+ Modul8 encourages some of the best practices of software development by allowing code sharing,
+ sharing of code by between the client and server by allowing several
+ _require domains_ on the client - represented by different paths on the server. Code from any of these domains can reference each other and the the
+ require tree will resolve
+
+ Code from your main app domain will pull in depencenies from the
+ other domains as needed, and your client code will be callbackless and smooth. What code gets pulled in is loggable as an npm like dependency tree.
 
  The style bundler, `brownie.glaze`, has similar aims regarding modularity, but is still in heavy production.
 
-## Bake Features
+## Features
   - client-side require without extra callbacks
   - compiles CommonJS compatible JavaScript or CoffeeScript
   - compilation of application code is dynamic and based only on the entry point and its dependency tree
@@ -26,27 +32,46 @@
 
 ## Installation
 
-via npm: `npm install brownie`
+via npm: `npm install modul8`
 Master branch should be avoided as it is generally unstable.
 
 
-# Baking / Code Bundling
+## Usage
 
-### Usage
 ```js
-brownie = require('brownie');
-brownie.bake({
-  target   : dir+'/public/js/target.js',
-  domains  : {
-    shared    : dir+'/shared/',
-    app       : dir+'/app/'
-  },
-  libDir   : dir+'/libs/',
-  libFiles : ['jquery.js', 'history.js'],
-
-  minify   : (environment == 'production')
-});
+modul8('app.js')
+  .domains()
+    .add('app', '/app/client/')
+    .add('shared', '/app/shared/')
+  .compile('dm.js')
 ```
+##
+
+```js
+modul8('app.cs')
+  .set('domloader', (code) -> code)
+  .set('namespace', 'QQ')
+  .libraries()
+    .list(['jQuery.js','history.js'])
+    .path('/app/client/libs/')
+    .target('dm-libs.js')
+  .domains()
+    .add('app', '/app/client/')
+    .add('shared', '/app/shared/')
+  .data()
+    .add('models', '{user:{name: {type:String, max: 10, min: 5}}}')
+    .add('versions', '{users/view:[0.2.5]}')
+  .analysis()
+    .prefix(true)
+    .suffix(false)
+  .in('development')
+    .analysis().output(console.log)
+    .post(modul8.minifier)
+  .in('all')
+    .pre(modul8.testcutter)
+    .compile('dm.js')
+```
+
 ### Bake Options
 
  - `target`         File to write to (must be referenced by your template).
