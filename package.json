@@ -1,19 +1,17 @@
 {
-  "name": "brownie",
-  "description": "Modularity enforcing code and style bundler for web applications",
+  "name": "Modul8",
+  "description": "Modularity enforcing code packager for web applications",
   "version": "0.1.1",
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git://github.com/clux/brownie.git"
+    "url": "git://github.com/clux/modul8.git"
   },
   "main": "./index.js",
   "dependencies": {
     "coffee-script": ">= 1.1.2",
     "uglify-js": ">= 1.1.0",
     "detective": ">= 0.0.3",
-    "stylus": ">= 0.16.0",
-    "nib": ">= 0.2.0"
   },
   "devDependencies": {},
   "engines": {
