@@ -42,7 +42,7 @@ CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, re
     return {absReq: absReq+'.js', dom: dom} if exists(@domains[dom]+absReq+'.js')
     return {absReq: absReq+'.coffee', dom: dom} if exists(@domains[dom]+absReq+'.coffee')
 
-  throw new Error("brownie.bake code analysis: require references a file which cound not be found: #{orig}, we looked in #{scannable} for #{absReq}")
+  throw new Error("modul8::analysis could not resolve a require for #{orig} (#{absReq}) - looked in #{scannable}")
 
 
 CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
@@ -72,7 +72,7 @@ CodeAnalysis::resolveDependencies = -> # private
       return if treePos.parent is undefined # got all the way to @entryPoint without finding self => good
       chain.push treePos.name
       treePos = treePos.parent # follow the chain up
-      throw new Error("brownie.bake code analysis revealed a circular dependency: #{chain.join(' <- ')} <- #{dep}") if treePos.name is dep
+      throw new Error("modul8::analysis revealed a circular dependency: #{chain.join(' <- ')} <- #{dep}") if treePos.name is dep
     return
 
   ((t) =>
@@ -121,7 +121,7 @@ CodeAnalysis::printed = (extSuffix=false, domPrefix=false) ->
   lines.join('\n')
 
 
-# public method, used by brownie to get ordered array of code
+# public method, get ordered array of code to be used by the compiler
 CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj = {}
   obj[@entryPoint] = [0, @mainDomain]
@@ -140,8 +140,8 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
 
 # requiring this gives a function which returns a closured object with access to only the public methods of a bound instance
 module.exports = (entryPoint, domains, mainDomain, useLocalTests=false) ->
-  throw new Error("brownie.bake code analysis: entryPoint required") if !entryPoint
-  throw new Error("brownie.bake code analysis: domains needed, and needs to contain specified mainDomain #{mainDomain}. Got #{domains}") if !domains or !domains[mainDomain]
+  throw new Error("modul8::analysis requires an entryPoint") if !entryPoint
+  throw new Error("modul8::analysis requires a domains object and a matching mainDomain. Got #{domains}, main: #{mainDomain}") if !domains or !domains[mainDomain]
   o = new CodeAnalysis(entryPoint, domains, mainDomain, useLocalTests)
   {
     printed : -> o.printed.apply(o, arguments)   # returns a big string
