@@ -21,7 +21,7 @@ toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain 
   prependStr+name
 
 # constructor
-CodeAnalysis = (@entryPoint, @domains, @mainDomain, @useLocalTests) ->
+CodeAnalysis = (@entryPoint, @domains, @mainDomain, @premw) ->
   @resolveDependencies() #automatically resolves dependency tree on construction, stores in @tree
   return
 
@@ -49,8 +49,7 @@ CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code t
   # we will only get name as absolute names because we convert everything that comes in 4 lines below (and initial is entryPoint)
   {absReq, dom} = @resolveRequire(name, domain, isRelative(name))
   code = compile(@domains[dom]+absReq)
-  code = cutTests(code) if @useLocalTests
-  #TODO: apply PRE-processing middleware here
+  code = @premw(code) if @premw # apply pre-processing middleware here
   {
     deps    : (toAbsPath(dep, subFolders) for dep in detective(code) when !(/^data::/).test(dep)) # convert all require paths to absolutes immediately so we dont have to deal
     domain  : dom
@@ -139,10 +138,11 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
 
 
 # requiring this gives a function which returns a closured object with access to only the public methods of a bound instance
-module.exports = (entryPoint, domains, mainDomain, useLocalTests=false) ->
+module.exports = (entryPoint, domains, mainDomain, premw) ->
   throw new Error("modul8::analysis requires an entryPoint") if !entryPoint
   throw new Error("modul8::analysis requires a domains object and a matching mainDomain. Got #{domains}, main: #{mainDomain}") if !domains or !domains[mainDomain]
-  o = new CodeAnalysis(entryPoint, domains, mainDomain, useLocalTests)
+  throw new Error("modul8::analysis requires a composed function of pre-processing middlewares to work. Got #{premw}") if !premw instanceof Function
+  o = new CodeAnalysis(entryPoint, domains, mainDomain, premw)
   {
     printed : -> o.printed.apply(o, arguments)   # returns a big string
     sorted  : -> o.sorted.apply(o, arguments)    # returns array of pairs of form [name, domain]
