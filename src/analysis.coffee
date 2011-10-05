@@ -1,7 +1,7 @@
 fs          = require 'fs'
 path        = require 'path'
 detective   = require 'detective'
-{compile, exists, cutTests}  = require './utils'
+{compile, exists}  = require './utils'
 
 # criteria for whether a require string is relative, rather than absolute
 # absolute require strings will scan on the defined require paths (@domains)
@@ -102,7 +102,7 @@ formatName = (name, extSuffix, domPrefix, dom) ->
 
 # public method, returns an npm like dependency tree
 CodeAnalysis::printed = (extSuffix=false, domPrefix=false) ->
-  lines = [formatName(@entryPoint, extSuffix, domPrefix, @mainDomain])
+  lines = [formatName(@entryPoint, extSuffix, domPrefix, @mainDomain)]
   ((branch, level, parentAry) ->
     idx = 0
     bSize = objCount(branch.deps)

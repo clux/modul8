@@ -24,15 +24,8 @@ exists = (file) ->
     return false
 
 
-# avoids pulling in test dependencies and test code
-cutTests = (code) ->
-  #TODO:? this can eventually use burrito if popular, but for now this is fine.
-  code.replace(/\n.*require.main[\w\W]*$/, '')
-
-
 module.exports =
   compile     : compile
   exists      : exists
-  cutTests    : cutTests
   read        : read
 
