@@ -122,7 +122,7 @@
 
  A circularly dependent set of modules are tightly coupled; they are really no longer a set of moudles, but more of a library.
  There are numerous sources talking about [why is tight coupling is bad](http://www.google.com/search?q=tight+coupling+bad) so this
- will not be covered here. Ignore this warnig at your own risk (regardless of whether or not you end up using modul8).
+ will not be covered here. Regardless of whether or not you end up using modul8: ignore this warnig at your own risk.
 
  Additionally, the dependency diagram cannot be easily visualized as it has gone from being a tree, to a tree with cycles.
  With the no circulars rule enforced, we can print a pretty `npm list`-like dependency tree for your client code.
