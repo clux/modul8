@@ -1,5 +1,5 @@
 {
-  "name": "Modul8",
+  "name": "modul8",
   "description": "Modularity enforcing code packager for web applications",
   "version": "0.2.0",
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
@@ -11,7 +11,7 @@
   "dependencies": {
     "coffee-script": ">= 1.1.2",
     "uglify-js": ">= 1.1.0",
-    "detective": ">= 0.0.3",
+    "detective": ">= 0.0.3"
   },
   "devDependencies": {},
   "engines": {
