@@ -89,6 +89,7 @@
 ### Middleware
 
  Middleware come in two forms: pre-processing and post-processing.
+
  - Pre-processing is middleware that is applied before analysing dependencies as well as before compiling.
  - Post-processing is middleware that is only applied to the output right before it gets written.
 
@@ -115,8 +116,8 @@
  **You have to** set `domloader` if you do not use jQuery. If you are familiar with the DOM or any other library this should be fairly trivial.
  The default jQuery implementation is as follows:
 
-     domloader_fn = function(code){
-      return "jQuery(function(){"+code+"});"
+    domloader_fn = function(code){
+     return "jQuery(function(){"+code+"});"
     }
  You should never have to set namespace unless you go digging in the source and the M8 references offend you.
 

@@ -4,6 +4,7 @@ DataReg = /^data::(.*)/
 DomReg = /^(.*)::/
 isRelative = (reqStr) -> reqStr[0...2] is './'
 
+#TODO: in ES.next implement a proxy for ns so that only require can access its data
 makeRequire = (dom, pathName) -> # each module gets its own unique require function based on where it is to be able to resolve better
   (reqStr) ->
     #console.log("#{dom}:#{pathName} <- #{reqStr}")
@@ -41,5 +42,10 @@ ns.define = (name, domain, fn) -> # pass in a fn that expects require, module an
     delete d[name] # need to properly override it this is to work
     d[name] = module.exports
   return
+
+ns.inspect = (domain) ->
+  console.log domain+" inspected. Found:",ns[domain]
+
+#TODO: create a client-side data:: manipulation API?
 
 ns.require = makeRequire(requireConfig.main,'browser') # for testing..
