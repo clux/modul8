@@ -19,6 +19,7 @@
  Both the domain and file extension can be omitted if there are no conflicts (if there are the main domain will be scanned first).
 
  The following are equivalent from the file: 'helper.js' on the 'shared' domain.
+
     1. require('shared::validation.js') //3. => can remove extension
     2. require('./helpers.js') //relative require searches only this domain
     3. require('./helpers') //.js extension always gets searched before .coffee
@@ -59,6 +60,7 @@
  To export these to the server, you will have to obtain the data somehow - your job - and allow modul8 to pull it into the script.
 
  The data API simply consists of `add()`ing data keys and functions to `data()`
+
     modul8('app.js')
       .domains().add('app', dir+'/app/client/')
       .data()
