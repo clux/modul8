@@ -62,7 +62,7 @@ bundle = (codeList, ns, domload, mw, o) ->
   l.push harvest(o.mainDomain, false).join('\n')
 
   # 4.b) include main CommonJS modules (these will be wait for DOMContentLoaded and and should contain main application code)
-  l.push harvest(o.mainDomain, true).join('\n')
+  l.push domload(harvest(o.mainDomain, true).join('\n'))
 
   l.join '\n'
 
@@ -84,7 +84,7 @@ module.exports = (o) ->
     throw new Error("modul8 requires a function as post-processing plugin") if !fnb instanceof Function
 
   namespace = o.options?.namespace ? 'M8'
-  domloader = o.options?.namespace ? jQueryWrap
+  domloader = o.options?.domloader ? jQueryWrap
   premw = if o.pre then compose(o.pre) else (a) -> a
   postmw = if o.post then compose(o.post) else (a) -> (a)
 
@@ -102,9 +102,11 @@ module.exports = (o) ->
       libs = postmw(c)
       fs.writeFileSync(o.libsOnlyTarget, libs)
 
-  if o.treeTarget or o.logTree
+  if o.treeTarget
     tree = ca.printed(o.extSuffix, o.domPrefix)
-    fs.writeFileSync(o.treeTarget, tree) if o.treeTarget
-    console.log tree if o.logTree
+    if o.treeTarget instanceof Function
+      o.treeTarget(tree)
+    else
+      fs.writeFileSync(o.treeTarget, tree) if o.treeTarget
 
   return
