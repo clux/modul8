@@ -121,7 +121,7 @@
  with sufficient fiddling, but it brings one major disadvantages to the table:
 
  A circularly dependent set of modules are tightly coupled; they are really no longer a set of moudles, but more of a library.
- There are numerous sources talking about (why is tight coupling is bad)[www.google.com/search?q=tight+coupling+bad] so this
+ There are numerous sources talking about [why is tight coupling is bad](http://www.google.com/search?q=tight+coupling+bad) so this
  will not be covered here. Ignore this warnig at your own risk (regardless of whether or not you end up using modul8).
 
  Additionally, the dependency diagram cannot be easily visualized as it has gone from being a tree, to a tree with cycles.
