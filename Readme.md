@@ -13,7 +13,6 @@
  Code from your main app domain will pull in depencenies from the
  other domains as needed, and your client code will be callbackless and smooth. What code gets pulled in is loggable as an npm like dependency tree.
 
- The style bundler, `brownie.glaze`, has similar aims regarding modularity, but is still in heavy production.
 
 ## Features
   - client-side require without extra callbacks
@@ -26,7 +25,7 @@
   - require tree is displayed in the style of `npm list`
   - only pulls in what is explicitly required - no need to ever manipulate your include list
   - application specific data can be pulled into the compilation process and the result is also required on the browser
-  - minimizes browser global usage -> attaches your application data to the namespaced `window.(namespace || 'Brownie')`
+  - minimizes browser global usage -> attaches your application data to the namespaced `window.(namespace || 'M8')`
   - ideal for single page web applications - only 1 or 2 HTTP requests to get all your code + possibly templates
   - Can bundle your code separately from your web server code with a short Cakefile
 
@@ -79,10 +78,10 @@ modul8('app.cs')
  - `mainDomain`     Specifies what key in above domains parameter is the main domain name. Default is 'app'.
  - `data`           Object of form key,val == name, pullFn. This will make the output of the pullFn requireable on the browser under 'data::name'. Useful for generating dynamic (app specific) data in the targetjs.
  - `entryPoint`     Name of the main file from which your app is launched. Defaults to 'main.coffee'. It must lie on the 'mainDomain'.
- - `namespace`      Global variable to encapsulate browser code into. Defaults to 'Brownie'. Unless you go digging in the output source, this should never need to be referenced directly.
+ - `namespace`      Global variable to encapsulate browser code into. Defaults to 'M8'. Unless you go digging in the output source, this should never need to be referenced directly.
  - `libDir`         Directory to find external libraries that you wish to include outside of the require system.
  - `libFiles`       List of files to include in order. Note: libDir+libFiles[i] must exist for all i.
- - `libsOnlyTarget` Optional file to write lib files to. This makes the output of brownie quickly distinguishable from your big libraries, and people won't have to redownload that part of the code everytime you change your app code.
+ - `libsOnlyTarget` Optional file to write lib files to. This makes the output quickly distinguishable from your big libraries, and people won't have to redownload that part of the code everytime you change your app code.
  - `minify`         Whether to pass the the output file through a minifier before writing to disk. Defaults to false.
  - `minifier`       What minifier to use. Supply a `(codeStr) -> minifiedStr` function. Defaults to [UglifyJS](http://github.com/mishoo/UglifyJS).
  - `DOMLoadWrap`    DOMContentLoaded wrapper function. It defaults to the famous `(code) -> "$(function(){"+code+"});"` function - commonly known as the jQuery wrapper. Lacking jQuery; supply your function of choice.
@@ -115,7 +114,7 @@ There are four different ways to use require:
  It does not arise from physical files, and will not show up in the dependency tree. It is simply data you have attached deliberately.
 
  **Note** File extensions are never required, but you can include them for specificity (except for on the data domain).
- While resolving (on the server), Brownie will try first the name, then try to append .js to the string, finally try to append .coffee. If any of these resolve it will be included, otherwise
+ While resolving (on the server), Modul8 will try first the name, then try to append .js to the string, finally try to append .coffee. If any of these resolve it will be included, otherwise
  the search moves on to the next require path if applicable.This means there's more chance for overlap if you omit the extensions.
  In other words, **DO NOT** omit extensions and keep .js and .coffee versions in the same folder or you will quickly become very frustrated.
 
@@ -140,7 +139,7 @@ This means you can use `$ = require('jQuery')` so everything will be explicitly 
 Clearly this as some advantages. By having all requires of jQuery explicitly defined you know exactly what parts of your code depend on it. It will show up in your require tree, and
 you will quickly identify what code is actually DOM dependent, and what isn't or shouldn't be.
 
-Brownie already does some of this for you anyway, it allows at most your mainDomain to wait for the DOM. If you can figure out how to separate on the domain level, then you are already
+Modul8 already does some of this for you anyway, it allows at most your mainDomain to wait for the DOM. If you can figure out how to separate on the domain level, then you are already
 good on your way to resolving spaghetti hell. Perhaps by having jQuery available everywhere on that domain isnt _that_ bad. Probably not, but by not having it available by default,
 it is easier to see what actually needs it and what doesn't, and it becomes harder to accidentally introduce dependencies in areas that should not have them.
 
@@ -158,7 +157,7 @@ Think about the behaviour you are defining, if it is for
 This way if something breaks, you should be easily able to narrow down the problem to a UI error, a signaling error, or a calculation error. => Debugging becomes up to 3 times easier.
 
 #### Ultimately
-Brownie just tries to facilitate the building of maintainable code.
+Modul8 just tries to facilitate the building of maintainable code.
 To actually build maintainable code, you need to always stay vigilant and remember to:
 
 - Not blend multiple types of behaviour together in one file.
@@ -171,15 +170,4 @@ Decouple your code this way and you will save yourself the trouble of later havi
 
 
 ## Comments and Feedback
-Brownie is still a relatively fresh project of mine. Feel free to give me traditional github feedback or help out.
-The `bake` API is, in my opinion, pretty much done.
-However, the CSS bundling implementation - `glaze` - is still up in the air.
-...
-# Glazing / Style bundling
-In development. The API will look something like this.
-
-```coffee
-brownie.glaze
-  target : './public/css/target.css'
-  minify : environment is 'production'
-```
+Modul8 is still a relatively fresh project of mine. Feel free to give me traditional github feedback or help out.

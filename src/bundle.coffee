@@ -9,7 +9,7 @@ pullData = (parser, name) -> # parser interface
   parser()
 
 jQueryWrap = (code) -> # default domloader
-  '$(function(){'+code+'});'
+  'jQuery(function(){'+code+'});' # use jQuery to be no-conflict compatible
 
 anonWrap = (code) ->
   '(function(){'+code+'})();'

@@ -125,7 +125,7 @@ Modul8::compile = (target) ->
   return @ if !@environmentMatches
   obj.target = target
   bundle(obj)
-  return # end chaining here if environmentMatches
+  @ # keep chaining in case there are subsequent calls chained on in different environments
 
 
 module.exports = start
