@@ -10,6 +10,8 @@ domLoader = function(code){
 };
 
 modul8('main.coffee')
+  .before(modul8.testcutter)
+  .after(homebrewMinifier)
   .libraries()
     .list(['monolith.js'])
     .path(dir+'/libraries/')
@@ -21,7 +23,5 @@ modul8('main.coffee')
     .prefix(true)
   .set('namespace', 'QQ')
   .set('domloader', domLoader)
-  .pre(modul8.testcutter)
-  .post(homebrewMinifier)
   .compile('./output.js');
 

@@ -19,11 +19,11 @@ Modul8::in = (env) ->
   @_env = env
   @
 
-Modul8::pre = (fn) ->
+Modul8::before = (fn) ->
   obj.pre.push fn if @environmentMatches
   @
 
-Modul8::post = (fn) ->
+Modul8::after = (fn) ->
   obj.post.push fn if @environmentMatches
   @
 
@@ -137,6 +137,8 @@ if module is require.main
   start('app.cs')
     .set('domloader', (code) -> code)
     .set('namespace', 'QQ')
+    .before(modul8.testcutter)
+    #.set('compiler', {extension:'.coca', fn: (fileName) -> (js)}) # not worth it yet.
     #.set('working directory', path)
     .libraries()
       .list(['jQuery.js','history.js'])
@@ -148,13 +150,13 @@ if module is require.main
     .data()
       .add('models', '{modeldata:{getssenttoclient}}')
       .add('versions', '{users/view:[0.2.5]}')
-    .analysis()
-      .prefix(true)
-      .suffix(false)
     .in('development')
-      .analysis().output(console.log)
-      .post(modul8.minifier)
+      .after(modul8.minifier)
+      .analysis()
+        .output(console.log)
+        .prefix(true)
+        .suffix(false)
     .in('all')
-      .pre(modul8.testcutter)
+
       .compile('dm.js')
 
