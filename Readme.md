@@ -31,9 +31,7 @@
 
 ## Installation
 
-via npm: `npm install modul8`
-Master branch should be avoided as it is generally unstable.
-
+via npm: `npm install modul8` (soon)
 
 ## Usage
 
@@ -48,12 +46,6 @@ modul8('app.js')
 
 ```js
 modul8('app.cs')
-  .set('domloader', (code) -> code)
-  .set('namespace', 'QQ')
-  .libraries()
-    .list(['jQuery.js','history.js'])
-    .path('/app/client/libs/')
-    .target('dm-libs.js')
   .domains()
     .add('app', '/app/client/')
     .add('shared', '/app/shared/')
@@ -61,8 +53,7 @@ modul8('app.cs')
     .add('models', '{user:{name: {type:String, max: 10, min: 5}}}')
     .add('versions', '{users/view:[0.2.5]}')
   .analysis()
-    .prefix(true)
-    .suffix(false)
+    .output(console.log)
   .in('development')
     .analysis().output(console.log)
     .post(modul8.minifier)
@@ -70,30 +61,6 @@ modul8('app.cs')
     .pre(modul8.testcutter)
     .compile('dm.js')
 ```
-
-### Bake Options
-
- - `target`         File to write to (must be referenced by your template).
- - `domains`        Object of form domainName, domainPath in no particular order. Think of these as your require paths on the browser. You can define as many/few as you want, but you need at least one 'main' domain.
- - `mainDomain`     Specifies what key in above domains parameter is the main domain name. Default is 'app'.
- - `data`           Object of form key,val == name, pullFn. This will make the output of the pullFn requireable on the browser under 'data::name'. Useful for generating dynamic (app specific) data in the targetjs.
- - `entryPoint`     Name of the main file from which your app is launched. Defaults to 'main.coffee'. It must lie on the 'mainDomain'.
- - `namespace`      Global variable to encapsulate browser code into. Defaults to 'M8'. Unless you go digging in the output source, this should never need to be referenced directly.
- - `libDir`         Directory to find external libraries that you wish to include outside of the require system.
- - `libFiles`       List of files to include in order. Note: libDir+libFiles[i] must exist for all i.
- - `libsOnlyTarget` Optional file to write lib files to. This makes the output quickly distinguishable from your big libraries, and people won't have to redownload that part of the code everytime you change your app code.
- - `minify`         Whether to pass the the output file through a minifier before writing to disk. Defaults to false.
- - `minifier`       What minifier to use. Supply a `(codeStr) -> minifiedStr` function. Defaults to [UglifyJS](http://github.com/mishoo/UglifyJS).
- - `DOMLoadWrap`    DOMContentLoaded wrapper function. It defaults to the famous `(code) -> "$(function(){"+code+"});"` function - commonly known as the jQuery wrapper. Lacking jQuery; supply your function of choice.
- - `localTests`     Bool to determine whether to chuck the standalone module code before bundling/looking for dependencies. Avoids pulling in test dependencies or test code.
- It is a bit raw at the moment, as it indiscriminately chucks everything from and including the line where 'require.main' is referenced in your code. Enable with caution for now.
-
-
-There are also 4 optional booleans for configuring the prettified require tree:
- - `treeTarget`     Where to write the current prettified require tree to. Useful for code analysis. Not set by default.
- - `logTree`        Boolean to determine if you want the prettified dependency passed to console.log. Default false. If neither treeTarget nor logTree is set, then the remaining options are meaningless.
- - `extSuffix`      Boolean to determine whether the extension name is suffixed to the name of each file in the require tree. Default false.
- - `domPrefix`      Boolean to determine whether the domain of the file is prefixed to the name of each file in the require tree. Default false.
 
 
 ## Notes on the data domain
