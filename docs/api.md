@@ -65,12 +65,26 @@
       .domains().add('app', dir+'/app/client/')
       .data()
         .add('versions', myVersionParser)
+        .add('models', myModelParser)
         .add('templates', myTemplateCompiler)
       .compile('./out.js');
 
  Under the covers, Modul8 attaches the output of the myX functions to an internal _data domain_ (so this domain is reserved).
- The end result is that you can require this data as if it were exported from a file (named versions|templates) on a domain named data.
- The second argument to add must be a function returning a string. Its result is attached verbatim to Modul8's require tree.
+ The end result is that you can require this data as if it were exported from a file (named versions|templates) on a domain named data:
+ e.g. `require('data::models')` gives you the implicitly **parsed** output of `myModelParser`. In other words, the functions output is
+ attached verbatim to Modul8's require tree; if you provide bad data, you are solely responsible for breaking your build.
+
+ As a small example our personal version parser operates something like the following:
+
+    function versionParser(){
+      //code to scan template directory for version numbers stored on the first line
+      return "{'user/view':[0,2,4], 'user/register':[0,3,1]}";
+    }
+
+ Chaining on an `add('versions', versionParser)` will allow:
+
+    var versions = require('data::versions');
+    console.log(versions['users/view']) // -> [0,2,4]
 
 ### Middleware
 
