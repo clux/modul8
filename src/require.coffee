@@ -63,6 +63,8 @@ ns.define = (name, domain, fn) -> # needed by outer
     exports[domain][name] = module.exports
   return
 
+
+
 # Public API
 
 # Debug Helpers
@@ -75,20 +77,10 @@ ns.domains = ->
 ns.require = makeRequire(base.main,'CONSOLE')
 
 # Live Extensions (requirable and namespace reference available)
-exports.M8.data = ns.external = (name, exported) ->
+exports.M8.data = ns.data = (name, exported) ->
   delete exports.data[name] if exports.data[name] # otherwise cant overwrite
   exports.data[name] = exported
 
-exports.M8.external = ns.data = (name, exported) ->
+exports.M8.external = ns.external = (name, exported) ->
   delete exports.exernal[name] if exports.external[name] # otherwise cant overwrite
   exports.extenal[name] = exported
-
-
-#TODO: make arbrite exclusion list
-#because: we can add this to data: "(function(){var a = window.jQuery; delete window.jQuery; delete window.$; return a;})()"
-#and it would work + annihilate jQuery globals
-#but the jQuery object is attached to data::name and the API is clumsy
-#perhaps do arbiters().add('jQuery', ['$','jQuery']).add('Spine', 'Spine')
-#then we need to extend require to be able to fetch these, but disallow them from getting through analysis!
-#should be easy as we now have the exact name! => just put it on the list of illegals for us to ignore it
-#or even better, do proper handling of a non-existent file require, so it can show up in the require tree

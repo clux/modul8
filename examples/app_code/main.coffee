@@ -15,6 +15,7 @@ v = require('validation.coffee')
 console.log('2004 isLeapYear?', v.isLeapYear(2004))
 
 
-#m = window.monolith; # external libraries would be available as before
-m = require('monolith') # but we added an explicit arbiter for this library, so the global variable has been deleted
-console.log "monolith:",m
+#!!window.monolith; # -> false
+#monolith uses an arbiter so only require can access it
+m = require('monolith')
+console.log("monolith:"+m)

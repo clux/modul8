@@ -198,6 +198,10 @@
  libraries as these are loaded in before the big `define()` and `stash` attaching scope, but you probably won't care for these anyway. jQuery will show up in your require tree,
  so you will quickly identify what code is actually DOM dependent, and what isn't or shouldn't be.
 
+ Having found this pattern very useful, but also noticing how repeating this pattern on several libraries pollutes our application code folder with meaningless files, a
+ modul8 extension has been made in 0.3.0 to allow automatic creation of these arbiters in the internal file system by using the `arbiters()` call.
+ This example could be automated by chaining on `arbiters().add(jQuery, ['jQuery', '$'])`. See the API docs for more details.
+
  Now, modul8 only allows one domain to be DOM dependent (the application domain), so with correct usage - i.e. not stuffing every module in that domain -
  you will not have any big revelations there anyway. If however, you do decide to use this construct - perhaps because you did stuff everything in the application domain -
  you may reap some benefits by being more or less told what files can be moved to another domain. And if you can separate on the domain level, then you are already

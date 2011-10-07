@@ -244,3 +244,18 @@
   - `M8.data === require('M8::data')`
   - `M8.external === require('M8::external')`
 
+### Arbiters
+
+These help reveal invisible dependencies by reduce the amounts global variables in your code.
+
+    modul8('app.js')
+      .domains().add('app', dir+'/app/client/')
+      .libraries()
+        .list(['jQuery.js','Spile.coffee'])
+        .path(dir+'/app/client/libs/')
+      .arbiters()
+        .add('jQuery', ['$', 'jQuery'])
+        .add('Spine')
+      .compile('./out.js')
+
+ This code would delete objects `$`, `jQuery` and `Spine` from `window` and under the covers add closure bound alternatives that are `require()`able.
