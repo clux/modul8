@@ -145,7 +145,7 @@
  Additionally, the dependency diagram cannot be easily visualized as it has gone from being a tree, to a tree with cycles.
  With the no circulars rule enforced, we can print a pretty `npm list`-like dependency tree for your client code.
 
-     app::main
+    app::main
     ├──┬app::controllers/user
     │  └───app::models/user
     ├──┬app::controllers/entries

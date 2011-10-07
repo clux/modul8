@@ -11,9 +11,11 @@
  will reside on the server as standalone code referencable by both. What modules from all domains are pulled in will
  be shown in an npm like dependency tree.
 
- modul8 encapsulates each modules exports away in a hidden stash. This stash can only be required through `require()` and a couple of
- clever hook-in functions to allow for asynchronous load extensions, data domain extensions (inject objects/fns directly on a separate domain),
- and some pretty nifty debug functionality.
+ modul8 encapsulates all the exports objects in a closure where only `require()` and a couple of clever extra functions are defined.
+ Because the export container can only be accessed through functions with access to that closure,
+ this means you can't have invisible dependencies in your application (outside global libraries - which also can be easily integrated)
+ The extra functions that can touch the exports are debug functions (for console read only access), and some hook-in functions to allow live
+ extensions of domains (inject objects/fns directly onto certain domains).
 
  For more information consult the extensive documentation.
 
@@ -28,7 +30,8 @@
   - require tree is displayed in the style of `npm list`
   - only pulls in what is explicitly required - no need to ever manipulate your include list
   - application specific data can be pulled in during the compilation process, to be requireable in the browser.
-  - Application does not rely on global variables (although it exports some for the console).
+  - Application does not rely on global variables (although it exports one for the console).
+  - Allows easy integration of CommonJS incompatible libraries to the require system
   - ideal for single page web applications - only 1 or 2 HTTP requests to get all your code + possibly templates
 
 ## Installation
@@ -36,28 +39,44 @@
 via npm: `npm install modul8`
 
 ## Usage
-Basic use only needs one data domain, and an entry point (`app.js`, assumed to lie on the domain `add()`ed first)
-```js
-modul8('app.js')
-  .domains()
-    .add('app', '/app/client/')
-    .add('shared', '/app/shared/')
-  .compile('dm.js')
-```
-##
+Basic use only needs one data domain, and an entry point (here `app.js` - assumed to lie on the domain `add()`ed first).
 
-## Notes on the data domain
-This is the main entry point for plugins. Here are some appropriate things that it is useful for:
+    modul8('app.js')
+      .domains()
+        .add('app', '/app/client/')
+        .add('shared', '/app/shared/')
+      .compile('./out.js')
 
-- 1a. exporting all your templates to data::templates.
-- 1b. exporting template versions to data::versions to make sure cached templates are up to date (if not, you could $.get them as you needed)
-- 2.  exporting model structure to data::models to avoid duplicating mongoose (say) logic
-- 3.  exporting applications default options for drop downs to data::defaults
-
-All you have to do to use this is either directly attach the data you have, or build a simple parser to make things browser friendly.
+ This adds two domains, and compiles all files from the two domains that have been explicitly `require()`d to `./out.js`.
+ Every `require()` call is tracked and the resulting dependency tree is loggable. Cross domain `require()`s are namespaced
+ C++ style, i.e. `require('shared::validation')` will look for .js then .coffee files named validation on the shared domain.
+ Non-application domains like this can potentially (if they are domain-isolated) be used on the server as well, so if we wish
+ shared to be such a domain, any `require()` calls should be relative to preserve server side compatibility. As an example,
+ a same-origin include of shared::defs should be done with a **./** prefix:  `require('./defs')`.
 
 
+ A typical dependency tree output will look like this.
 
-## Comments and Feedback
+    app::app
+    ├──┬app::controllers/user
+    │  └───app::models/user
+    ├──┬app::controllers/entries
+    │  └───app::models/entry
+    └──┬shared::validation
+       └───shared::defs
+
+
+## Injecting Data
+
+ modul8 allows data to be attached to the private exports tree both from the server and live on the client.
+ This allows for easy transportation of dynamically generated data from the server to the client by passing it through `modul8.data()`,
+ and it allows integration with third party asynchronous script loaders by passing results to `require('M8::external')` on the client.
+
+ The data API is particularly useful for web applications:
+
+  - Want your templates compiled and passed down to the client in the JavaScript? Just write a parser plugin and hook it up.
+  - Want mongoose logic on the client? Let modul8 pull the data down through such plugins.
+
+
+## Feedback
 modul8 is still a relatively fresh project of mine. Feel free to give me traditional github feedback or help out.
-Modul is Norwegian for module in case people do not understand 1337.
