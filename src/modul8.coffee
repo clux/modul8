@@ -37,6 +37,7 @@ start = (entry) ->
   obj =
     namespace   : 'M8'
     data        : {}
+    arbiters    : {}
     domains     : {}
     pre         : []
     post        : []
@@ -121,6 +122,24 @@ Analysis::suffix = (suffix) ->
 
 
 
+Modul8::arbiters = () ->
+  return @ if !@environmentMatches
+  new Arbiters()
+
+Arbiters = ->
+Arbiters:: = new Modul8()
+
+Arbiters::add = (name, globs) ->
+  return @ if !@environmentMatches
+  if globs and globs.length #TODO: better array testing
+    obj.arbiters[name] = globs
+  else if globs
+    obj.arbiters[name] = [globs]
+  else
+    obj.arbiters[name] = [name]
+  @
+
+
 Modul8::compile = (target) ->
   return @ if !@environmentMatches
   obj.target = target
@@ -144,6 +163,9 @@ if module is require.main
       .list(['jQuery.js','history.js'])
       .path('/app/client/libs/')
       .target('dm-libs.js')
+    .arbiters()
+      .add('jQuery', ['$','jQuery'])
+      .add('Spine')
     .domains()
       .add('app', '/app/client/')
       .add('shared', '/app/shared/')

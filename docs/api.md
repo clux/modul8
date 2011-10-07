@@ -41,6 +41,7 @@
       .compile('./out.js');
 
  Libraries tend to update with a very different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
+ Note that unmodified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response.
  This can be done like the above example by calling `target()` on `libraries()`.
 
  Note that for huge libraries like jQuery, you may benefit (bandwidth wise) by using the [Google CDN](http://code.google.com/apis/libraries/devguide.html#jquery).
@@ -119,7 +120,9 @@
     domloader_fn = function(code){
      return "jQuery(function(){"+code+"});"
     }
- You should never have to set namespace unless you go digging in the source and the M8 references offend you.
+
+ Note that the namespace does not actually contain the exported objects from each module, or the data attachments. This information is encapsulated in a closure.
+ The namespace'd object simply contains the public debug API.
 
  Options can be set by chaining them on `modul8()` using the `set(option, value)` method. For example:
 
@@ -200,4 +203,44 @@
 
   If we perform the same action for environments, set them before
   the first `in()` call, or use `in('all')`.
+
+### Debugging
+
+ If you have wrongly entered data to `require()`, you will not get any information other than an undefined reference back.
+ Since all the exported data is encapsulated in a closure, you will not be able to find it directly from the console.
+
+ To see where the object you are looking for should live or lives, you may find it useful to log the specified domain object
+ with the globally available `M8.inspect(domainName)` method. Additionally, you may dump the list of domains modul8 tracks using the
+ `M8.domains()` command.
+
+ There is additionally a console friendly require version globally available at `M8.require()`.
+ This acts as if you were a file called 'CONSOLE' on the root directory of your main application domains, so you can use relative requires there.
+
+
+### Live Extensions
+
+ It is plausible you may want to store `require()`able data or code inside modul8's module containers.
+ Perhaps you have a third-party asynchronous script loader, and you want to attach the resulting object onto some appropriate domain.
+
+ This is an issue, because `require()` calls are analysed on the server before compilation, and if you reference something that has been loaded in
+ separately, it will not be found on the server. The solution to this is the same solution modul8 uses to allow data domain references; whitelisting.
+
+ The two domains `M8`, `data` and `external` have been whitelisted for this purpose, and a `require()`able API exists on the client.
+
+  - `require('M8::external')` - returns a function(name, object), which, when called will attach object to external::name
+  - `require('M8::external')` - returns a function(name, object), which, when called will attach object to data::name
+
+  Both these functions will overwrite on repeat calls. For example:
+
+     var dataAdd = require('M8::data');
+     dataAdd('libX', libXobj);
+     require('data::libX'); // -> libXobj
+     dataAdd('libX', {});
+     require('data::libX'); // -> {}
+
+ Although inteded for the console, if you don't like `require()`ing in these functions, they are aliased on the namespaced object.
+ Just remember that if you change the name of your namespace, you will have to change these references everywhere. The aliases are as follows:
+
+  - `M8.data === require('M8::data')`
+  - `M8.external === require('M8::external')`
 

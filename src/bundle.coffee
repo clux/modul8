@@ -27,44 +27,40 @@ compose = (funcs) ->
 
 bundle = (codeList, ns, domload, mw, o) ->
   l = []
-  # 0. attach libs if we didnt want to split them into a separate file
-  if !o.libsOnlyTarget and o.libDir and o.libFiles
-    l.push (compile(o.libDir+file,false) for file in o.libFiles).join('\n') # concatenate lib files as is - safetywrap .coffee files
 
-  # 1. construct the namespace object
-  nsObj = {} # TODO: userLocals
-  nsObj[name] = {} for name of o.domains
-  nsObj.data = {}
-  l.push "var #{ns} = #{JSON.stringify(nsObj)};"
+  # 1. construct the global namespace object
+  l.push "window.#{ns} = {};"
 
   # 2. pull in data from parsers
   l.push "#{ns}.data.#{name} = #{pullData(pull_fn,name)};" for name, pull_fn of o.data
 
   # 3. attach require code
-  requireConfig =
+  config =
     namespace : ns
     domains   : name for name of o.domains
+    arbiters  : o.arbiters
     main      : o.mainDomain
-  l.push "var requireConfig = #{JSON.stringify(requireConfig)};"
+  l.push "var _modul8RequireConfig = #{JSON.stringify(config)};"
   l.push anonWrap(compile(__dirname + '/require.coffee'))
 
-  # 4. include CommonJS compatible code in the order they have to be defined - wrap each file in a define function for relative requires
+  # 4. prepare to include CommonJS compatible code in the order they have to be defined - wrap each file in a define function for relative requires
   defineWrap = (exportName, domain, code) -> "#{ns}.define('#{exportName}','#{domain}',function(require, module, exports){#{code}});"
 
-  # 4. Each compiled file result gets passed to (pre-processing) middleware, before the result is definewrapped
+  # 5. Each compiled file result gets passed to (pre-processing) middleware, before the result is definewrapped
   harvest = (domain, onlyThis) ->
     for [name, domain] in codeList when (domain is o.mainDomain) == onlyThis
       code = compile(o.domains[domain] + name)
       basename = name.split('.')[0]
-      defineWrap(basename, domain, mw(code))
+      defineWrap(basename, domain, mw(code)) # middleware applied to code first
 
-  # 4.a) include non-main CommonJS modules (these should be independent on both the App and the DOM)
+  # 6.a) include non-main CommonJS modules (these should be independent on both the App and the DOM)
   l.push harvest(o.mainDomain, false).join('\n')
 
-  # 4.b) include main CommonJS modules (these will be wait for DOMContentLoaded and and should contain main application code)
+  # 6.b) include main CommonJS modules (these will be wait for DOMContentLoaded and and should contain main application code)
   l.push domload(harvest(o.mainDomain, true).join('\n'))
 
-  l.join '\n'
+  # 7. Use a closure to encapsulate the public and private require/define API as well as all export data
+  anonWrap('\n'+l.join('\n')+'\n')
 
 
 module.exports = (o) ->
@@ -75,38 +71,47 @@ module.exports = (o) ->
   o.mainDomain ?= 'app'
   if !exists(o.domains[o.mainDomain]+o.entryPoint)
     throw new Error("modul8 requires the entryPoint to be contained in the first domain. Could not find: "+o.domains[o.mainDomain]+o.entryPoint)
+
   if o.domains.data
-    throw new Error("modul8 reserves the 'data' domain for pulled in code")
+    throw new Error("modul8 reserves the 'data' domain for pulled in data")
+  if o.domains.external
+    throw new Error("modul8 reserves the 'external' domain for externally loaded code")
+  if o.domains.M8
+    throw new Error("modul8 reserves the 'M8' domain for its internal API")
 
   for fna in o.pre
     throw new Error("modul8 requires a function as pre-processing plugin") if !fna instanceof Function
   for fnb in o.post
     throw new Error("modul8 requires a function as post-processing plugin") if !fnb instanceof Function
 
+
   namespace = o.options?.namespace ? 'M8'
   domloader = o.options?.domloader ? jQueryWrap
   premw = if o.pre then compose(o.pre) else (a) -> a
   postmw = if o.post then compose(o.post) else (a) -> (a)
 
-  ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, premw)
+  ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, premw, o.arbiters)
 
   if o.target
 
     c = bundle(ca.sorted(), namespace, domloader, premw, o)
     c = postmw(c)
-    fs.writeFileSync(o.target, c)
 
-    if o.libsOnlyTarget and o.libDir and o.libFiles # => libs where not included in above bundle
-      #TODO: only write this file if it hasnt changed!!!
-      libs = (compile(o.libDir+file, false) for file in o.libFiles).join('\n') # concatenate libs as is - safetywrap .coffee files
-      libs = postmw(c)
-      fs.writeFileSync(o.libsOnlyTarget, libs)
+    if o.libDir and o.libFiles
+      libs = (compile(o.libDir+file, false) for file in o.libFiles).join('\n') # concatenate libs as is - safetywrap any .coffee files
+      libs = postmw(libs) #TODO: always apply postmw to libs? it is only a minifier atm..
+      if o.libsOnlyTarget
+        fs.writeFileSync(o.libsOnlyTarget, libs) #TODO: only write this file if it hasnt changed!!!
+      else
+        c = libs + c
+
+    fs.writeFileSync(o.target, c)
 
   if o.treeTarget
     tree = ca.printed(o.extSuffix, o.domPrefix)
     if o.treeTarget instanceof Function
       o.treeTarget(tree)
     else
-      fs.writeFileSync(o.treeTarget, tree) if o.treeTarget
+      fs.writeFileSync(o.treeTarget, tree)
 
   return

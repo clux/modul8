@@ -10,7 +10,7 @@ isRelative = (reqStr) -> reqStr[0...2] is './'
 # convert relative requires to absolute ones
 # relative folder movement limited to ./(../)*n + normalpath [no backing out after normal folder movement has started]
 # will return a string (without a leading slash) that can be post-concatenated with the domain specific path
-toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain base that we were requiring from
+toAbsPath = (name, subFolders, domain) -> # subFolders is array of folders after domain base that we were requiring from
   return name if !isRelative(name)
   name = name[2...]
   while name[0...3] is '../'
@@ -18,23 +18,23 @@ toAbsPath = (name, subFolders) -> # subFolders is array of folders after domain 
     name = name[3...]
   folderStr = subFolders.join('/')
   prependStr = if folderStr then folderStr+'/' else ''
-  prependStr+name
+  domain+'::'+prependStr+name #TODO: check that this is fine
 
 # constructor
-CodeAnalysis = (@entryPoint, @domains, @mainDomain, @premw) ->
+CodeAnalysis = (@entryPoint, @domains, @mainDomain, @premw, @arbiters) ->
   @resolveDependencies() #automatically resolves dependency tree on construction, stores in @tree
   return
 
 # helpers for resolveDependencies
-CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, reports where it wound it
+CodeAnalysis::resolveRequire = (absReq, domain) -> # finds file, reports where it wound it
   orig = absReq
-  # always scan current domain first, but only scan current domain path if require string was relative
-  scannable = [domain].concat(name for name of @domains when name isnt domain)
-  if wasRelative
-    scannable = [domain]
-  else if (dataReg = /^(.*)::/).test(absReq)
-    scannable = [absReq.match(dataReg)[1]]
+
+  # emulate client side require behaviour here
+  if (domainReg = /^(.*)::/).test(absReq)
+    scannable = [absReq.match(domainReg)[1]] # relative requires get pushed in here, because toAbsPath appends their domain
     absReq = absReq.split('::')[1]
+  else
+    scannable = [domain].concat(name for name of @domains when name isnt domain)
 
   for dom in scannable
     # try raw require, then with coffee extension, then js extension
@@ -44,14 +44,16 @@ CodeAnalysis::resolveRequire = (absReq, domain, wasRelative) -> # finds file, re
 
   throw new Error("modul8::analysis could not resolve a require for #{orig} (#{absReq}) - looked in #{scannable}")
 
+illegalDomain = /^data(?=::)|^external(?=::)|^M8(?=::)/
 
 CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
   # we will only get name as absolute names because we convert everything that comes in 4 lines below (and initial is entryPoint)
-  {absReq, dom} = @resolveRequire(name, domain, isRelative(name))
+  {absReq, dom} = @resolveRequire(name, domain)
   code = compile(@domains[dom]+absReq)
   code = @premw(code) if @premw # apply pre-processing middleware here
   {
-    deps    : (toAbsPath(dep, subFolders) for dep in detective(code) when !(/^data::/).test(dep)) # convert all require paths to absolutes immediately so we dont have to deal
+    # convert all require paths to absolutes immediately so we dont have to deal with them later
+    deps    : (toAbsPath(dep, subFolders, domain) for dep in detective(code) when !illegalDomain.test(dep))
     domain  : dom
     absReq  : absReq
   }
@@ -73,17 +75,21 @@ CodeAnalysis::resolveDependencies = -> # private
       treePos = treePos.parent # follow the chain up
       throw new Error("modul8::analysis revealed a circular dependency: #{chain.join(' <- ')} <- #{dep}") if treePos.name is dep
     return
-
+  #console.log a for a of @arbiters
   ((t) =>
     {deps, domain, absReq} = @loadDependencies(t.name, t.subFolders, t.domain)
     t.domain = domain
     t.name = absReq
     t.name = t.name.replace(/^(.*::)/,'') # can now safely remove domain:: part from domain specific requires (note the key of the deps object retains full value)
     for dep in deps #not to be confused with t.deps which is an object, deps from loadDependencies is an array
-      t.deps[dep] = {name : dep, parent: t, deps: {}, subFolders: dep.split('/')[0...-1], level: t.level+1}
-      t.deps[dep].domain = @resolveRequire(dep, t.domain, isRelative(dep)).dom
-      circularCheck(t, dep)
-      arguments.callee.call(@, t.deps[dep])
+      if dep of @arbiters # was an arbiter string required verbatim?
+        t.deps[dep] = {name : dep, parent: t, deps: {}, subFolders: [], level: t.level+1}
+        t.deps[dep].domain = 'M8' # does not have a file representation, but we want it to show up in the tree
+      else
+        t.deps[dep] = {name : dep, parent: t, deps: {}, subFolders: dep.split('/')[0...-1], level: t.level+1}
+        t.deps[dep].domain = @resolveRequire(dep, t.domain, isRelative(dep)).dom # ensures file exists
+        circularCheck(t, dep)
+        arguments.callee.call(@, t.deps[dep]) # preserve context and recurse
     return
   )(@tree) # call detective recursively and resolve each require
   return
@@ -124,25 +130,27 @@ CodeAnalysis::printed = (extSuffix=false, domPrefix=false) ->
 CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj = {}
   obj[@entryPoint] = [0, @mainDomain]
+  arbs = @arbiters
   ((t) ->
     for name,dep of t.deps
+      continue if name of arbs
       obj[dep.name] = [] if !obj[dep.name]
       obj[dep.name][0] = Math.max(dep.level, obj[dep.name][0] or 0)
       obj[dep.name][1] = dep.domain
       arguments.callee(dep)
     return
-  )(@tree) # creates an object of arrays of form [level, domain], so key,val of obj => val = [level, domain]
-  # This line converts to (sortable) array, then sorts by level, then maps to array of pairs of form [name, domain] (where we take out the domain:: part of name)
-  a = ([name,ary] for name,ary of obj).sort((a,b) -> b[1][0] - a[1][0]).map((e) -> [e[0], e[1][1]])
+  )(@tree) # populates obj of form: key=name, val=[level, domain]
+  # This line converts obj to (sortable) array, sorts by level, then maps to array of pairs of form [name, domain] (where we take out the domain:: part of name)
+  ([name,ary] for name,ary of obj).sort((a,b) -> b[1][0] - a[1][0]).map((e) -> [e[0], e[1][1]])
 
 
 
 # requiring this gives a function which returns a closured object with access to only the public methods of a bound instance
-module.exports = (entryPoint, domains, mainDomain, premw) ->
+module.exports = (entryPoint, domains, mainDomain, premw, arbiters) ->
   throw new Error("modul8::analysis requires an entryPoint") if !entryPoint
   throw new Error("modul8::analysis requires a domains object and a matching mainDomain. Got #{domains}, main: #{mainDomain}") if !domains or !domains[mainDomain]
   throw new Error("modul8::analysis requires a composed function of pre-processing middlewares to work. Got #{premw}") if !premw instanceof Function
-  o = new CodeAnalysis(entryPoint, domains, mainDomain, premw)
+  o = new CodeAnalysis(entryPoint, domains, mainDomain, premw, arbiters)
   {
     printed : -> o.printed.apply(o, arguments)   # returns a big string
     sorted  : -> o.sorted.apply(o, arguments)    # returns array of pairs of form [name, domain]
