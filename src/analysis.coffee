@@ -116,7 +116,7 @@ CodeAnalysis::printed = (extSuffix=false, domPrefix=false) ->
       forkChar = if hasChildren then "┬" else "─" # this char only occurs near the leaf
       isLast = ++idx is bSize
       turnChar = if isLast then "└" else "├"
-      indent = ((if parentAry[i] then " " else "│")+"  " for i in [0...level]).join('') # extra double whitespace correspond to double dash used to connect
+      indent = " "+((if parentAry[i] then " " else "│")+"  " for i in [0...level]).join('')
 
       displayName = formatName(name, extSuffix, domPrefix, domain)
       lines.push indent+turnChar+"──"+forkChar+displayName
