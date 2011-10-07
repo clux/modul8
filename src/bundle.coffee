@@ -8,8 +8,10 @@ pullData = (parser, name) -> # parser interface
   throw new Error("modul8::data got a value supplied for #{name} which is not a function") if not parser instanceof Function
   parser()
 
-jQueryWrap = (code) -> # default domloader
-  'jQuery(function(){'+code+'});' # use jQuery to be no-conflict compatible
+makeDOMWrap = (ns, jQueryArbiter=false) ->
+  location = if jQueryArbiter then ns+".require('M8::jQuery')" else "jQuery"
+  (code) ->
+    location+'(function(){'+code+'});' # use jQuery to be no-conflict compatible and arbiter compatible
 
 anonWrap = (code) ->
   '(function(){'+code+'})();'
@@ -29,7 +31,7 @@ bundle = (codeList, ns, domload, mw, o) ->
   l = []
 
   # 1. construct the global namespace object
-  l.push "window.#{ns} = {};"
+  l.push "window.#{ns} = {data:{}};"
 
   # 2. pull in data from parsers
   l.push "#{ns}.data.#{name} = #{pullData(pull_fn,name)};" for name, pull_fn of o.data
@@ -86,9 +88,9 @@ module.exports = (o) ->
 
 
   namespace = o.options?.namespace ? 'M8'
-  domloader = o.options?.domloader ? jQueryWrap
-  premw = if o.pre then compose(o.pre) else (a) -> a
-  postmw = if o.post then compose(o.post) else (a) -> (a)
+  domloader = o.options?.domloader ? makeDOMWrap(namespace, 'jQuery' of o.arbiters)
+  premw = if o.pre and o.pre.length > 0 then compose(o.pre) else (a) -> a
+  postmw = if o.post and o.post.length > 0 then compose(o.post) else (a) -> (a)
 
   ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, premw, o.arbiters)
 
