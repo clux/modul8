@@ -24,11 +24,10 @@
 
  You may shrug and say, well, I'm only going to write this once anyway..
 
- ..indeed you will. You will write it once and quickly realize you were wrong.
- It would be even better if you wrote it zero times. Trust me.
+ ..and you will be right. You will write it once and quickly realize you that it would have been even better if you hade written it zero times. Trust me.
 
  There's simply no way around it. The biggest mistake you can make as a learning programmer is to not factor out behaviour as early as possible.
- Always.
+ *</advice>*
 
 ### Relation to JavaScript
 
@@ -49,8 +48,8 @@
  This works; `var private` is inaccessible outside this anonymous function.
 
  Unfortunately, this just exposes publicFn to the global window object. This is not ideal, as anything, anywhere can just reference it, leaving
- us none the wiser. True modularity is clearly impossible when things are just lying around freely like this for everyone. It is fragile, and
- it is error prone as conflicts will actually just favour the last script to execute - as JavaScript simply runs top to bottom, attaching its
+ us not much wiser. True modularity is clearly impossible when things are just lying around freely like this for everyone. It is fragile, and
+ it is error prone as conflicting exports will actually just favour the last script to execute - as JavaScript simply runs top to bottom, attaching its
  exports to window as we go along. Clearly we need something better than this.
 
 #### CommonJS
@@ -58,7 +57,7 @@
  There is a way to fix this, but first of all it assumes all modules need to support a stadardised format for exporting of modules.
  CommonJS is a such a standardization. It has very large traction at the moment, particularly driven by server side environments such as NodeJS.
 
- Its ideas are simple. Each module avoids the normal safety-wrapper, should assume it has a working `require()`, and instead of attaching its exports
+ Its ideas are simple. Each module avoids the above safety-wrapper, and should assume it has a working `require()`, and instead of attaching its exports
  to a global object, it attaches them to an opaque `exports` object. Alternatively, it can replace the `module.exports` object to define all your exports at once.
 
  By making sure each module is written this way, CommonJS parsers can implement clever trickery on top of it to make this behaviour work.
@@ -91,6 +90,7 @@
 
  where `location` is a unique identifier passed down from the compiler to indicate where the module lives, so that `require()` can later retrieve it.
  The `makeRequire()` factory must be able to construct specifically crafted `require()` functions for given locations.
+ `stash` will be a pre-defined object on which all modules are exported.  Wrapping up this behaviour inside a function, we can write something like this.
 
     define(location, function(require, module, exports) {
       var private = 5;
@@ -100,10 +100,10 @@
       }
     });
 
- `stash` will be a pre-defined object on which all modules are exported. This can cleverly be defined in the closure where `makeRequire()` and `define()`
- is defined. This means that only these functions can access your modules. If the module system simply created a namespace for where your modules resided,
- say, `stash = window.ModuleSystem`, then this would be **bad**. You could still bypass the system and end up requiring stuff implicitly again.
- modul8 encapsulates `stash` inside a closure for `require()` and `define()`, so that only these functions + a few carefully constructed functions to
+ The `makeRequire()` and `define()` functions can cleverly be defined inside a closure with access to `stash`. This way only these functions can access your modules.
+ If the module system simply created a global namespace for where your modules resided, say, `stash = window.ModuleSystem`, then this would be **bad**.
+ You could still bypass the system and end up requiring stuff implicitly again.
+ modul8 encapsulates such a `stash` inside a closure for `require()` and `define()`, so that only these functions + a few carefully constructed functions to
  debug export information and require strings.
 
  Now, a final problem we have glossed over is which order the modules must be included in. The module above requires the module `b`.
@@ -113,7 +113,7 @@
  or you can resolve `require()` calls recursively to create a dependency tree.
 
  modul8 in particular, does so via excellently simple `detective` module that constructs a full Abstract Syntax Tree before it safely scans for `require()` calls.
- Using this `detective` data, a tree like the following can be output from `analysis()`.
+ Using this `detective` data, a tree structure representing the dependencies can be created. modul8 allows printing of a prettified form of this tree.
 
     app::main
     ├───app::forms

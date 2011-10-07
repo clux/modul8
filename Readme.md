@@ -49,9 +49,10 @@ Basic use only needs one data domain, and an entry point (here `app.js` - assume
 
  This adds two domains, and compiles all files from the two domains that have been explicitly `require()`d to `./out.js`.
  Every `require()` call is tracked and the resulting dependency tree is loggable. Cross domain `require()`s are namespaced
- C++ style, i.e. `require('shared::validation')` will look for .js then .coffee files named validation on the shared domain.
- Non-application domains like this can potentially (if they are domain-isolated) be used on the server as well, so if we wish
- shared to be such a domain, any `require()` calls should be relative to preserve server side compatibility. As an example,
+ C++ style, i.e. `require('shared::validation')` will look for a .js then .coffee file named validation on the shared domain.
+
+ Non-application domains like _shared_ can potentially (if they are domain-isolated) be used on the server as well, To
+ ensure this, any `require()` calls should be relative to preserve server side compatibility. As an example,
  a same-origin include of shared::defs should be done with a **./** prefix:  `require('./defs')`.
 
 
@@ -78,5 +79,7 @@ Basic use only needs one data domain, and an entry point (here `app.js` - assume
   - Want mongoose logic on the client? Let modul8 pull the data down through such plugins.
 
 
-## Feedback
-modul8 is still a relatively fresh project of mine. Feel free to give me traditional github feedback or help out.
+## Learn more
+ The API docs contain everything you could ever want to know about modul8 and more. Read it, try it out, and give feedback if you liked or hated it / parts of it.
+
+ modul8 is a relatively fresh project of mine. It was crafted out of necessity, but it has grown into something larger. I hope it will be useful.
