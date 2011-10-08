@@ -17,7 +17,7 @@ this means you can't have invisible dependencies in your application (outside gl
 The extra functions that can touch the exports are debug functions (for console read only access), and some hook-in functions to allow live
 extensions of domains (inject objects/fns directly onto certain domains).
 
-For more information consult the [extensive documentation](http://clux.github.com/modul8).
+For more information consult the [extensive documentation](http://clux.github.com/modul8). Currently stupidly ugly default. Stay tuned for an hour.
 
 ## Features
 
