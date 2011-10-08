@@ -1,7 +1,7 @@
 (function(){  window.monolith = "I am a huge library";
 })();
 (function(){window.QQ = {data:{}};
-var _modul8RequireConfig = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"main":"app"};
+var _modul8RequireConfig = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"logging":false,"main":"app"};
 (function(){var a, arbiters, ary, base, domains, exports, glob, makeRequire, name, ns, toAbsPath, _i, _j, _len, _len2, _ref;
 var __indexOf = Array.prototype.indexOf || function(item) {
   for (var i = 0, l = this.length; i < l; i++) {
@@ -41,6 +41,9 @@ makeRequire = function(dom, pathName) {
   };
   return function(reqStr) {
     var o, scannable, _k, _len3;
+    if (base.logging) {
+      console.log("" + dom + ":" + pathName + " <- " + reqStr);
+    }
     if (isRelative(reqStr)) {
       scannable = [dom];
       reqStr = toAbsPath(dom, pathName, reqStr.slice(2));
