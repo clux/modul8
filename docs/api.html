@@ -37,18 +37,16 @@ More information on <code>require</code> is available in <a href="require.html">
 
 <h3>API Chaining Note</h3>
 
-<p>As indicated by the first example, the modul8 API is controlled by chaining methods together. While most chaining APIs can be read linearly,
-we apply extra indentation when we break into an - under the cover - subclass (e.g. at the <code>.data()</code> above). If only one method is chained on a subclass,
+<p>As indicated by the first example, the modul8 API is controlled by chaining methods together. For style and semanticity
+we apply extra indentation when we break into a subroutine like in the <code>.data()</code> call above, or, if only one method is chained on a subclass,
 we sometimes write it on the same line.</p>
 
-<p>While actually applying this extra indentation obviously won't change anything programmatically, we feel it makes reading it more semantic.
-We recommend sticking to this notation as subclass methods from different subclasses often have identical names.
-Regardless, the API will warn you if you try to apply non-subclass methods after having broken out from them.</p>
+<p>We recommend sticking to this notation as subroutines from different methods often have identical names.
+Regardless, the API will warn you if you try to apply methods from a subroutine after having broken out from them.</p>
 
 <h3>Adding Libraries</h3>
 
-<p>Not every JavaScript library is CommonJS compatible, and you also might just want to keep exporting jQuery to window since it is so heavily intwined with
-your application code. modul8 makes this easy by simply concatenating in the libraries you need first - in the order you specify.</p>
+<p>Appending standard (window exporting) JavaScript and CoffeeScript files is easy. Call <code>.libraries()</code> and chain on your options as below.</p>
 
 <pre><code>modul8('app.js')
   .domains().add('app', dir+'/app/client/')
@@ -59,24 +57,28 @@ your application code. modul8 makes this easy by simply concatenating in the lib
   .compile('./out.js');
 </code></pre>
 
-<p>Libraries tend to update with a very different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
-Note that unmodified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response.
-This can be done like the above example by calling <code>target()</code> on <code>libraries()</code>. Lacking this, libraries will be inserted on before your application code.</p>
+<p>Note that without the <code>.target()</code> option added, the libraries would be inserted in the same file before you application code.</p>
+
+<p>Libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
+And nmodified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response. Thus, using <code>.target()</code> and
+splitting these into a different file could be advantageous.</p>
+
+<p>If you would like to integrate libraries into the require system check out the documentation on <code>arbiters()</code> below.</p>
+
+<h4>Libraries CDN Note</h4>
 
 <p>Note that for huge libraries like jQuery, you may benefit (bandwidth wise) by using the <a href="http://code.google.com/apis/libraries/devguide.html#jquery">Google CDN</a>.
 In general, offsourcing static components to load from a CDN is a good first step to scale your website.
 There is also evidence to suggest that splitting up your files into a few big chunks may help the browser load your page faster, by downloading the scripts in parallel.
 Don't overdo this, however. HTTP requests are still expensive. Two or three JavaScript files for your site should be plenty using HTTP.</p>
 
-<p>If you would like to integrate libraries into the require system check out the documentation on <code>arbiters()</code> below.</p>
-
 <h3>Adding Data</h3>
 
-<p>At some point during development it is natural to feel that this data should be available on the client as well. There are two fundamental ways of doing this with modul8.</p>
+<p>At some point during development it is natural to feel that this data should be available on the client as well. modul8 supports two ways of doing this:</p>
 
 <ul>
 <li>Have an explicit file on a shared domain, exporting the objects you need</li>
-<li>Export the object directly onto the data domain</li>
+<li>Export the object directly onto the <code>data</code> domain</li>
 </ul>
 
 <p>The first is good if you have static data like definitions, because they are perhaps useful to the server as well,
@@ -94,10 +96,14 @@ To export these to the server, you will have to obtain the data somehow - your j
   .compile('./out.js');
 </code></pre>
 
-<p>Under the covers, modul8 attaches the output of the myX functions to an internal <em>data domain</em> (so this domain is reserved) from the server.
-The end result is that you can require this data as if it were exported from a file (named versions|templates|models) on a domain named data:
-e.g. <code>require('data::models')</code> gives you the output of <code>myModelParser</code>. In other words, the functions output is
-attached verbatim to modul8's require tree; if you provide bad data, you are solely responsible for breaking your build.
+<p>Under the covers, modul8 attaches the output of the myX functions to the reserved <code>data</code> domain.
+Data exported to this domain is <code>require()</code>able as if it were exported from a file (named versions|templates|models) on a domain named data:</p>
+
+<ul>
+<li><code>require('data::models')  //output of myModelParser</code></li>
+</ul>
+
+<p>In other words the function output is attached verbatim to modul8's exports container; if you provide bad data, you are solely responsible for breaking your build.
 This should be easy to detect in a console though.</p>
 
 <p>As a small example our personal version parser operates something like the following:</p>
@@ -147,8 +153,9 @@ expect that everything from the line of reference to be removed.</p>
 <p>Below are the settings available:</p>
 
 <ul>
-<li><code>domloader</code> A function that safety wraps code with a DOMContentLoaded barrier</li>
+<li><code>domloader</code>  A function that safety wraps code with a DOMContentLoaded barrier</li>
 <li><code>namespace</code>  The namespace modul8 uses in your browser, to export console helpers to, defaulting to <code>M8</code></li>
+<li><code>logging</code>    Boolean to set whether to log <code>require()</code> calls in the console, defaults to <code>false</code></li>
 </ul>
 
 <p><strong>You have to</strong> set <code>domloader</code> if you do not use jQuery. If you are familiar with the DOM or any other library this should be fairly trivial.
@@ -168,6 +175,7 @@ It is there if you want to write a simpler prefix than than capital M, 8 all the
 <pre><code>modul8('app.js')
   .set('namespace', 'QQ')
   .set('domloader', domloader_fn)
+  .set('logging', true)
   .domains().add('app', dir+'/app/client/')
   .compile('./out.js');
 </code></pre>
@@ -175,8 +183,7 @@ It is there if you want to write a simpler prefix than than capital M, 8 all the
 <h3>Code Analysis</h3>
 
 <p>To dynamically resolve dependencies from a single entry point, modul8 does a recursive analysis of the <code>require()</code>d code.
-To avoid getting stuck in an infinite loop, preserve the tree structure of the dependency tree,
-modul8 enforces a <strong>no circular dependencies rule</strong>. Granted, this is possible with sufficient fiddling,
+Note that modul8 enforces a <strong>no circular dependencies rule</strong>. Granted, this is possible with sufficient fiddling,
 but it brings one major disadvantages to the table:</p>
 
 <p>A circularly dependent set of modules are tightly coupled; they are really no longer a set of moudles, but more of a library.
@@ -257,6 +264,8 @@ Since all the exported data is encapsulated in a closure, you will not be able t
 <p>To see where the object you are looking for should live or lives, you may find it useful to log the specified domain object
 with the globally available <code>M8.inspect(domainName)</code> method. Additionally, you may show the list of domains modul8 tracks using the
 <code>M8.domains()</code> command.</p>
+
+<p>If you want every <code>require()</code> call to be logged to the console, you can set the <code>logging</code> setting.</p>
 
 <p>There is additionally a console friendly require version globally available at <code>M8.require()</code>.
 This acts as if you were a file called 'CONSOLE' on the root directory of your main application domains, so you can use relative requires there.</p>
