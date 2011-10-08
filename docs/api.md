@@ -27,6 +27,16 @@
  Additionally, `require('helpers')` will resolve to the same file if there are no helpers.js in the root of any other domains.
  More information on `require` is available in Readme.md
 
+### API Chaining
+
+ As indicated by the previous example, the modul8 API is controlled by chaining methods together. While most chaining APIs can be read linearly,
+ we apply extra indentation when we break into an - under the cover - subclass (e.g. at the `.data()` above). If only one method is chained on a subclass,
+ we sometimes write it on the same line.
+
+ While actually applying this extra indentation obviously won't change anything programmatically, we feel it makes reading it more semantic.
+ We recommend sticking to this notation as subclass methods from different subclasses often have identical names.
+ Regardless, the API will warn you if you try to apply non-subclass methods after having broken out from them, so you should not be able to do anything wrong.
+
 ### Adding Libraries
 
  Not every JavaScript library is CommonJS compatible, and you also just want to keep exporting jQuery to window since it is so heavily intwined with
