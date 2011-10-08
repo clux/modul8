@@ -129,7 +129,7 @@ Clearly this is advantageous.
 Having found this pattern very useful, but also noticing how repeating this pattern on several libraries pollutes our application
 code folder with meaningless files, a modul8 extension has been made in 0.3.0 to allow automatic creation of these arbiters in the
 internal module system by using the `arbiters()` call.
-This example could be automated by chaining on `arbiters().add('jQuery', ['jQuery', '$'])`. See the API docs for more details.
+This example could be automated by chaining on `arbiters().add('jQuery', ['jQuery', '$'])`. See the [API docs](api.html) for more details.
 
 Note that modul8 only allows one domain to be DOM dependent (the application domain), so with correct usage -
 i.e. not stuffing every module in that domain - you might not have any big revelations there anyway. You are likely
@@ -141,4 +141,4 @@ If you can efficiently separate code on the domain level, try to keep above advi
 good on your way to resolving spaghetti hell. The rest is tackling the correct signaling model for your events.
 And for that there are MVC/MVVM frameworms of varying sizes.
 
-Good luck.
+Good luck. Hopefully this was useful.
