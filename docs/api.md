@@ -239,10 +239,13 @@
      require('data::libX'); // -> {}
 
  Although inteded for the console, if you don't like `require()`ing in these functions, they are aliased on the namespaced object.
- Just remember that if you change the name of your namespace, you will have to change these references everywhere. The aliases are as follows:
+ Just remember that if you change the name of your namespace, you will have to change these references everywhere.
+ Also note that changing the namespace does not change the domain these two functions lie on. The aliases are as follows:
 
   - `M8.data === require('M8::data')`
   - `M8.external === require('M8::external')`
+
+Changing the namespace above would change the reference on the left hand side of this equaliy.
 
 ### Arbiters
 
@@ -259,3 +262,8 @@ These help reveal invisible dependencies by reduce the amounts global variables 
       .compile('./out.js')
 
  This code would delete objects `$`, `jQuery` and `Spine` from `window` and under the covers add closure bound alternatives that are `require()`able.
+ The second parameter to `arbiters().add()` is the variable name/names to be deleted. If only a single variable should be deleted,
+ it can be entered as a string, but if this is the same as as the arbiter's name, then it can be omitted completely - as with Spine above.
+
+ Arbitered libraries can be should be referenced simply with `require('jQuery')`, or `require('M8::jQuery')` it there isnt a conflicting
+ jQuery.js file on your current domain. Normally this specificity should not be required.

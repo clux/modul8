@@ -1,8 +1,8 @@
 ## require()
 
 Modul8's `require()` works hand in hand with a private `define()` call that gets pre-pended to the compiled source.
-On compilation each module is wrapped in a define call (encapsulating variables not explicitly exported) that also give each of these modules
-the necessary context for the `require()` calls the module may make. All context is stored via closures and will be hidden from you.
+On compilation each module is wrapped in a define call (ensuring encapsulation of private variables between modules) that give each of these modules
+the necessary context for the `require()` calls it may make. All context is stored via closures and will be hidden from you.
 
 ### Ways to require
 
@@ -48,8 +48,6 @@ There are four different ways to use require:
 
 ### Hooking into define
 
- It is plausible that you may at some point (using an asynchronous script loader) want to register the loaded modules with the existing require system.
- This is at the moment possible only through referencing the private `M8.define()`. Since this is still private, we will not document it yet.
- It is likely that we will want to expose `define()` for public hookins such as this, but it is also arguable that the script loader should get the
- exports object directly. In such a scenario it may make more sense to expose an API on the client for adding modules to the _data_ domain.
+modul8 defines way to help you attach objects/fn to certain domains both live on the client and from the server via `data()`.
+The API docs have full information on this.
 
