@@ -20,19 +20,19 @@
  For more information consult the extensive documentation.
 
 ## Features
-  - client-side require without extra callbacks
-  - compiles CommonJS compatible JavaScript or CoffeeScript
-  - compilation of application code is dynamic and based only on the entry point and its dependency tree
-  - non-CommonJS compatible files (:=libraries) can be optionally listed in the order they should be included (before the rest of the app)
-  - CommonJS modules can work in both NodeJS and the browser if they do not reference external dependencies
-  - low footprint - only ~70 lines pre-pended to the compiled file (no extra file to include - no assumed dependencies)
-  - enforces modularity best practices (no circular dependencies allowed from the start, and helps analyse your require tree)
-  - require tree is displayed in the style of `npm list`
-  - only pulls in what is explicitly required - no need to ever manipulate your include list
-  - application specific data can be pulled in during the compilation process, to be requireable in the browser.
-  - Application does not rely on global variables (although it exports one for the console).
-  - Allows easy integration of CommonJS incompatible libraries to the require system
-  - ideal for single page web applications - only 1 or 2 HTTP requests to get all your code + possibly templates
+
+ - client side require
+ - automatically share code between the server and the client
+ - dynamic resolution and compilation of dependencies server-side
+ - compiles CommonJS compatible JavaScript or CoffeeScript
+ - low footprint - only ~75 lines prepended to output source
+ - enforces modularity best practices
+ - dependency tree loggable in `npm list` style
+ - no need to ever maintain include lists or order
+ - inject requireable data from the server directly
+ - inject requireable data live from the client
+ - minimizes global usage, encapsulates exports in closures
+ - ideal for single page web applications, 1/2 HTTP request to get all code
 
 ## Installation
 
