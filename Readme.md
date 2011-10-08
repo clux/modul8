@@ -17,7 +17,7 @@ this means you can't have invisible dependencies in your application (outside gl
 The extra functions that can touch the exports are debug functions (for console read only access), and some hook-in functions to allow live
 extensions of domains (inject objects/fns directly onto certain domains).
 
-For more information consult the (extensive documentation)[http://clux.github.com/modul8].
+For more information consult the [extensive documentation](http://clux.github.com/modul8).
 
 ## Features
 
@@ -83,7 +83,7 @@ The data API is particularly useful for web applications:
 
 
 ## Learn more
-The (docs)[http://clux.github.com/modul8] should contain everything you could ever want to know about modul8 and probably more.
+The [docs](http://clux.github.com/modul8) should contain everything you could ever want to know about modul8 and probably more.
 Read it, try it out, and give feedback if you like or hate it / parts of it, or if you want to contribute.
 
 modul8 is a relatively fresh project of mine. It was crafted out of necessity, but it has grown into something larger.
