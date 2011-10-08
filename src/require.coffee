@@ -25,7 +25,7 @@ makeRequire = (dom, pathName) -> # each (path, domain) gets its own unique requi
   isRelative = (reqStr) -> reqStr[0...2] is './'
 
   (reqStr) ->
-    #console.log("#{dom}:#{pathName} <- #{reqStr}")
+    console.log("#{dom}:#{pathName} <- #{reqStr}") if base.logging
     if isRelative(reqStr)
       # relative require: only look through the current domain
       scannable = [dom]

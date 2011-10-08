@@ -41,6 +41,7 @@ bundle = (codeList, ns, domload, mw, o) ->
     namespace : ns
     domains   : name for name of o.domains
     arbiters  : o.arbiters
+    logging   : o.logging ? false
     main      : o.mainDomain
   l.push "var _modul8RequireConfig = #{JSON.stringify(config)};"
   l.push anonWrap(compile(__dirname + '/require.coffee'))

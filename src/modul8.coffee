@@ -42,6 +42,7 @@ Modul8::after = (fn) ->
 
 Modul8::set = (key, val) ->
   @removeSubClassMethods()
+  return @ if !(key in ['namespace', 'logging', 'domloader'])
   obj.options[key] = val if @environmentMatches
   @
 
@@ -166,7 +167,8 @@ Modul8::compile = (target) ->
   @removeSubClassMethods()
   return @ if !@environmentMatches
   obj.target = target
-  bundle(obj)
+  #bundle(obj)
+  console.log obj
   @ # keep chaining in case there are subsequent calls chained on in different environments
 
 
@@ -179,6 +181,7 @@ if module is require.main
   start('app.cs')
     .set('domloader', (code) -> code)
     .set('namespace', 'QQ')
+    .set('logging', true)
     .before(modul8.testcutter)
     #.set('compiler', {extension:'.coca', fn: (fileName) -> (js)}) # not worth it yet.
     #.set('working directory', path) # maybe do this to avoid having to prefix dir+ on almost all API inputs
