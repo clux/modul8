@@ -105,7 +105,6 @@ modul8 just tries to facilitate the building of maintainable code. To actually d
 
 Decouple your code this way and you will save yourself the trouble of later having to learn from your mistakes the hard way.
 
-
 ### Going Further
 
 Global variable are evil, and should be kept to a minimum. We know this, and this is were a require system really shines, but you are generally
