@@ -1,5 +1,4 @@
-
-## API
+# API
 
 modul8's API is in its basic form extremely simple, all we need to do is `add()` domains to `domains()`,
 an entry point for the first domain to modul8 itself, and the target JavaScript file to write
@@ -36,33 +35,7 @@ we sometimes write it on the same line.
 We recommend sticking to this notation as subroutines from different methods often have identical names.
 Regardless, the API will warn you if you try to apply methods from a subroutine after having broken out from them.
 
-### Adding Libraries
-
-Appending standard (window exporting) JavaScript and CoffeeScript files is easy. Call `.libraries()` and chain on your options as below.
-
-    modul8('app.js')
-      .domains().add('app', dir+'/app/client/')
-      .libraries()
-        .list(['jQuery.js','history.js'])
-        .path(dir+'/app/client/libs/')
-        .target('out-libs.js')
-      .compile('./out.js');
-
-Note that without the `.target()` option added, the libraries would be inserted in the same file before you application code.
-
-Libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
-And nmodified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response. Thus, using `.target()` and
-splitting these into a different file could be advantageous.
-
-If you would like to integrate libraries into the require system check out the documentation on `arbiters()` below.
-
-#### Libraries CDN Note
-Note that for huge libraries like jQuery, you may benefit (bandwidth wise) by using the [Google CDN](http://code.google.com/apis/libraries/devguide.html#jquery).
-In general, offsourcing static components to load from a CDN is a good first step to scale your website.
-There is also evidence to suggest that splitting up your files into a few big chunks may help the browser load your page faster, by downloading the scripts in parallel.
-Don't overdo this, however. HTTP requests are still expensive. Two or three JavaScript files for your site should be plenty using HTTP.
-
-### Adding Data
+## Adding Data
 
 At some point during development it is natural to feel that this data should be available on the client as well. modul8 supports two ways of doing this:
 
@@ -103,7 +76,33 @@ Chaining on `.add('versions', versionParser)` will allow:
     var versions = require('data::versions');
     console.log(versions['users/view']) // -> [0,2,4]
 
-### Middleware
+## Adding Libraries
+
+Appending standard (window exporting) JavaScript and CoffeeScript files is easy. Call `.libraries()` and chain on your options as below.
+
+    modul8('app.js')
+      .domains().add('app', dir+'/app/client/')
+      .libraries()
+        .list(['jQuery.js','history.js'])
+        .path(dir+'/app/client/libs/')
+        .target('out-libs.js')
+      .compile('./out.js');
+
+Note that without the `.target()` option added, the libraries would be inserted in the same file before you application code.
+
+Libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
+And nmodified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response. Thus, using `.target()` and
+splitting these into a different file could be advantageous.
+
+If you would like to integrate libraries into the require system check out the documentation on `arbiters()` below.
+
+#### Libraries CDN Note
+Note that for huge libraries like jQuery, you may benefit (bandwidth wise) by using the [Google CDN](http://code.google.com/apis/libraries/devguide.html#jquery).
+In general, offsourcing static components to load from a CDN is a good first step to scale your website.
+There is also evidence to suggest that splitting up your files into a few big chunks may help the browser load your page faster, by downloading the scripts in parallel.
+Don't overdo this, however. HTTP requests are still expensive. Two or three JavaScript files for your site should be plenty using HTTP.
+
+## Middleware
 
 Middleware come in two forms: pre-processing and post-processing: in short terms before and after middleware.
 
@@ -126,7 +125,7 @@ To use these they must be chained on `modul8()` via `before()` or `after()` depe
 **WARNING:** testcutter is not very intelligent at the moment, if you reference `require.main` in your module,
 expect that everything from the line of reference to be removed.
 
-### Settings
+## Settings
 
 Below are the settings available:
 
@@ -154,7 +153,7 @@ Options can be set by chaining them on `modul8()` using the `set(option, value)`
       .domains().add('app', dir+'/app/client/')
       .compile('./out.js');
 
-### Code Analysis
+## Code Analysis
 
 To dynamically resolve dependencies from a single entry point, modul8 does a recursive analysis of the `require()`d code.
 Note that modul8 enforces a **no circular dependencies rule**. Granted, this is possible with sufficient fiddling,
@@ -194,7 +193,7 @@ The additional boolean methods, `prefix()` and `suffix()` simply control the lay
 Prefix refers to the domain (name::) prefix that may or may not have been used in the require, and similarly, suffix refers to the file extension.
 Defaults for thes are : `{prefix: true, suffix: false}`.
 
-### Environment Conditionals
+## Environment Conditionals
 
 We can conditionally perform the following action, if __NODE_ENV__ matches specified environment.
 
@@ -226,7 +225,7 @@ The environment conditionals may be applied to several calls:
 If we perform the same action for environments, set them before
 the first `in()` call, or use `in('all')`.
 
-### Debugging
+## Debugging
 
 If you have wrongly entered data to `require()`, you will not get any information other than an undefined reference back.
 Since all the exported data is encapsulated in a closure, you will not be able to find it directly from the console.
@@ -240,7 +239,7 @@ If you want every `require()` call to be logged to the console, you can set the 
 There is additionally a console friendly require version globally available at `M8.require()`.
 This acts as if you were a file called 'CONSOLE' on the root directory of your main application domains, so you can use relative requires there.
 
-### Live Extensions
+## Live Extensions
 
 It is plausible you may want to store `require()`able data or code inside modul8's module containers.
 Perhaps you have a third-party asynchronous script loader, and you want to attach the resulting object onto some appropriate domain.
@@ -270,7 +269,7 @@ Also note that changing the namespace does not change the domain these two funct
 
 Or, more generally; `#{namespace}.data === require('M8::data')`.
 
-### Arbiters
+## Arbiters
 
 These help reveal invisible dependencies by reduce the amounts global variables in your code.
 
