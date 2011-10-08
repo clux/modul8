@@ -1,5 +1,10 @@
 ## Modularity
 
+ This document contains some basic advice for how to achieve modularity,
+ then it goes into more advanced ideas as you scroll. At the bottom lie some information on arbiters.
+
+### The Italy of Programming
+
  It here is one thing you learn quickly in programming, it is this:
    - Spaghetti code is awful
 
@@ -7,7 +12,7 @@
 
 ### What is Bad Code
 
- Without rehashing the entire internet: tightly coupled code is bad code. Because
+ Without rehashing the entire internet: **tightly coupled code is bad code**. Because
 
    - The more tightly coupled your modules become, the more side-effects alterations will have and the harder it will be to reuse that module.
    - The more different behaviour per module, the harder it is to to maintain that module.
@@ -45,7 +50,7 @@
     })();
 
  This is the commonly employed method of encapsulating and exposing objects and functions that can reference private variable through a closure.
- This works; `var private` is inaccessible outside this anonymous function.
+ This works; `private` is inaccessible outside this anonymous function.
 
  Unfortunately, this just exposes publicFn to the global window object. This is not ideal, as anything, anywhere can just reference it, leaving
  us not much wiser. True modularity is clearly impossible when things are just lying around freely like this for everyone. It is fragile, and
@@ -57,113 +62,36 @@
  There is a way to fix this, but first of all it assumes all modules need to support a stadardised format for exporting of modules.
  CommonJS is a such a standardization. It has very large traction at the moment, particularly driven by server side environments such as NodeJS.
 
- Its ideas are simple. Each module avoids the above safety-wrapper, and should assume it has a working `require()`, and instead of attaching its exports
- to a global object, it attaches them to an opaque `exports` object. Alternatively, it can replace the `module.exports` object to define all your exports at once.
+ Its ideas are simple. Each module avoids the above safety-wrapper, must assume it has a working `require()`,
+ and instead of attaching its exports to a global object, it attaches them to an opaque `exports` object.
+ Alternatively, it can replace the `module.exports` object to define all your exports at once.
 
  By making sure each module is written this way, CommonJS parsers can implement clever trickery on top of it to make this behaviour work.
+ I.e. having each module's exports objects stored somewhere for `require()` and every module will export a singleton.
  For more information on this goto the last section in this document: How a Module System Works
-
-## How a Module System Works
-
- A CommonJS parser must turn this:
-
-    var private = 5;
-    var b = require('b');
-    exports.publicFn = function(){
-      console.log(private);
-    }
-
- into
-
-    var module = {}
-    (function(require, module, exports){
-      var private = 5;
-      var b = require('b');
-      exports.publicFn = function(){
-        console.log(private);
-      }
-    })(makeRequire(location), module, stash[location])
-    if (module.exports) {
-      delete stash[location];
-      stash[location] = module.exports;
-    }
-
- where `location` is a unique identifier passed down from the compiler to indicate where the module lives, so that `require()` can later retrieve it.
- The `makeRequire()` factory must be able to construct specifically crafted `require()` functions for given locations.
- `stash` will be a pre-defined object on which all modules are exported.  Wrapping up this behaviour inside a function, we can write something like this.
-
-    define(location, function(require, module, exports) {
-      var private = 5;
-      var b = require('b');
-      exports.publicFn = function(){
-        console.log(private);
-      }
-    });
-
- The `makeRequire()` and `define()` functions can cleverly be defined inside a closure with access to `stash`. This way only these functions can access your modules.
- If the module system simply created a global namespace for where your modules resided, say, `stash = window.ModuleSystem`, then this would be **bad**.
- You could still bypass the system and end up requiring stuff implicitly again.
- modul8 encapsulates such a `stash` inside a closure for `require()` and `define()`, so that only these functions + a few carefully constructed functions to
- debug export information and require strings.
-
- Now, a final problem we have glossed over is which order the modules must be included in. The module above requires the module `b`.
- What happens if this module has not yet been placed in the document? Syntax error. The least `require()`d modules must be included first.
-
- To solve this problem, you can either give a safe ordering yourself - which will become increasingly difficult as your application grows in size -
- or you can resolve `require()` calls recursively to create a dependency tree.
-
- modul8 in particular, does so via excellently simple `detective` module that constructs a full Abstract Syntax Tree before it safely scans for `require()` calls.
- Using this `detective` data, a tree structure representing the dependencies can be created. modul8 allows printing of a prettified form of this tree.
-
-    app::main
-    ├───app::forms
-    ├──┬app::controllers/user
-    │  └──┬app::models/user
-    │     └───app::forms
-    ├──┬app::controllers/entries
-    │  └───app::models/entry
-    └──┬shared::validation
-       └───shared::defs
-
- It is clear that the modules on the edges of this tree must get required first, because they do not depend on anything. And similarly,
- the previous level should be safe having included the outmost level. Note here that `app::forms` is needed both by
- `app:moduls/user` and `app::main` so it must be included before both. Thus, we only care about a module's outmost level.
-
- If we reduce the tree into an unique array of modules and their (maximum) level numbers, sort this by level numbers descending, then voila:
- You have ordered the modules correctly.
-
-#### modul8 Extensions
-
- Whilst maintaining compatibility with the CommonJS spec, we have extended require to ameliorate one common problem.
-
- - `require()` calls is a clash prone object property look-up on `stash[reqStr]`
-
- We wanted to be able to share code between the server and the client by essentially having multiple _require paths_.
- Since the relation between these paths are lost on the browser, we decided to namespace each each path, or _domain_ which we
- refer to them as in modul8. This involves creating an object container directly on `stash`.
- We can make a `require()` function that knows which domains to look on by passing in which domain it was found on as
- an extra parameter to `define()`.
-
- The result is that, with modul8, we can `require()` files relatively as if it was on a 100% CommonJS environment,
- but we could also do cross-domain `require()` by using C++ style namespacing, e.g. calls like `require('shared::helper.js')`
- to get access to code on a different domain.
 
 
 ### Best Practices
 
- One of the hardest areas to modularize web applications is the client application domain. If you are using jQuery, you should be particularly familiar with this.
- `$` selector calls spread around, DOM insertion & manipulation code all over the place, the same event style callback functions written for every URL.
- If this is familiar to you, then you should consider looking at a MVC/MVVM framework such as Spine/Backbone/Knockout (this by no means is this an exhaustive list).
+ One of the hardest areas to modularize web applications is the client application domain. If you are using jQuery,
+ you should be particularly familiar with this. `$` selector calls are spread around, DOM insertion & manipulation code
+ exists all over the place, identical behaviour modifying functions written for every URL.
+ If this is familiar to you, then you should consider looking at a MVC/MVVM framework such as Spine/Backbone/Knockout
+ (although this by no means is this an exhaustive list).
 
  However, for jQuery applications, some things transcends the framework you use to manage your events.
+
 ####Decoupling jQuery code
+
  It is always important to think about the behaviour you are defining. If it is for
 
  - non-request based DOM interactivity - it is almost always better to write a plugin
  - request based DOM interactivity - you should use controllers/eventmanagers to handle your events and call above plugins.
- - calculations needed before DOM manipulation - you should make a standalone calulation module that should work on its own, and call it at appropriate stages above.
+ - calculations needed before DOM manipulation - you should make a standalone calulation module that should work on its own,
+ and call it at appropriate stages above.
 
- This way if something breaks, you should be easily able to narrow down the problem to a UI error, a signaling error, or a calculation error. => Debugging becomes up to 3 times easier.
+ This way if something breaks, you should be easily able to narrow down the problem to a UI error, a signaling error, or a calculation error.
+ => Debugging becomes up to 3 times easier.
 
 #### Ultimately
  modul8 just tries to facilitate the building of maintainable code.
@@ -180,9 +108,11 @@
 
 ### Going Further
 
- Global variable are evil, and should be kept to a minimum. We know this, and this is were a require system really shines, but you are ultimately
- going to depend on a few global variables. Not all libraries are CommonJS compliant, and having jQuery plugins in your require tree (and all its requirements)
- might make things more confusing than by continuing to load jQuery and its plugins in the classical way. Besides, you may want to load it in from a separate CDN anyway.
+ Global variable are evil, and should be kept to a minimum. We know this, and this is were a require system really shines, but you are generally
+ going to depend on a few global variables. Not all libraries are CommonJS compliant, and having jQuery plugins in showing up in your
+ dependency tree under every branch that requires jQuery might just make things more confusing than to load them classically.
+
+ Besides, you may want to load it in from a separate CDN anyway.
 
  Even in such an environment, it is possible rid yourself of the global $ and jQuery symbols without breaking everything.
 
@@ -192,19 +122,27 @@
     delete window.jQuery;
     delete window.$
 
-  This means you can use `$ = require('jQuery')` so everything will be explicitly defined, plus you've deleted the global shortcuts so that you will know when you forgot to require.
+ This means you can use `$ = require('jQuery')` so everything will be explicitly defined on the application domain,
+ you've deleted the global shortcuts so that you will know when you forgot to require, and jQuery (but none of its dependencies)
+ show up in the dependency tree. I.e. you will quickly identify what code is actually DOM dependent, and what isn't or shouldn't be.
+ Clearly this is advantageous.
 
- Clearly this as some advantages. By having all requires of jQuery explicitly defined you know exactly what parts of your code depend on. It will not affect
- libraries as these are loaded in before the big `define()` and `stash` attaching scope, but you probably won't care for these anyway. jQuery will show up in your require tree,
- so you will quickly identify what code is actually DOM dependent, and what isn't or shouldn't be.
+ Having found this pattern very useful, but also noticing how repeating this pattern on several libraries pollutes our application
+ code folder with meaningless files, a modul8 extension has been made in 0.3.0 to allow automatic creation of these arbiters in the
+ internal module system by using the `arbiters()` call.
+ This example could be automated by chaining on `arbiters().add('jQuery', ['jQuery', '$'])`. See the API docs for more details.
 
- Having found this pattern very useful, but also noticing how repeating this pattern on several libraries pollutes our application code folder with meaningless files, a
- modul8 extension has been made in 0.3.0 to allow automatic creation of these arbiters in the internal file system by using the `arbiters()` call.
- This example could be automated by chaining on `arbiters().add(jQuery, ['jQuery', '$'])`. See the API docs for more details.
+ Note that modul8 only allows one domain to be DOM dependent (the application domain), so with correct usage -
+ i.e. not stuffing every module in that domain - you might not have any big revelations there anyway. You are likely
+ having to `require('jQuery')` in most places. But if you just find some areas that do not use it, and as a result move them to a
+ environment agnostic domain, then this has been a success.
 
- Now, modul8 only allows one domain to be DOM dependent (the application domain), so with correct usage - i.e. not stuffing every module in that domain -
- you will not have any big revelations there anyway. If however, you do decide to use this construct - perhaps because you did stuff everything in the application domain -
- you may reap some benefits by being more or less told what files can be moved to another domain. And if you can separate on the domain level, then you are already
- good on your way to resolving spaghetti hell. The rest is tackling correct MVC/MVVM models or other alternative ways of factoring out your spaghetti prone jQuery code.
+ If you can efficiently separate code on the domain level, try to keep above advice in mind
+ (always aim to factor out behavior into small loosely coupled modules),  then you are already
+ good on your way to resolving spaghetti hell. The rest is tackling the correct signaling model for your events.
+ And for that there are MVC/MVVM frameworms of varying sizes.
 
  Good luck.
+
+
+
