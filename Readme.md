@@ -37,6 +37,7 @@ For more information consult the [extensive documentation](http://clux.github.co
 ## Installation
 
 via npm: `npm install modul8`
+or for the development version `git clone git://github.com/clux/modul8`
 
 ## Usage
 Basic use only needs one data domain, and an entry point (here `app.js` - assumed to lie on the domain `add()`ed first).
