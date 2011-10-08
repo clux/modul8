@@ -6,7 +6,7 @@
   </head>
   <body class="subpage">
     <div id="content">
-<h2>API</h2>
+<h1>API</h1>
 
 <p>modul8's API is in its basic form extremely simple, all we need to do is <code>add()</code> domains to <code>domains()</code>,
 an entry point for the first domain to modul8 itself, and the target JavaScript file to write</p>
@@ -44,35 +44,7 @@ we sometimes write it on the same line.</p>
 <p>We recommend sticking to this notation as subroutines from different methods often have identical names.
 Regardless, the API will warn you if you try to apply methods from a subroutine after having broken out from them.</p>
 
-<h3>Adding Libraries</h3>
-
-<p>Appending standard (window exporting) JavaScript and CoffeeScript files is easy. Call <code>.libraries()</code> and chain on your options as below.</p>
-
-<pre><code>modul8('app.js')
-  .domains().add('app', dir+'/app/client/')
-  .libraries()
-    .list(['jQuery.js','history.js'])
-    .path(dir+'/app/client/libs/')
-    .target('out-libs.js')
-  .compile('./out.js');
-</code></pre>
-
-<p>Note that without the <code>.target()</code> option added, the libraries would be inserted in the same file before you application code.</p>
-
-<p>Libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
-And nmodified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response. Thus, using <code>.target()</code> and
-splitting these into a different file could be advantageous.</p>
-
-<p>If you would like to integrate libraries into the require system check out the documentation on <code>arbiters()</code> below.</p>
-
-<h4>Libraries CDN Note</h4>
-
-<p>Note that for huge libraries like jQuery, you may benefit (bandwidth wise) by using the <a href="http://code.google.com/apis/libraries/devguide.html#jquery">Google CDN</a>.
-In general, offsourcing static components to load from a CDN is a good first step to scale your website.
-There is also evidence to suggest that splitting up your files into a few big chunks may help the browser load your page faster, by downloading the scripts in parallel.
-Don't overdo this, however. HTTP requests are still expensive. Two or three JavaScript files for your site should be plenty using HTTP.</p>
-
-<h3>Adding Data</h3>
+<h2>Adding Data</h2>
 
 <p>At some point during development it is natural to feel that this data should be available on the client as well. modul8 supports two ways of doing this:</p>
 
@@ -120,7 +92,35 @@ This should be easy to detect in a console though.</p>
 console.log(versions['users/view']) // -&gt; [0,2,4]
 </code></pre>
 
-<h3>Middleware</h3>
+<h2>Adding Libraries</h2>
+
+<p>Appending standard (window exporting) JavaScript and CoffeeScript files is easy. Call <code>.libraries()</code> and chain on your options as below.</p>
+
+<pre><code>modul8('app.js')
+  .domains().add('app', dir+'/app/client/')
+  .libraries()
+    .list(['jQuery.js','history.js'])
+    .path(dir+'/app/client/libs/')
+    .target('out-libs.js')
+  .compile('./out.js');
+</code></pre>
+
+<p>Note that without the <code>.target()</code> option added, the libraries would be inserted in the same file before you application code.</p>
+
+<p>Libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
+And nmodified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response. Thus, using <code>.target()</code> and
+splitting these into a different file could be advantageous.</p>
+
+<p>If you would like to integrate libraries into the require system check out the documentation on <code>arbiters()</code> below.</p>
+
+<h4>Libraries CDN Note</h4>
+
+<p>Note that for huge libraries like jQuery, you may benefit (bandwidth wise) by using the <a href="http://code.google.com/apis/libraries/devguide.html#jquery">Google CDN</a>.
+In general, offsourcing static components to load from a CDN is a good first step to scale your website.
+There is also evidence to suggest that splitting up your files into a few big chunks may help the browser load your page faster, by downloading the scripts in parallel.
+Don't overdo this, however. HTTP requests are still expensive. Two or three JavaScript files for your site should be plenty using HTTP.</p>
+
+<h2>Middleware</h2>
 
 <p>Middleware come in two forms: pre-processing and post-processing: in short terms before and after middleware.</p>
 
@@ -148,7 +148,7 @@ console.log(versions['users/view']) // -&gt; [0,2,4]
 <p><strong>WARNING:</strong> testcutter is not very intelligent at the moment, if you reference <code>require.main</code> in your module,
 expect that everything from the line of reference to be removed.</p>
 
-<h3>Settings</h3>
+<h2>Settings</h2>
 
 <p>Below are the settings available:</p>
 
@@ -180,7 +180,7 @@ It is there if you want to write a simpler prefix than than capital M, 8 all the
   .compile('./out.js');
 </code></pre>
 
-<h3>Code Analysis</h3>
+<h2>Code Analysis</h2>
 
 <p>To dynamically resolve dependencies from a single entry point, modul8 does a recursive analysis of the <code>require()</code>d code.
 Note that modul8 enforces a <strong>no circular dependencies rule</strong>. Granted, this is possible with sufficient fiddling,
@@ -222,7 +222,7 @@ It must take either a function to pipe the tree to, or a filepath to write it ou
 Prefix refers to the domain (name::) prefix that may or may not have been used in the require, and similarly, suffix refers to the file extension.
 Defaults for thes are : <code>{prefix: true, suffix: false}</code>.</p>
 
-<h3>Environment Conditionals</h3>
+<h2>Environment Conditionals</h2>
 
 <p>We can conditionally perform the following action, if <strong>NODE_ENV</strong> matches specified environment.</p>
 
@@ -256,7 +256,7 @@ Defaults for thes are : <code>{prefix: true, suffix: false}</code>.</p>
 <p>If we perform the same action for environments, set them before
 the first <code>in()</code> call, or use <code>in('all')</code>.</p>
 
-<h3>Debugging</h3>
+<h2>Debugging</h2>
 
 <p>If you have wrongly entered data to <code>require()</code>, you will not get any information other than an undefined reference back.
 Since all the exported data is encapsulated in a closure, you will not be able to find it directly from the console.</p>
@@ -270,7 +270,7 @@ with the globally available <code>M8.inspect(domainName)</code> method. Addition
 <p>There is additionally a console friendly require version globally available at <code>M8.require()</code>.
 This acts as if you were a file called 'CONSOLE' on the root directory of your main application domains, so you can use relative requires there.</p>
 
-<h3>Live Extensions</h3>
+<h2>Live Extensions</h2>
 
 <p>It is plausible you may want to store <code>require()</code>able data or code inside modul8's module containers.
 Perhaps you have a third-party asynchronous script loader, and you want to attach the resulting object onto some appropriate domain.</p>
@@ -305,7 +305,7 @@ Also note that changing the namespace does not change the domain these two funct
 
 <p>Or, more generally; <code>#{namespace}.data === require('M8::data')</code>.</p>
 
-<h3>Arbiters</h3>
+<h2>Arbiters</h2>
 
 <p>These help reveal invisible dependencies by reduce the amounts global variables in your code.</p>
 

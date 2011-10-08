@@ -6,12 +6,12 @@
   </head>
   <body class="subpage">
     <div id="content">
-<h2>Modularity</h2>
+<h1>Modularity</h1>
 
 <p>This document contains some basic advice for how to achieve modularity,
 then it goes into more advanced ideas as you scroll. At the bottom lie some information on arbiters.</p>
 
-<h3>The Italy of Programming</h3>
+<h2>Welcome to Italy</h2>
 
 <p>It here is one thing you learn quickly in programming, it is this:</p>
 
@@ -21,7 +21,7 @@ then it goes into more advanced ideas as you scroll. At the bottom lie some info
 
 <p>It is awful to read, but it is even worse to modify or maintain.</p>
 
-<h3>What is Bad Code</h3>
+<h2>What is Bad Code</h2>
 
 <p>Without rehashing the entire internet: <strong>tightly coupled code is bad code</strong>. Because</p>
 
@@ -31,7 +31,7 @@ then it goes into more advanced ideas as you scroll. At the bottom lie some info
 <li>The more one type of behaviour is spread out into different modules, the harder it is to find the source of that behaviour.</li>
 </ul>
 
-<h3>What is Good Code</h3>
+<h2>What is Good Code</h2>
 
 <h4>What it is not: Bad Code</h4>
 
@@ -48,7 +48,7 @@ It does, however, take certain disipline to constantly police your files for mul
 <p>There's simply no way around it. The biggest mistake you can make as a learning programmer is to not factor out behaviour as early as possible.
 <em></advice></em></p>
 
-<h3>Relation to JavaScript</h3>
+<h2>Relation to JavaScript</h2>
 
 <p>JavaScript has no module system.</p>
 
@@ -72,7 +72,7 @@ us not much wiser. True modularity is clearly impossible when things are just ly
 it is error prone as conflicting exports will actually just favour the last script to execute - as JavaScript simply runs top to bottom, attaching its
 exports to window as we go along. Clearly we need something better than this.</p>
 
-<h4>CommonJS</h4>
+<h3>CommonJS</h3>
 
 <p>There is a way to fix this, but first of all it assumes all modules need to support a stadardised format for exporting of modules.
 CommonJS is a such a standardization. It has very large traction at the moment, particularly driven by server side environments such as NodeJS.</p>
@@ -83,9 +83,9 @@ Alternatively, it can replace the <code>module.exports</code> object to define a
 
 <p>By making sure each module is written this way, CommonJS parsers can implement clever trickery on top of it to make this behaviour work.
 I.e. having each module's exports objects stored somewhere for <code>require()</code> and every module will export a singleton.
-For more information on this goto the last section in this document: How a Module System Works</p>
+For more information on this goto the <a href="commonjs.html">CommonJS document</a> describing how a module system works.</p>
 
-<h3>Best Practices</h3>
+<h2>Best Practices</h2>
 
 <p>One of the hardest areas to modularize web applications is the client application domain. If you are using jQuery,
 you should be particularly familiar with this. <code>$</code> selector calls are spread around, DOM insertion &amp; manipulation code
@@ -95,7 +95,7 @@ If this is familiar to you, then you should consider looking at a MVC/MVVM frame
 
 <p>However, for jQuery applications, some things transcends the framework you use to manage your events.</p>
 
-<h4>Decoupling jQuery code</h4>
+<h3>Decoupling jQuery code</h3>
 
 <p>It is always important to think about the behaviour you are defining. If it is for</p>
 
@@ -109,7 +109,7 @@ and call it at appropriate stages above.</li>
 <p>This way if something breaks, you should be easily able to narrow down the problem to a UI error, a signaling error, or a calculation error.
 => Debugging becomes up to 3 times easier.</p>
 
-<h4>Ultimately</h4>
+<h3>General</h3>
 
 <p>modul8 just tries to facilitate the building of maintainable code. To actually do so, you need to always stay vigilant and remember to:</p>
 
@@ -123,7 +123,7 @@ and call it at appropriate stages above.</li>
 
 <p>Decouple your code this way and you will save yourself the trouble of later having to learn from your mistakes the hard way.</p>
 
-<h3>Going Further</h3>
+<h2>Going Further</h2>
 
 <p>Global variable are evil, and should be kept to a minimum. We know this, and this is were a require system really shines, but you are generally
 going to depend on a few global variables. Not all libraries are CommonJS compliant, and having jQuery plugins in showing up in your
@@ -160,6 +160,6 @@ environment agnostic domain, then this has been a success.</p>
 good on your way to resolving spaghetti hell. The rest is tackling the correct signaling model for your events.
 And for that there are MVC/MVVM frameworms of varying sizes.</p>
 
-<p>Good luck. Hopefully this was useful.</p>    </div>
+<p>Good luck. Hopefully this is useful on some level.</p>    </div>
   </body>
 </html>

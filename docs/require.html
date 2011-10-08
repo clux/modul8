@@ -6,13 +6,13 @@
   </head>
   <body class="subpage">
     <div id="content">
-<h2>require()</h2>
+<h1>require()</h1>
 
 <p>Modul8's <code>require()</code> works hand in hand with a private <code>define()</code> call that gets pre-pended to the compiled source.
 On compilation each module is wrapped in a define call (ensuring encapsulation of private variables between modules) that give each of these modules
 the necessary context for the <code>require()</code> calls it may make. All context is stored via closures and will be hidden from you.</p>
 
-<h3>Ways to require</h3>
+<h2>Ways to require</h2>
 
 <p>There are four different ways to use require:</p>
 
@@ -34,7 +34,7 @@ Note that this domain name is not related to the namespace setting. If a jQuery.
 arbiters domain. If this cooexistence is necessary, any arbiters must be <code>require()</code>d domainspecifically: <code>$ = require('M8::jQuery')</code>.</p></li>
 </ul>
 
-<h4>File extensions</h4>
+<h3>File extensions</h3>
 
 <p>File extensions are never necessary, but you can (and sometimes should) include them for specificity (except for on the data domain).</p>
 
