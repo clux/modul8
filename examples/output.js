@@ -1,6 +1,6 @@
 (function(){  window.monolith = "I am a huge library";
 })();
-(function(){window.QQ = {};
+(function(){window.QQ = {data:{}};
 var _modul8RequireConfig = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"main":"app"};
 (function(){var a, arbiters, ary, base, domains, exports, glob, makeRequire, name, ns, toAbsPath, _i, _j, _len, _len2, _ref;
 var __indexOf = Array.prototype.indexOf || function(item) {
@@ -88,13 +88,13 @@ ns.domains = function() {
   return console.log("modul8 tracks the following domains: ", domains.concat(['external']));
 };
 ns.require = makeRequire(base.main, 'CONSOLE');
-exports.M8.data = ns.external = function(name, exported) {
+exports.M8.data = ns.data = function(name, exported) {
   if (exports.data[name]) {
     delete exports.data[name];
   }
   return exports.data[name] = exported;
 };
-exports.M8.external = ns.data = function(name, exported) {
+exports.M8.external = ns.external = function(name, exported) {
   if (exports.external[name]) {
     delete exports.exernal[name];
   }
@@ -130,5 +130,5 @@ b.doComplex('app calls up to sub1');
 v = require('validation.coffee');
 console.log('2004 isLeapYear?', v.isLeapYear(2004));
 m = require('monolith');
-console.log("monolith:", m);});})();
+console.log("monolith:" + m);});})();
 })();
