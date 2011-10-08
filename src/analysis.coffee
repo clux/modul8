@@ -133,7 +133,7 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   arbs = @arbiters
   ((t) ->
     for name,dep of t.deps
-      continue if name of arbs
+      continue if name of arbs # dont include arbiters in code list, bundle wont be able to include them
       obj[dep.name] = [] if !obj[dep.name]
       obj[dep.name][0] = Math.max(dep.level, obj[dep.name][0] or 0)
       obj[dep.name][1] = dep.domain
