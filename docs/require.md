@@ -1,10 +1,10 @@
-## require()
+# require()
 
 Modul8's `require()` works hand in hand with a private `define()` call that gets pre-pended to the compiled source.
 On compilation each module is wrapped in a define call (ensuring encapsulation of private variables between modules) that give each of these modules
 the necessary context for the `require()` calls it may make. All context is stored via closures and will be hidden from you.
 
-### Ways to require
+## Ways to require
 
 There are four different ways to use require:
 
@@ -27,7 +27,7 @@ There are four different ways to use require:
  Note that this domain name is not related to the namespace setting. If a jQuery.js file is found on the current domain, however, it will gain priority over the
  arbiters domain. If this cooexistence is necessary, any arbiters must be `require()`d domainspecifically: `$ = require('M8::jQuery')`.
 
-#### File extensions
+### File extensions
 
  File extensions are never necessary, but you can (and sometimes should) include them for specificity (except for on the data domain).
 
@@ -67,5 +67,3 @@ In other words, collisions should not occur unless you have duplicate files in d
 
 modul8 defines way to help you attach objects/fn to certain domains both live on the client and from the server via `data()`.
 The [API docs](api.html) have full information on this.
-
-

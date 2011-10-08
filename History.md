@@ -1,3 +1,15 @@
+0.4.0 / 2011-??-??
+==================
+
+  * Better documentation.
+  * Safed up API against broken out calls against subclass.
+  * Loggability of requires on the client
+
+  TODO:
+  * Ensure a separate libs file will not get overwritten if no changes has been made
+  * Provide more levels of logging on the client
+  * Add option to show external requires in the dependency tree.
+
 0.3.0 / 2011-10-08
 ==================
 

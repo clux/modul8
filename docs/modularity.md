@@ -1,9 +1,9 @@
-## Modularity
+# Modularity
 
 This document contains some basic advice for how to achieve modularity,
 then it goes into more advanced ideas as you scroll. At the bottom lie some information on arbiters.
 
-### The Italy of Programming
+## Welcome to Italy
 
 It here is one thing you learn quickly in programming, it is this:
 
@@ -11,7 +11,7 @@ It here is one thing you learn quickly in programming, it is this:
 
 It is awful to read, but it is even worse to modify or maintain.
 
-### What is Bad Code
+## What is Bad Code
 
 Without rehashing the entire internet: **tightly coupled code is bad code**. Because
 
@@ -19,7 +19,7 @@ Without rehashing the entire internet: **tightly coupled code is bad code**. Bec
    - The more different behaviour per module, the harder it is to to maintain that module.
    - The more one type of behaviour is spread out into different modules, the harder it is to find the source of that behaviour.
 
-### What is Good Code
+## What is Good Code
 
 #### What it is not: Bad Code
 If tightly coupled code is bad code, then good code is loosely coupled. A ⇒ B ∴ ¬B ⇒ ¬A.
@@ -35,7 +35,7 @@ You may shrug and say, well, I'm only going to write this once anyway..
 There's simply no way around it. The biggest mistake you can make as a learning programmer is to not factor out behaviour as early as possible.
 *</advice>*
 
-### Relation to JavaScript
+## Relation to JavaScript
 
 JavaScript has no module system.
 
@@ -58,7 +58,7 @@ us not much wiser. True modularity is clearly impossible when things are just ly
 it is error prone as conflicting exports will actually just favour the last script to execute - as JavaScript simply runs top to bottom, attaching its
 exports to window as we go along. Clearly we need something better than this.
 
-#### CommonJS
+### CommonJS
 
 There is a way to fix this, but first of all it assumes all modules need to support a stadardised format for exporting of modules.
 CommonJS is a such a standardization. It has very large traction at the moment, particularly driven by server side environments such as NodeJS.
@@ -69,10 +69,10 @@ Alternatively, it can replace the `module.exports` object to define all your exp
 
 By making sure each module is written this way, CommonJS parsers can implement clever trickery on top of it to make this behaviour work.
 I.e. having each module's exports objects stored somewhere for `require()` and every module will export a singleton.
-For more information on this goto the last section in this document: How a Module System Works
+For more information on this goto the [CommonJS document](commonjs.html) describing how a module system works.
 
 
-### Best Practices
+## Best Practices
 
 One of the hardest areas to modularize web applications is the client application domain. If you are using jQuery,
 you should be particularly familiar with this. `$` selector calls are spread around, DOM insertion & manipulation code
@@ -82,7 +82,7 @@ If this is familiar to you, then you should consider looking at a MVC/MVVM frame
 
 However, for jQuery applications, some things transcends the framework you use to manage your events.
 
-####Decoupling jQuery code
+### Decoupling jQuery code
 
 It is always important to think about the behaviour you are defining. If it is for
 
@@ -94,7 +94,8 @@ It is always important to think about the behaviour you are defining. If it is f
 This way if something breaks, you should be easily able to narrow down the problem to a UI error, a signaling error, or a calculation error.
 => Debugging becomes up to 3 times easier.
 
-#### Ultimately
+### General
+
 modul8 just tries to facilitate the building of maintainable code. To actually do so, you need to always stay vigilant and remember to:
 
  - Not blend multiple types of behaviour together in one file.
@@ -105,7 +106,7 @@ modul8 just tries to facilitate the building of maintainable code. To actually d
 
 Decouple your code this way and you will save yourself the trouble of later having to learn from your mistakes the hard way.
 
-### Going Further
+## Going Further
 
 Global variable are evil, and should be kept to a minimum. We know this, and this is were a require system really shines, but you are generally
 going to depend on a few global variables. Not all libraries are CommonJS compliant, and having jQuery plugins in showing up in your
@@ -141,4 +142,4 @@ If you can efficiently separate code on the domain level, try to keep above advi
 good on your way to resolving spaghetti hell. The rest is tackling the correct signaling model for your events.
 And for that there are MVC/MVVM frameworms of varying sizes.
 
-Good luck. Hopefully this was useful.
+Good luck. Hopefully this is useful on some level.

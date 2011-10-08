@@ -18,7 +18,7 @@ toAbsPath = (name, subFolders, domain) -> # subFolders is array of folders after
     name = name[3...]
   folderStr = subFolders.join('/')
   prependStr = if folderStr then folderStr+'/' else ''
-  domain+'::'+prependStr+name #TODO: check that this is fine
+  domain+'::'+prependStr+name
 
 # constructor
 CodeAnalysis = (@entryPoint, @domains, @mainDomain, @premw, @arbiters) ->
