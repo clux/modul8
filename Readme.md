@@ -37,6 +37,7 @@ For more information consult the [extensive documentation](http://clux.github.co
 ## Installation
 
 via npm: `npm install modul8`
+
 or for the development version `git clone git://github.com/clux/modul8`
 
 ## Usage
