@@ -6,6 +6,7 @@
   * Loggability of requires on the client
 
   TODO:
+
   * Ensure a separate libs file will not get overwritten if no changes has been made
   * Provide more levels of logging on the client
   * Add option to show external requires in the dependency tree.
