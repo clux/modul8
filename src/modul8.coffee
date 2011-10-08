@@ -167,8 +167,7 @@ Modul8::compile = (target) ->
   @removeSubClassMethods()
   return @ if !@environmentMatches
   obj.target = target
-  #bundle(obj)
-  console.log obj
+  bundle(obj)
   @ # keep chaining in case there are subsequent calls chained on in different environments
 
 
