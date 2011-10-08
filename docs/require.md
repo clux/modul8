@@ -45,9 +45,27 @@ There are four different ways to use require:
  If there is one thing to learn from it is is that you absolutely **DO NOT omit extensions and keep .js and .coffee versions in the same folder**
  or you will quickly become very frustrated as to why your coffee changes arent doing anything.
 
+### Require Priority
+
+Requires are attempted resolved with the following priority:
+
+    if require string is relative
+      resolve absolutized require string on current domain
+    else if require string includes domain prefix
+      resolve require string on specified domain
+    else //arbiter search
+      resolve require string on the M8 domain
+
+    if none of the above worked
+      resolve on all other domains
+
+    //error
+
+In other words, collisions should not occur unless you have duplicate files in different domains, and you are very relaxed about your domain specifiers or arbiter prefixes.
 
 ### Hooking into define
 
 modul8 defines way to help you attach objects/fn to certain domains both live on the client and from the server via `data()`.
-The API docs have full information on this.
+The [API docs](api.html) have full information on this.
+
 
