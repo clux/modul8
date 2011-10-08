@@ -1,0 +1,321 @@
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>modul8 - modularity enforcing code packager and analyzer for nodejs web applications</title>
+    <link rel='stylesheet' href='../main.css' />
+  </head>
+  <body class="subpage">
+    <div id="content">
+<h2>API</h2>
+
+<p>modul8's API is in its basic form extremely simple, all we need to do is <code>add()</code> domains to <code>domains()</code>,
+an entry point for the first domain to modul8 itself, and the target JavaScript file to write</p>
+
+<pre><code>var modul8 = require('modul8');
+var dir = __dirname;
+
+modul8('app.js')
+  .domains()
+    .add('app', dir+'/app/client/')
+    .add('shared', dir+'/app/shared/')
+  .compile('./out.js');
+</code></pre>
+
+<p>You can add any number of domains to be scanned, but the first domain added must be the location of the entry point; 'app.js'.
+Files on these domains can be required specifically with <code>require('domain::name')</code>.
+Both the domain and file extension can be omitted if there are no conflicts (if there are, the main domain will be scanned first).</p>
+
+<p>The following are equivalent from the file: 'helper.js' on the 'shared' domain.</p>
+
+<pre><code>require('shared::validation.js') //extension not necessary
+require('./helpers.js') //relative require searches only this domain
+require('./helpers') //.js extension always gets searched before .coffee
+</code></pre>
+
+<p>Additionally, <code>require('helpers')</code> will resolve to the same file if there are no helpers.js in the root of any other domains.
+More information on <code>require</code> is available in <a href="require.html">this section</a></p>
+
+<h3>API Chaining Note</h3>
+
+<p>As indicated by the first example, the modul8 API is controlled by chaining methods together. While most chaining APIs can be read linearly,
+we apply extra indentation when we break into an - under the cover - subclass (e.g. at the <code>.data()</code> above). If only one method is chained on a subclass,
+we sometimes write it on the same line.</p>
+
+<p>While actually applying this extra indentation obviously won't change anything programmatically, we feel it makes reading it more semantic.
+We recommend sticking to this notation as subclass methods from different subclasses often have identical names.
+Regardless, the API will warn you if you try to apply non-subclass methods after having broken out from them.</p>
+
+<h3>Adding Libraries</h3>
+
+<p>Not every JavaScript library is CommonJS compatible, and you also might just want to keep exporting jQuery to window since it is so heavily intwined with
+your application code. modul8 makes this easy by simply concatenating in the libraries you need first - in the order you specify.</p>
+
+<pre><code>modul8('app.js')
+  .domains().add('app', dir+'/app/client/')
+  .libraries()
+    .list(['jQuery.js','history.js'])
+    .path(dir+'/app/client/libs/')
+    .target('out-libs.js')
+  .compile('./out.js');
+</code></pre>
+
+<p>Libraries tend to update with a very different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
+Note that unmodified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response.
+This can be done like the above example by calling <code>target()</code> on <code>libraries()</code>. Lacking this, libraries will be inserted on before your application code.</p>
+
+<p>Note that for huge libraries like jQuery, you may benefit (bandwidth wise) by using the <a href="http://code.google.com/apis/libraries/devguide.html#jquery">Google CDN</a>.
+In general, offsourcing static components to load from a CDN is a good first step to scale your website.
+There is also evidence to suggest that splitting up your files into a few big chunks may help the browser load your page faster, by downloading the scripts in parallel.
+Don't overdo this, however. HTTP requests are still expensive. Two or three JavaScript files for your site should be plenty using HTTP.</p>
+
+<p>If you would like to integrate libraries into the require system check out the documentation on <code>arbiters()</code> below.</p>
+
+<h3>Adding Data</h3>
+
+<p>At some point during development it is natural to feel that this data should be available on the client as well. There are two fundamental ways of doing this with modul8.</p>
+
+<ul>
+<li>Have an explicit file on a shared domain, exporting the objects you need</li>
+<li>Export the object directly onto the data domain</li>
+</ul>
+
+<p>The first is good if you have static data like definitions, because they are perhaps useful to the server as well,
+but suppose you want to export more ephemeral data that the server has no need for, like templates or template versions.
+To export these to the server, you will have to obtain the data somehow - your job - and allow modul8 to pull it into the script.</p>
+
+<p>The data API simply consists of <code>add()</code>ing data keys and functions to <code>data()</code></p>
+
+<pre><code>modul8('app.js')
+  .domains().add('app', dir+'/app/client/')
+  .data()
+    .add('versions', myVersionParser)
+    .add('models', myModelParser)
+    .add('templates', myTemplateCompiler)
+  .compile('./out.js');
+</code></pre>
+
+<p>Under the covers, modul8 attaches the output of the myX functions to an internal <em>data domain</em> (so this domain is reserved) from the server.
+The end result is that you can require this data as if it were exported from a file (named versions|templates|models) on a domain named data:
+e.g. <code>require('data::models')</code> gives you the output of <code>myModelParser</code>. In other words, the functions output is
+attached verbatim to modul8's require tree; if you provide bad data, you are solely responsible for breaking your build.
+This should be easy to detect in a console though.</p>
+
+<p>As a small example our personal version parser operates something like the following:</p>
+
+<pre><code>function versionParser(){
+  //code to scan template directory for version numbers stored on the first line
+  return "{'user/view':[0,2,4], 'user/register':[0,3,1]}";
+}
+</code></pre>
+
+<p>Chaining on <code>.add('versions', versionParser)</code> will allow:</p>
+
+<pre><code>var versions = require('data::versions');
+console.log(versions['users/view']) // -&gt; [0,2,4]
+</code></pre>
+
+<h3>Middleware</h3>
+
+<p>Middleware come in two forms: pre-processing and post-processing: in short terms before and after middleware.</p>
+
+<ul>
+<li><code>.before()</code> middleware is applied before analysing dependencies as well as before compiling.</li>
+<li><code>.after()</code> middleware is only applied to the output right before it gets written.</li>
+</ul>
+
+<p>modul8 comes bundled with one of each of these:</p>
+
+<ul>
+<li><code>modul8.minifier</code> - post-processing middleware that minifies using <code>UglifyJS</code></li>
+<li><code>modul8.testcutter</code> - pre-processing middleware that cuts out the end of a file (after require.main is referenced) to avoid pulling in test dependencies.</li>
+</ul>
+
+<p>To use these they must be chained on <code>modul8()</code> via <code>before()</code> or <code>after()</code> depending on what type of middleware it is.</p>
+
+<pre><code>modul8('app.js')
+  .domains().add('app', dir+'/app/client/')
+  .before(modul8.testcutter)
+  .after(modul8.minifier)
+  .compile('./out.js');
+</code></pre>
+
+<p><strong>WARNING:</strong> testcutter is not very intelligent at the moment, if you reference <code>require.main</code> in your module,
+expect that everything from the line of reference to be removed.</p>
+
+<h3>Settings</h3>
+
+<p>Below are the settings available:</p>
+
+<ul>
+<li><code>domloader</code> A function that safety wraps code with a DOMContentLoaded barrier</li>
+<li><code>namespace</code>  The namespace modul8 uses in your browser, to export console helpers to, defaulting to <code>M8</code></li>
+</ul>
+
+<p><strong>You have to</strong> set <code>domloader</code> if you do not use jQuery. If you are familiar with the DOM or any other library this should be fairly trivial.
+The default jQuery implementation is as follows:</p>
+
+<pre><code>domloader_fn = function(code){
+ return "jQuery(function(){"+code+"});"
+}
+</code></pre>
+
+<p>Note that the namespace does not actually contain the exported objects from each module, or the data attachments.
+This information is encapsulated in a closure. The namespace'd object simply contains the public debug API.
+It is there if you want to write a simpler prefix than than capital M, 8 all the time, maybe you would like 'QQ' or 'TT'.</p>
+
+<p>Options can be set by chaining them on <code>modul8()</code> using the <code>set(option, value)</code> method. For example:</p>
+
+<pre><code>modul8('app.js')
+  .set('namespace', 'QQ')
+  .set('domloader', domloader_fn)
+  .domains().add('app', dir+'/app/client/')
+  .compile('./out.js');
+</code></pre>
+
+<h3>Code Analysis</h3>
+
+<p>To dynamically resolve dependencies from a single entry point, modul8 does a recursive analysis of the <code>require()</code>d code.
+To avoid getting stuck in an infinite loop, preserve the tree structure of the dependency tree,
+modul8 enforces a <strong>no circular dependencies rule</strong>. Granted, this is possible with sufficient fiddling,
+but it brings one major disadvantages to the table:</p>
+
+<p>A circularly dependent set of modules are tightly coupled; they are really no longer a set of moudles, but more of a library.
+There are numerous sources talking about <a href="http://www.google.com/search?q=tight+coupling+bad">why is tight coupling is bad</a> so this
+will not be covered here. Regardless of whether or not you end up using modul8: ignore this warnig at your own risk.</p>
+
+<p>Additionally, the dependency diagram cannot be easily visualized as it has gone from being a tree, to a tree with cycles.
+With the no circulars rule enforced, we can print a pretty <code>npm list</code>-like dependency tree for your client code.</p>
+
+<pre><code>app::main
+├──┬app::controllers/user
+│  └───app::models/user
+├──┬app::controllers/entries
+│  └───app::models/entry
+└──┬shared::validation
+   └───shared::defs
+</code></pre>
+
+<p>While this usually grows much lot bigger than what is seen here, by putting this in your face, it helps you identify what pieces of code
+that perhaps should not need to be required at a particular point. In essence, we feel this helps promote more loosely coupled applications.
+We strongly encourage you to use it if possible. The API consists of chaining 1-3 methods on <code>analysis()</code>:</p>
+
+<pre><code>modul8('app.js')
+  .domains().add('app', dir+'/app/client/')
+  .analysis()
+    .output(console.log)
+    .prefix(false)
+    .suffix(true)
+  .compile('./out.js')
+</code></pre>
+
+<p>The <code>output()</code> method must be set for <code>analysis()</code> to have any effect.
+It must take either a function to pipe the tree to, or a filepath to write it out to.</p>
+
+<p>The additional boolean methods, <code>prefix()</code> and <code>suffix()</code> simply control the layout of the printed dependency tree.
+Prefix refers to the domain (name::) prefix that may or may not have been used in the require, and similarly, suffix refers to the file extension.
+Defaults for thes are : <code>{prefix: true, suffix: false}</code>.</p>
+
+<h3>Environment Conditionals</h3>
+
+<p>We can conditionally perform the following action, if <strong>NODE_ENV</strong> matches specified environment.</p>
+
+<pre><code>modul8('app.js')
+  .domains().add('app', dir+'/app/client/')
+  .in('development').after(modul8.minifier)
+  .in('development').compile('./out.js')
+  .in('production').compile('./out.js')
+</code></pre>
+
+<p>The environment conditionals may be applied to several calls:</p>
+
+<pre><code>modul8('app.js')
+  .domains().add('app', dir+'/app/client/')
+  .in('development')
+    .after(modul8.minifier)
+    .analysis()
+      .output(console.log)
+      .prefix(true)
+      .suffix(false)
+    .domains()
+      .add('debug', dir+'/app/debug/')
+  .in('production')
+    .libraries()
+      .list(['analytics.js'])
+      .path(dir+'/app/client/libs/')
+  .in('all')
+   .compile('./out.js')
+</code></pre>
+
+<p>If we perform the same action for environments, set them before
+the first <code>in()</code> call, or use <code>in('all')</code>.</p>
+
+<h3>Debugging</h3>
+
+<p>If you have wrongly entered data to <code>require()</code>, you will not get any information other than an undefined reference back.
+Since all the exported data is encapsulated in a closure, you will not be able to find it directly from the console.</p>
+
+<p>To see where the object you are looking for should live or lives, you may find it useful to log the specified domain object
+with the globally available <code>M8.inspect(domainName)</code> method. Additionally, you may show the list of domains modul8 tracks using the
+<code>M8.domains()</code> command.</p>
+
+<p>There is additionally a console friendly require version globally available at <code>M8.require()</code>.
+This acts as if you were a file called 'CONSOLE' on the root directory of your main application domains, so you can use relative requires there.</p>
+
+<h3>Live Extensions</h3>
+
+<p>It is plausible you may want to store <code>require()</code>able data or code inside modul8's module containers.
+Perhaps you have a third-party asynchronous script loader, and you want to attach the resulting object onto some appropriate domain.</p>
+
+<p>This is an issue, because <code>require()</code> calls are analysed on the server before compilation, and if you reference something that will be loaded in
+separately, it will not be found on the server. The solution to this is the same solution modul8 uses to allow data domain references; whitelisting.</p>
+
+<p>The domains <code>M8</code>, <code>data</code> and <code>external</code> have been whitelisted for this purpose, and a <code>require()</code>able API exists on the client.</p>
+
+<ul>
+<li><code>require('M8::external')</code> - returns a function(name, object), which, when called will attach object to external::name</li>
+<li><code>require('M8::external')</code> - returns a function(name, object), which, when called will attach object to data::name</li>
+</ul>
+
+<p>Both these functions will overwrite on repeat calls. For example:</p>
+
+<pre><code> var dataAdd = require('M8::data');
+ dataAdd('libX', libXobj);
+ require('data::libX'); // -&gt; libXobj
+ dataAdd('libX', {});
+ require('data::libX'); // -&gt; {}
+</code></pre>
+
+<p>Although inteded for the console, if you don't like <code>require()</code>ing in these functions, they are aliased on the namespaced object.
+Just remember that if you change the name of your namespace, you will have to change these references everywhere.
+Also note that changing the namespace does not change the domain these two functions lie on. The aliases are as follows:</p>
+
+<ul>
+<li><code>M8.data === require('M8::data')</code></li>
+<li><code>M8.external === require('M8::external')</code></li>
+</ul>
+
+<p>Or, more generally; <code>#{namespace}.data === require('M8::data')</code>.</p>
+
+<h3>Arbiters</h3>
+
+<p>These help reveal invisible dependencies by reduce the amounts global variables in your code.</p>
+
+<pre><code>modul8('app.js')
+  .domains().add('app', dir+'/app/client/')
+  .libraries()
+    .list(['jQuery.js','Spile.coffee'])
+    .path(dir+'/app/client/libs/')
+  .arbiters()
+    .add('jQuery', ['$', 'jQuery'])
+    .add('Spine')
+  .compile('./out.js')
+</code></pre>
+
+<p>This code would delete objects <code>$</code>, <code>jQuery</code> and <code>Spine</code> from <code>window</code> and under the covers add closure bound alternatives that are <code>require()</code>able.
+The second parameter to <code>arbiters().add()</code> is the variable name/names to be deleted. If only a single variable should be deleted,
+it can be entered as a string, but if this is the same as as the arbiter's name, then it can be omitted completely - as with Spine above.</p>
+
+<p>Arbitered libraries can be should be referenced simply with <code>require('jQuery')</code>, or <code>require('M8::jQuery')</code> it there isnt a conflicting
+jQuery.js file on your current domain. Normally this specificity should not be required.</p>    </div>
+  </body>
+</html>
