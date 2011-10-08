@@ -1,6 +1,6 @@
 # modul8 - modularize your web applications
 
- modul8 is a modularity enforcing code packager for JavaScript web applications.
+ modul8 is a modularity enforcing code packager and analyzer for JavaScript web applications.
  Like a normal code packager, it will dynamically pull in dependencies from multiple paths and compile and combine the dynamically ordered set of dependencies
  into a single browser compatible JavaScript file. This means your application can consist entirely of JavaScript/CoffeeScript CommonJS modules, and your code
  can be used verbatim on the server as long as it does not reference browser only dependencies like the DOM.
@@ -41,6 +41,7 @@ via npm: `npm install modul8`
 ## Usage
 Basic use only needs one data domain, and an entry point (here `app.js` - assumed to lie on the domain `add()`ed first).
 
+    var modul8 = require('modul8');
     modul8('app.js')
       .domains()
         .add('app', '/app/client/')
@@ -69,17 +70,21 @@ Basic use only needs one data domain, and an entry point (here `app.js` - assume
 
 ## Injecting Data
 
- modul8 allows data to be attached to the private exports tree both from the server and live on the client.
- This allows for easy transportation of dynamically generated data from the server to the client by passing it through `modul8.data()`,
- and it allows integration with third party asynchronous script loaders by passing results to `require('M8::external')` on the client.
+ modul8 allows data to be _safely_ attached to the private exports container both from the server and live on the client.
+ This allows for easy transportation of dynamically generated data from the server to the client by passing it through `modul8.data()`.
+ Client side manipulation allows integration with third party asynchronous script loaders by passing results
+ to `require('M8::external')`.
 
  The data API is particularly useful for web applications:
 
   - Want your templates compiled and passed down to the client in the JavaScript? Just write a parser plugin and hook it up.
+  - Or, want a versioning system for your templates so that the newest can be stored in LocalStorage? Send the versions down.
   - Want mongoose logic on the client? Let modul8 pull the data down through such plugins.
 
 
 ## Learn more
- The API docs contain everything you could ever want to know about modul8 and more. Read it, try it out, and give feedback if you liked or hated it / parts of it.
+ The API docs should contain everything you could ever want to know about modul8 and probably more.
+ Read it, try it out, and give feedback if you like or hate it / parts of it, or if you want to contribute.
 
- modul8 is a relatively fresh project of mine. It was crafted out of necessity, but it has grown into something larger. I hope it will be useful.
+ modul8 is a relatively fresh project of mine. It was crafted out of necessity, but it has grown into something larger.
+ I hope it will be useful.

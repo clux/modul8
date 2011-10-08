@@ -1,7 +1,7 @@
 
 ## API
 
- Modul8's API is in its basic form extremely simple, all we need to do is `add()` domains to `domains()`,
+ modul8's API is in its basic form extremely simple, all we need to do is `add()` domains to `domains()`,
  an entry point for the first domain to modul8 itself, and the target JavaScript file to write
 
     var modul8 = require('modul8');
@@ -16,7 +16,7 @@
 
  You can add any number of domains to be scanned, but the first domain `add()`ed must be the location of the entry point ('app.js').
  Files on these domains can be `require()`d specifically with `require('domain::filename')`.
- Both the domain and file extension can be omitted if there are no conflicts (if there are the main domain will be scanned first).
+ Both the domain and file extension can be omitted if there are no conflicts (if there are, the main domain will be scanned first).
 
  The following are equivalent from the file: 'helper.js' on the 'shared' domain.
 
@@ -30,7 +30,7 @@
 ### Adding Libraries
 
  Not every JavaScript library is CommonJS compatible, and you also just want to keep exporting jQuery to window since it is so heavily intwined with
- your application code. Modul8 makes this easy by simply concatenating in the libraries you need first - in the order you specify.
+ your application code. modul8 makes this easy by simply concatenating in the libraries you need first - in the order you specify.
 
     modul8('app.js')
       .domains().add('app', dir+'/app/client/')
@@ -46,8 +46,11 @@
 
  Note that for huge libraries like jQuery, you may benefit (bandwidth wise) by using the [Google CDN](http://code.google.com/apis/libraries/devguide.html#jquery).
  In general, offsourcing static components to load from a CDN is a good first step to scale your website.
- There is also evidence to suggest that splitting up your files may help the browser finish loading your page faster (the browser can download scripts in parallel),
- just don't overdo it - HTTP requests are still expensive. Two or three JavaScript files for your site should be plenty using HTTP.
+ There is also evidence to suggest that splitting up your files into a few big chunks may help the browser finish loading
+ your page faster as the browser can download scripts in parallel.
+ However, don't overdo this: HTTP requests are still expensive. Two or three JavaScript files for your site should be plenty using HTTP.
+
+ If you would like to integrate libraries into the require system check out the documentation on `arbiters()` below.
 
 ### Adding Data
 
@@ -70,10 +73,11 @@
         .add('templates', myTemplateCompiler)
       .compile('./out.js');
 
- Under the covers, Modul8 attaches the output of the myX functions to an internal _data domain_ (so this domain is reserved).
- The end result is that you can require this data as if it were exported from a file (named versions|templates) on a domain named data:
- e.g. `require('data::models')` gives you the implicitly **parsed** output of `myModelParser`. In other words, the functions output is
- attached verbatim to Modul8's require tree; if you provide bad data, you are solely responsible for breaking your build.
+ Under the covers, modul8 attaches the output of the myX functions to an internal _data domain_ (so this domain is reserved) from the server.
+ The end result is that you can require this data as if it were exported from a file (named versions|templates|models) on a domain named data:
+ e.g. `require('data::models')` gives you the output of `myModelParser`. In other words, the functions output is
+ attached verbatim to modul8's require tree; if you provide bad data, you are solely responsible for breaking your build.
+ This should be easy to detect in a console though.
 
  As a small example our personal version parser operates something like the following:
 
@@ -89,12 +93,12 @@
 
 ### Middleware
 
- Middleware come in two forms: pre-processing and post-processing.
+ Middleware come in two forms: pre-processing and post-processing: in short terms before and after middleware.
 
- - Pre-processing is middleware that is applied before analysing dependencies as well as before compiling.
- - Post-processing is middleware that is only applied to the output right before it gets written.
+ - `.before()` middleware is applied before analysing dependencies as well as before compiling.
+ - `.after()` middleware is only applied to the output right before it gets written.
 
- Modul8 comes bundled with one of each of these:
+ modul8 comes bundled with one of each of these:
 
  - modul8.minifier - post-processing middleware that minifies using UglifyJS
  - modul8.testcutter - pre-processing middleware that cuts out the end of a file (after require.main is referenced) to avoid pulling in test dependencies.
@@ -107,12 +111,14 @@
       .after(modul8.minifier)
       .compile('./out.js');
 
+ **WARNING:** testcutter is not very intelligent at the moment, if you reference require.main in your module,
+ expect that everything from the line of reference to be removed.
 ### Settings
 
  Below are the settings available:
 
    - `domloader` A function that safety wraps code with a DOMContentLoaded barrier
-   - `namespace`  The namespace modul8 uses in your browser, defaulting to `M8`
+   - `namespace`  The namespace modul8 uses in your browser, to export console helpers to, defaulting to `M8`
 
  **You have to** set `domloader` if you do not use jQuery. If you are familiar with the DOM or any other library this should be fairly trivial.
  The default jQuery implementation is as follows:
@@ -121,13 +127,14 @@
      return "jQuery(function(){"+code+"});"
     }
 
- Note that the namespace does not actually contain the exported objects from each module, or the data attachments. This information is encapsulated in a closure.
- The namespace'd object simply contains the public debug API.
+ Note that the namespace does not actually contain the exported objects from each module, or the data attachments.
+ This information is encapsulated in a closure. The namespace'd object simply contains the public debug API.
+ It is there if you want to write a simpler prefix than than capital M, 8 all the time, maybe you would like 'QQ' or 'TT'.
 
  Options can be set by chaining them on `modul8()` using the `set(option, value)` method. For example:
 
     modul8('app.js')
-      .set('namespace', 'BOOM')
+      .set('namespace', 'QQ')
       .set('domloader', domloader_fn)
       .domains().add('app', dir+'/app/client/')
       .compile('./out.js');
@@ -135,8 +142,9 @@
 ### Code Analysis
 
  To dynamically resolve dependencies from a single entry point, modul8 does a recursive analysis of the `require()`d code.
- To avoid getting stuck in an infinite loop, modul8 enforces the **no circular dependencies rule**. Granted, this is possible
- with sufficient fiddling, but it brings one major disadvantages to the table:
+ To avoid getting stuck in an infinite loop, preserve the tree structure of the dependency tree,
+ modul8 enforces a **no circular dependencies rule**. Granted, this is possible with sufficient fiddling,
+ but it brings one major disadvantages to the table:
 
  A circularly dependent set of modules are tightly coupled; they are really no longer a set of moudles, but more of a library.
  There are numerous sources talking about [why is tight coupling is bad](http://www.google.com/search?q=tight+coupling+bad) so this
@@ -169,7 +177,7 @@
  It must take either a function to pipe the tree to, or a filepath to write it out to.
 
  The additional boolean methods, `prefix()` and `suffix()` simply control the layout of the printed dependency tree.
- The prefix refers to the domain (dom::) prefix that may or may not have been used in the require, and similarly, suffix refers to the file extension.
+ Prefix refers to the domain (name::) prefix that may or may not have been used in the require, and similarly, suffix refers to the file extension.
  Defaults for thes are : `{prefix: true, suffix: false}`.
 
 ### Environment Conditionals
@@ -210,7 +218,7 @@
  Since all the exported data is encapsulated in a closure, you will not be able to find it directly from the console.
 
  To see where the object you are looking for should live or lives, you may find it useful to log the specified domain object
- with the globally available `M8.inspect(domainName)` method. Additionally, you may dump the list of domains modul8 tracks using the
+ with the globally available `M8.inspect(domainName)` method. Additionally, you may show the list of domains modul8 tracks using the
  `M8.domains()` command.
 
  There is additionally a console friendly require version globally available at `M8.require()`.
@@ -222,10 +230,10 @@
  It is plausible you may want to store `require()`able data or code inside modul8's module containers.
  Perhaps you have a third-party asynchronous script loader, and you want to attach the resulting object onto some appropriate domain.
 
- This is an issue, because `require()` calls are analysed on the server before compilation, and if you reference something that has been loaded in
+ This is an issue, because `require()` calls are analysed on the server before compilation, and if you reference something that will be loaded in
  separately, it will not be found on the server. The solution to this is the same solution modul8 uses to allow data domain references; whitelisting.
 
- The two domains `M8`, `data` and `external` have been whitelisted for this purpose, and a `require()`able API exists on the client.
+ The domains `M8`, `data` and `external` have been whitelisted for this purpose, and a `require()`able API exists on the client.
 
   - `require('M8::external')` - returns a function(name, object), which, when called will attach object to external::name
   - `require('M8::external')` - returns a function(name, object), which, when called will attach object to data::name
@@ -245,7 +253,7 @@
   - `M8.data === require('M8::data')`
   - `M8.external === require('M8::external')`
 
-Changing the namespace above would change the reference on the left hand side of this equaliy.
+Or, more generally; `#{namespace}.data === require('M8::data')`.
 
 ### Arbiters
 
