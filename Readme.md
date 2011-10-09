@@ -8,11 +8,12 @@ Additionally, modul8 encourages best practises such as loose coupling and code s
 Sharing is done by allowing several _require domains_ on the client, represented by different paths on the server.
 Code from the app domain can pull in dependencies from any domains, whereas each other domain
 consists of standalone code referencable by both. What modules that are somehow pulled in from the app domain is loggable as
-an npm like dependency **tree** (this structure which is enforced) - so that no surprise bloat happens in your JavaScript file.
+an npm like dependency **tree** (this structure is enforced) - so that no surprise bloating affects your JavaScript file.
 
 modul8 encapsulates all the exports objects in a closure where only `require()` and a couple of extra functions are defined.
 Because the export container can only be accessed through functions with access to that closure,
-you cannot have invisible dependencies in your application (outside global libraries - which are also easily integrated)
+you cannot have invisible dependencies in your application - even globals like 'jQuery' & '$' can be deleted and integrated easily into the require system.
+
 The extra functions that can touch the exports are debug functions (for console read only access), and some hook-in functions to allow live
 extensions of domains (inject objects/fns directly onto certain domains).
 
