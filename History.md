@@ -2,7 +2,7 @@
 ==================
 
   * Better documentation.
-  * Safed up API against broken out calls against subclass.
+  * Safed up API against subclass calls against on superclass.
   * Loggability of requires on the client
 
   TODO:
