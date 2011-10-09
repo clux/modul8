@@ -14,9 +14,10 @@ modul8 encapsulates all the exports objects in a closure where only `require()` 
 Because the export container can only be accessed through functions with access to that closure,
 you cannot have invisible dependencies in your application - even globals like `jQuery` and `$` can be deleted and integrated easily into the require system.
 
-The extra functions that can touch the exports are debug functions (for console read only access), and some hook-in functions to allow live
-extensions of certain domains so that it can be `require()`d.
-These functions can be used from the server to attach dynamic data, or live from the client after using third-party script loaders.
+The extra functions that can touch the exports container are debug functions (for console read only access), and some hook-in functions to allow live
+extentions to parts of the exports container.
+These functions can be used from the server to attach dynamic data to the `data` domain,
+or live from the client to attach results of third-party script loaders to the `external` domain.
 
 For more information consult the [extensive documentation](http://clux.github.com/modul8).
 
