@@ -6,6 +6,7 @@ homebrewMinifier = function(code){
 };
 
 domLoader = function(code){
+  // we set this because the default assumes jQuery exists or is arbitered
   return "(function(){"+code+"})();";
 };
 
