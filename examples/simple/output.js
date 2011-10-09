@@ -1,6 +1,6 @@
 (function(){
 window.M8 = {data:{}};
-var _modul8RequireConfig = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["jQuery","$"]},"logging":false,"main":"app"};
+var _modul8RequireConfig = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["$","jQuery"]},"logging":false,"main":"app"};
 (function(){var a, arbiters, ary, base, domains, exports, glob, makeRequire, name, ns, toAbsPath, _i, _j, _len, _len2, _ref;
 var __indexOf = Array.prototype.indexOf || function(item) {
   for (var i = 0, l = this.length; i < l; i++) {

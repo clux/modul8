@@ -5,7 +5,7 @@ modul8('app.js')
   .domains()
     .add('app', dir+'/app_code/')
   .arbiters()
-    .add('jQuery', ['jQuery','$'])
+    .add('jQuery', ['$','jQuery'])
   .analysis()
     .output(console.log)
   .compile('./output.js');
