@@ -1,4 +1,4 @@
-var modul8 = require('./../index.js');
+var modul8 = require('./../../index.js');
 var dir = __dirname;
 
 homebrewMinifier = function(code){
