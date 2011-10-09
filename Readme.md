@@ -2,18 +2,17 @@
 
 modul8 is a modularity enforcing code packager and analyzer for JavaScript web applications.
 Like a normal code packager, it will dynamically pull in dependencies from multiple paths and compile and combine the dynamically ordered set of dependencies
-into a single browser compatible JavaScript file. This means your application can consist entirely of JavaScript/CoffeeScript CommonJS modules, and your code
-can be used verbatim on the server as long as it does not reference browser only dependencies like the DOM.
+into a single browser compatible JavaScript file.
 
-Additionally, modul8 encourages some of the best practices of software development by allowing you to share code by between the client and server.
-It does so by allowing several _require domains_ on the client, represented by different paths on the server.
-Code from the main application domain can pull in dependencies from any of these domains, whereas each extra domain
-will reside on the server as standalone code referencable by both. What modules from all domains are pulled in will
-be shown in an npm like dependency tree.
+Additionally, modul8 encourages best practises such as loose coupling and code sharing between the server and the client.
+Sharing is done by allowing several _require domains_ on the client, represented by different paths on the server.
+Code from the app domain can pull in dependencies from any domains, whereas each other domain
+consists of standalone code referencable by both. What modules that are somehow pulled in from the app domain is loggable as
+an npm like dependency **tree** (this structure which is enforced) - so that no surprise bloat happens in your JavaScript file.
 
-modul8 encapsulates all the exports objects in a closure where only `require()` and a couple of clever extra functions are defined.
+modul8 encapsulates all the exports objects in a closure where only `require()` and a couple of extra functions are defined.
 Because the export container can only be accessed through functions with access to that closure,
-this means you can't have invisible dependencies in your application (outside global libraries - which also can be easily integrated)
+you cannot have invisible dependencies in your application (outside global libraries - which are also easily integrated)
 The extra functions that can touch the exports are debug functions (for console read only access), and some hook-in functions to allow live
 extensions of domains (inject objects/fns directly onto certain domains).
 
@@ -25,7 +24,7 @@ For more information consult the [extensive documentation](http://clux.github.co
  - automatically share code between the server and the client
  - dynamic resolution and compilation of dependencies server-side
  - compiles CommonJS compatible JavaScript or CoffeeScript
- - low footprint - only ~75 lines prepended to output source
+ - low footprint - only ~100 lines prepended to output source
  - enforces modularity best practices
  - dependency tree loggable in `npm list` style
  - no need to ever maintain include lists or order
