@@ -22,7 +22,7 @@ compose = (funcs) ->
     args = [].slice.call(arguments)
     for i in [funcs.length-1..0]
       fn = funcs[i]
-      if !fn instanceof Function
+      if !(fn instanceof Function)
         throw new Error("modul8::middeware must consist of functions got: #{fn}")
       args = [fn.apply(@, args)]
     args[0]
@@ -67,7 +67,6 @@ bundle = (codeList, ns, domload, mw, o) ->
 
 
 module.exports = (o) ->
-  #console.log "from bundle:",o
   if !o.domains
     throw new Error("modul8 requires domains specified. Got "+JSON.stringify(o.domains))
   o.entryPoint ?= 'main.coffee'
@@ -83,9 +82,9 @@ module.exports = (o) ->
     throw new Error("modul8 reserves the 'M8' domain for its internal API")
 
   for fna in o.pre
-    throw new Error("modul8 requires a function as pre-processing plugin") if !fna instanceof Function
+    throw new Error("modul8 requires a function as pre-processing plugin") if !(fna instanceof Function)
   for fnb in o.post
-    throw new Error("modul8 requires a function as post-processing plugin") if !fnb instanceof Function
+    throw new Error("modul8 requires a function as post-processing plugin") if !(fnb instanceof Function)
 
 
   namespace = o.options?.namespace ? 'M8'

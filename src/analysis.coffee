@@ -1,59 +1,23 @@
 fs          = require 'fs'
 path        = require 'path'
 detective   = require 'detective'
-{compile, exists}  = require './utils'
+utils       = require './utils'
 
-# criteria for whether a require string is relative, rather than absolute
-# absolute require strings will scan on the defined require paths (@domains)
-isRelative = (reqStr) -> reqStr[0...2] is './'
-
-# convert relative requires to absolute ones
-# relative folder movement limited to ./(../)*n + normalpath [no backing out after normal folder movement has started]
-# will return a string (without a leading slash) that can be post-concatenated with the domain specific path
-toAbsPath = (name, subFolders, domain) -> # subFolders is array of folders after domain base that we were requiring from
-  return name if !isRelative(name)
-  name = name[2...]
-  while name[0...3] is '../'
-    subFolders = subFolders[0...-1] # slice away the top folder every time we see a '../' string
-    name = name[3...]
-  folderStr = subFolders.join('/')
-  prependStr = if folderStr then folderStr+'/' else ''
-  domain+'::'+prependStr+name
 
 # constructor
 CodeAnalysis = (@entryPoint, @domains, @mainDomain, @premw, @arbiters) ->
+  @resolveRequire = utils.makeResolver(@domains) # (reqStr, domain) -> {absReq, dom}
   @resolveDependencies() #automatically resolves dependency tree on construction, stores in @tree
   return
 
-# helpers for resolveDependencies
-CodeAnalysis::resolveRequire = (absReq, domain) -> # finds file, reports where it wound it
-  orig = absReq
-
-  # emulate client side require behaviour here
-  if (domainReg = /^(.*)::/).test(absReq)
-    scannable = [absReq.match(domainReg)[1]] # relative requires get pushed in here, because toAbsPath appends their domain
-    absReq = absReq.split('::')[1]
-  else
-    scannable = [domain].concat(name for name of @domains when name isnt domain)
-
-  for dom in scannable
-    # try raw require, then with coffee extension, then js extension
-    return {absReq, dom} if exists(@domains[dom]+absReq)
-    return {absReq: absReq+'.js', dom: dom} if exists(@domains[dom]+absReq+'.js')
-    return {absReq: absReq+'.coffee', dom: dom} if exists(@domains[dom]+absReq+'.coffee')
-
-  throw new Error("modul8::analysis could not resolve a require for #{orig} (#{absReq}) - looked in #{scannable}")
-
-illegalDomain = /^data(?=::)|^external(?=::)|^M8(?=::)/
-
-CodeAnalysis::loadDependencies = (name, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
+CodeAnalysis::loadDependencies = (reqStr, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
   # we will only get name as absolute names because we convert everything that comes in 4 lines below (and initial is entryPoint)
-  {absReq, dom} = @resolveRequire(name, domain)
-  code = compile(@domains[dom]+absReq)
+  {absReq, dom} = @resolveRequire(reqStr, domain)
+  code = utils.compile(@domains[dom]+absReq)
   code = @premw(code) if @premw # apply pre-processing middleware here
   {
     # convert all require paths to absolutes immediately so we dont have to deal with them later
-    deps    : (toAbsPath(dep, subFolders, domain) for dep in detective(code) when !illegalDomain.test(dep))
+    deps    : (utils.toAbsPath(dep, subFolders, domain) for dep in detective(code) when utils.isLegalDomain(dep))
     domain  : dom
     absReq  : absReq
   }
@@ -75,7 +39,7 @@ CodeAnalysis::resolveDependencies = -> # private
       treePos = treePos.parent # follow the chain up
       throw new Error("modul8::analysis revealed a circular dependency: #{chain.join(' <- ')} <- #{dep}") if treePos.name is dep
     return
-  #console.log a for a of @arbiters
+
   ((t) =>
     {deps, domain, absReq} = @loadDependencies(t.name, t.subFolders, t.domain)
     t.domain = domain
@@ -87,7 +51,7 @@ CodeAnalysis::resolveDependencies = -> # private
         t.deps[dep].domain = 'M8' # does not have a file representation, but we want it to show up in the tree
       else
         t.deps[dep] = {name : dep, parent: t, deps: {}, subFolders: dep.split('/')[0...-1], level: t.level+1}
-        t.deps[dep].domain = @resolveRequire(dep, t.domain, isRelative(dep)).dom # ensures file exists
+        t.deps[dep].domain = @resolveRequire(dep, t.domain, utils.isRelative(dep)).dom # ensures file exists
         circularCheck(t, dep)
         arguments.callee.call(@, t.deps[dep]) # preserve context and recurse
     return
@@ -140,7 +104,7 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
       arguments.callee(dep)
     return
   )(@tree) # populates obj of form: key=name, val=[level, domain]
-  # This line converts obj to (sortable) array, sorts by level, then maps to array of pairs of form [name, domain] (where we take out the domain:: part of name)
+  # This line converts obj to (sortable) array, sorts by level, then maps to array of pairs of form [name, domain]
   ([name,ary] for name,ary of obj).sort((a,b) -> b[1][0] - a[1][0]).map((e) -> [e[0], e[1][1]])
 
 

@@ -63,11 +63,11 @@ start = (entry) ->
 
 
 
-Modul8::data = () ->
+Modul8::data = ->
   return @ if !@environmentMatches
   new Data()
 
-Data = () ->
+Data = ->
 Data:: = new Modul8('Data')
 
 
@@ -78,11 +78,11 @@ Data::add = (key, val) ->
 
 
 
-Modul8::domains = () ->
+Modul8::domains = ->
   return @ if !@environmentMatches
   new Domains()
 
-Domains = () ->
+Domains = ->
 Domains:: = new Modul8('Domains')
 
 Domains::add = (key, val, primary) ->
@@ -96,7 +96,7 @@ Domains::add = (key, val, primary) ->
 
 
 
-Modul8::libraries = () ->
+Modul8::libraries = ->
   return @ if !@environmentMatches
   new Libraries()
 
@@ -120,7 +120,7 @@ Libraries::path = (dir) ->
 
 
 
-Modul8::analysis = () ->
+Modul8::analysis = ->
   return @ if !@environmentMatches
   new Analysis()
 
@@ -144,7 +144,7 @@ Analysis::suffix = (suffix) ->
 
 
 
-Modul8::arbiters = () ->
+Modul8::arbiters = ->
   return @ if !@environmentMatches
   new Arbiters()
 
