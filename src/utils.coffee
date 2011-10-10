@@ -43,18 +43,18 @@ makeResolver = (domains) ->
 
     throw new Error("modul8::analysis could not resolve a require for #{orig} (#{absReq}) - looked in #{scannable}")
 
-
+# fs shortcut
 read = (name) -> fs.readFileSync(name, 'utf8')
 
 # internal compile shortcut
-compile = (fileName, bare=true) ->
-  switch path.extname(fileName)
+compile = (file, bare=true) ->
+  switch path.extname(file)
     when '.js'
-      read(fileName)
+      read(file)
     when '.coffee'
-      coffee.compile(read(fileName),{bare}) # all coffee files must be wrapped later by default (libs get extra wrapper)
+      coffee.compile(read(file),{bare}) # all coffee files that eludes M8.define must get the standard safety wrapper to encapsulate private variables
     else
-      throw new Error("file: #{fileName} does not have a valid javascript/coffeescript extension")
+      throw new Error("file: #{file} does not have a valid javascript/coffeescript extension")
 
 # simple fs extension to check if a file exists [used to verify require calls' validity]
 exists = (file) ->
@@ -65,12 +65,12 @@ exists = (file) ->
     return false
 
 
-module.exports =
-  compile         : compile
-  exists          : exists
-  read            : read
-  isRelative      : isRelative
-  toAbsPath       : toAbsPath
-  isLegalDomain   : isLegalDomain
-  makeResolver    : makeResolver
-
+module.exports = {
+  compile
+  exists
+  read
+  isRelative
+  toAbsPath
+  isLegalDomain
+  makeResolver
+}

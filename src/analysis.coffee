@@ -7,7 +7,7 @@ utils       = require './utils'
 # constructor
 CodeAnalysis = (@entryPoint, @domains, @mainDomain, @premw, @arbiters) ->
   @resolveRequire = utils.makeResolver(@domains) # (reqStr, domain) -> {absReq, dom}
-  @resolveDependencies() #automatically resolves dependency tree on construction, stores in @tree
+  @resolveDependencies() # automatically resolves dependency tree on construction, stores in @tree
   return
 
 CodeAnalysis::loadDependencies = (reqStr, subFolders, domain) -> # compiles code to str, use node-detective to find require calls, report up with them
