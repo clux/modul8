@@ -72,7 +72,7 @@ ns.inspect = (domain) ->
   console.log(exports[domain])
 
 ns.domains = ->
-  console.log("modul8 tracks the following domains: ", domains.concat(['external'])) # only hides the data and M8 domains
+  domains.concat(['external']) # only hides the data and M8 domains
 
 ns.require = makeRequire(base.main,'CONSOLE')
 

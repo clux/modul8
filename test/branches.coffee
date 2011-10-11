@@ -6,7 +6,6 @@ modul8 = require './../index.js' #public interface
 dir = __dirname
 
 
-
 makeBranch1 = (num) ->
   for i in [0...num]
     l = []
@@ -19,7 +18,8 @@ makeBranch2 = (num) ->
     l = []
     l.push "var a = "+ if i is num-1 then "{chain: true}" else "require('./#{i+1}')"+";"
     l.push "var b = "+ if Math.floor(num/2) is i then "require('./../branch1/#{i}.js')" else "{chain: true}" +";"
-    l.push "exports.chain = a.chain && b.chain;"
+    l.push "var c = "+ if Math.floor(num/3) is i then "require('./../branch1/#{i}.js')" else "{chain: true}" +";"
+    l.push "exports.chain = a.chain && b.chain && c.chain;"
     fs.writeFileSync(dir+'/input/app/branch2/'+i+'.js', l.join('\n'))
 
 makeSharedBranches = (num) ->
@@ -58,17 +58,32 @@ createExampleApp = (size) ->
     .compile(dir+'/output/output.js')
 
 
-verifyRequireValidity = (reqType) ->
-  #createInputExample(5)
-  browser = new zombie.Browser(debug: true)
+exports["test require#branches"] = ->
+  num = 8
+  createExampleApp(num)
+  browser = new zombie.Browser()
   browser.visit 'file:///'+dir+"/output/empty.html", (err, browser, status) ->
     throw err if err
-    console.log("Successfully started a blank zombie visit") #browser.html()
-    code = utils.compile('./output/output.js')
-    evalRes = browser.evaluate(code) # should not return anything if successful
+    mainCode = utils.compile(dir+'/output/output.js')
+
+    assert.isUndefined(browser.evaluate(mainCode), ".compile() result evaluates successfully")
+    assert.isDefined(browser.evaluate("M8"), "global namespace is defined")
+    assert.isDefined(browser.evaluate("M8.require"), "require is globally accessible")
+    assert.type(browser.evaluate("M8.require"), 'function', "require is a function")
+
+    for i in [0...num]
+      assert.isDefined(browser.evaluate("M8.require('app::branch1/#{i}')"), "require app::branch1/#{i} defined")
+      assert.isDefined(browser.evaluate("M8.require('app::branch2/#{i}')"), "require app::branch2/#{i} defined")
+      assert.isDefined(browser.evaluate("M8.require('shared::branch1/#{i}')"), "require shared::branch1/#{i} defined")
+
+    assert.ok(browser.evaluate("M8.require('entry').branch1.chain"), "entry point resolves the entire branch1 chain")
+    assert.ok(browser.evaluate("M8.require('entry').branch2.chain"), "entry point resolves the entire branch2 chain")
+    assert.ok(browser.evaluate("M8.require('entry').shared.chain"), "entry point resolves the entire shared base chain")
+    assert.ok(browser.evaluate("M8.require('entry').sharedbranch1.chain"), "entry point resolves the entire shared branch1 chain")
+
+    assert.includes(browser.evaluate("M8.domains()"), 'app', "domains() contain 'app'")
+    assert.includes(browser.evaluate("M8.domains()"), 'app', "domains() contain 'shared'")
 
 
-
-if module is require.main
-  createExampleApp(5)
-  verifyRequireValidity()
+#if module is require.main
+#verifyRequireValidity()
