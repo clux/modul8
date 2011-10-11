@@ -44,14 +44,15 @@ CodeAnalysis::resolveDependencies = -> # private
     {deps, domain, absReq} = @loadDependencies(t.name, t.subFolders, t.domain)
     t.domain = domain
     t.name = absReq
-    t.name = t.name.replace(/^(.*::)/,'') # can now safely remove domain:: part from domain specific requires (note the key of the deps object retains full value)
+    t.name = utils.stripDomain(t.name) # can now safely remove domain:: part from domain specific requires (note the key of the deps object retains full value)
     for dep in deps #not to be confused with t.deps which is an object, deps from loadDependencies is an array
-      if dep of @arbiters # was an arbiter string required verbatim?
-        t.deps[dep] = {name : dep, parent: t, deps: {}, subFolders: [], level: t.level+1}
-        t.deps[dep].domain = 'M8' # does not have a file representation, but we want it to show up in the tree
+      if dep of @arbiters or 'M8::'+dep of @arbiters # was an arbiter string required verbatim?
+        # this require does not have a file representation, but we may want it to show up in the tree
+        t.deps[dep] = {name : utils.stripDomain(dep), parent: t, deps: {}, subFolders: [], level: t.level+1, domain: 'M8'}
       else
-        t.deps[dep] = {name : dep, parent: t, deps: {}, subFolders: dep.split('/')[0...-1], level: t.level+1}
-        t.deps[dep].domain = @resolveRequire(dep, t.domain, utils.isRelative(dep)).dom # ensures file exists
+        t.deps[dep] = {name: dep, parent: t, deps: {}, subFolders: utils.stripDomain(dep).split('/')[0...-1], level: t.level+1}
+        t.deps[dep].domain = @resolveRequire(t.deps[dep].name, t.domain, utils.isRelative(dep)).dom # ensures file exists
+
         circularCheck(t, dep)
         arguments.callee.call(@, t.deps[dep]) # preserve context and recurse
     return
@@ -70,7 +71,7 @@ formatName = (name, extSuffix, domPrefix, dom) ->
   n
 
 # public method, returns an npm like dependency tree
-CodeAnalysis::printed = (extSuffix=false, domPrefix=false) ->
+CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
   lines = [formatName(@entryPoint, extSuffix, domPrefix, @mainDomain)]
   ((branch, level, parentAry) ->
     idx = 0
@@ -93,20 +94,22 @@ CodeAnalysis::printed = (extSuffix=false, domPrefix=false) ->
 # public method, get ordered array of code to be used by the compiler
 CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj = {}
-  obj[@entryPoint] = [0, @mainDomain]
+  obj[@mainDomain+'::'+@entryPoint] = 0
   arbs = @arbiters
   ((t) ->
     for name,dep of t.deps
       continue if name of arbs # dont include arbiters in code list, bundle wont be able to include them
-      obj[dep.name] = [] if !obj[dep.name]
-      obj[dep.name][0] = Math.max(dep.level, obj[dep.name][0] or 0)
-      obj[dep.name][1] = dep.domain
+      name = dep.domain+'::'+dep.name
+      obj[name] = Math.max(dep.level, obj[name] or 0)
       arguments.callee(dep)
     return
-  )(@tree) # populates obj of form: key=name, val=[level, domain]
-  # This line converts obj to (sortable) array, sorts by level, then maps to array of pairs of form [name, domain]
-  ([name,ary] for name,ary of obj).sort((a,b) -> b[1][0] - a[1][0]).map((e) -> [e[0], e[1][1]])
+  )(@tree) # populates obj of form: key=domain::name, val=level
 
+  ([name,level] for name,level of obj) # convert obj to (sortable) array
+    .sort((a,b) -> b[1] - a[1])        # sort by level
+    .map (e) ->                        # return after mapping to pairs of form [domain, name]
+      ary = e[0].split('::')
+      [ary[1], ary[0]]
 
 
 # requiring this gives a function which returns a closured object with access to only the public methods of a bound instance

@@ -10,6 +10,9 @@ isRelative = (reqStr) -> reqStr[0...2] is './'
 domain_ignore_list = /^data(?=::)|^external(?=::)|^M8(?=::)/
 isLegalDomain = (reqStr) -> !domain_ignore_list.test(reqStr)
 
+# take out domain prefix from request string if exists
+stripDomain = (reqStr) -> reqStr.replace(/^(.*::)/,'')
+
 # convert relative requires to absolute ones
 # relative folder movement limited to ./(../)*n + normalpath [no backing out after normal folder movement has started]
 # will returisLegaln a string (without a leading slash) that can be post-concatenated with the domain specific path
@@ -73,4 +76,5 @@ module.exports = {
   toAbsPath
   isLegalDomain
   makeResolver
+  stripDomain
 }
