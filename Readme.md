@@ -92,3 +92,17 @@ Read it, try it out, and give feedback if you like or hate it / parts of it, or 
 
 modul8 is a relatively fresh project of mine. It was crafted out of necessity, but it has grown into something larger.
 I hope it will be useful.
+
+## Running Tests
+
+Install development dependencies:
+
+    npm install
+
+Then:
+
+    expresso verify
+
+Actively tested with node:
+
+  - 0.4.10

@@ -51,7 +51,7 @@ createExampleApp = (size) ->
   createEntry(size, 'branch1/0', 'branch2/0')
   modul8('entry.js')
     .set('domloader', (a) -> (a)) # dont test jQuery functionality here
-    .analysis().output(console.log)
+    #.analysis().output(console.log)
     .domains()
       .add('app', dir+'/input/app/')
       .add('shared', dir+'/input/shared/')
@@ -74,6 +74,7 @@ exports["test require#branches"] = ->
     for i in [0...num]
       assert.isDefined(browser.evaluate("M8.require('app::branch1/#{i}')"), "require app::branch1/#{i} defined")
       assert.isDefined(browser.evaluate("M8.require('app::branch2/#{i}')"), "require app::branch2/#{i} defined")
+      assert.isDefined(browser.evaluate("M8.require('shared::#{i}')"), "require shared::#{i} defined")
       assert.isDefined(browser.evaluate("M8.require('shared::branch1/#{i}')"), "require shared::branch1/#{i} defined")
 
     assert.ok(browser.evaluate("M8.require('entry').branch1.chain"), "entry point resolves the entire branch1 chain")
@@ -83,6 +84,7 @@ exports["test require#branches"] = ->
 
     assert.includes(browser.evaluate("M8.domains()"), 'app', "domains() contain 'app'")
     assert.includes(browser.evaluate("M8.domains()"), 'app', "domains() contain 'shared'")
+    assert.includes(browser.evaluate("M8.domains()"), 'app', "domains() contain 'external'")
 
 
 #if module is require.main
