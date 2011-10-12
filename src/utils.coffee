@@ -35,6 +35,7 @@ makeResolver = (domains) ->
     if (domainReg = /^(.*)::/).test(absReq)
       scannable = [absReq.match(domainReg)[1]] # relative requires get pushed in here, because toAbsPath appends their domain
       absReq = absReq.split('::')[1]
+      throw new Error("modul8::analysis could not resolve a require for an unconfigured domain: #{scannable[0]}") if !domains[scannable[0]]
     else
       scannable = [domain].concat(name for name of domains when name isnt domain)
 
