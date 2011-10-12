@@ -45,7 +45,8 @@ makeRequire = (dom, pathName) -> # each (path, domain) gets its own unique requi
     reqStr = reqStr.split('.')[0] # ignore extensions if exists
 
     return exports[o][reqStr] for o in scannable when exports[o][reqStr]
-    return console.error("Unable to resolve require for: #{reqStr}")
+    console.error("Unable to resolve require for: #{reqStr}") if base.logging
+    null
 
 toAbsPath = (domain, pathName, relReqStr) ->
   folders = pathName.split('/')[0...-1] # slice away the filename
@@ -70,6 +71,7 @@ ns.define = (name, domain, fn) -> # needed by outer
 # Debug Helpers
 ns.inspect = (domain) ->
   console.log(exports[domain])
+  return
 
 ns.domains = ->
   domains.concat(['external']) # only hides the data and M8 domains
@@ -79,8 +81,10 @@ ns.require = makeRequire(base.main,'CONSOLE')
 # Live Extensions (requirable and namespace reference available)
 exports.M8.data = ns.data = (name, exported) ->
   delete exports.data[name] if exports.data[name] # otherwise cant overwrite
-  exports.data[name] = exported
+  exports.data[name] = exported if exported
+  return
 
 exports.M8.external = ns.external = (name, exported) ->
   delete exports.exernal[name] if exports.external[name] # otherwise cant overwrite
-  exports.extenal[name] = exported
+  exports.extenal[name] = exported if exported
+  return
