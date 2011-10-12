@@ -231,7 +231,7 @@ If you have wrongly entered data to `require()`, you will not get any informatio
 Since all the exported data is encapsulated in a closure, you will not be able to find it directly from the console.
 
 To see where the object you are looking for should live or lives, you may find it useful to log the specified domain object
-with the globally available `M8.inspect(domainName)` method. Additionally, you may show the list of domains modul8 tracks using the
+with the globally available `M8.inspect(domainName)` method. Additionally, you may retrieve the list of domains modul8 tracks using the
 `M8.domains()` command.
 
 If you want every `require()` call to be logged to the console, you can set the `logging` setting.

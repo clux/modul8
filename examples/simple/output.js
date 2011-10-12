@@ -87,7 +87,7 @@ ns.inspect = function(domain) {
   return console.log(exports[domain]);
 };
 ns.domains = function() {
-  return console.log("modul8 tracks the following domains: ", domains.concat(['external']));
+  return domains.concat(['external']);
 };
 ns.require = makeRequire(base.main, 'CONSOLE');
 exports.M8.data = ns.data = function(name, exported) {
