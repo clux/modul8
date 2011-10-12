@@ -63,7 +63,10 @@ makeRequire = function(dom, pathName) {
         return exports[o][reqStr];
       }
     }
-    return console.error("Unable to resolve require for: " + reqStr);
+    if (base.logging) {
+      console.error("Unable to resolve require for: " + reqStr);
+    }
+    return null;
   };
 };
 toAbsPath = function(domain, pathName, relReqStr) {
@@ -84,7 +87,7 @@ ns.define = function(name, domain, fn) {
   }
 };
 ns.inspect = function(domain) {
-  return console.log(exports[domain]);
+  console.log(exports[domain]);
 };
 ns.domains = function() {
   return domains.concat(['external']);
@@ -94,13 +97,17 @@ exports.M8.data = ns.data = function(name, exported) {
   if (exports.data[name]) {
     delete exports.data[name];
   }
-  return exports.data[name] = exported;
+  if (exported) {
+    exports.data[name] = exported;
+  }
 };
 exports.M8.external = ns.external = function(name, exported) {
   if (exports.external[name]) {
     delete exports.exernal[name];
   }
-  return exports.extenal[name] = exported;
+  if (exported) {
+    exports.extenal[name] = exported;
+  }
 };})();
 
 M8.require('M8::jQuery')(function(){M8.define('utils/validation','app',function(require, module, exports){exports.nameOk = function(name){
