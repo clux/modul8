@@ -63,7 +63,7 @@ Lastly, modul8 aims to eliminate most global variables from your code. It does s
 
 For more information consult the [api docs](http://clux.github.com/modul8/docs/api.html).
 
-## Feature List
+## Features
 
  - client side require
  - automatically share code between the server and the client
