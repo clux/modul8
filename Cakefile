@@ -11,7 +11,7 @@ task 'docs', 'build docs', (opts) ->
     out = fs.readFileSync('../docs/'+file+'.md', 'utf8')
     fs.writeFileSync('./docs/'+file+'.html', head+md(out)+tail)
 
-  out = fs.readFileSync('../Readme.md', 'utf8')
-  fs.writeFileSync('./index.html', head+md(out)+tail)
+  #out = fs.readFileSync('../Readme.md', 'utf8')
+  #fs.writeFileSync('./index.html', head+md(out)+tail)
 
   return
