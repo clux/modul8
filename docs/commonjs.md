@@ -14,7 +14,9 @@ exports.publicFn = function(){
   console.log(private);
 };
 ````
+
 into
+
 ````javascript
 var module = {};
 (function(require, module, exports){
@@ -22,13 +24,14 @@ var module = {};
   var b = require('b');
   exports.publicFn = function(){
     console.log(private);
-  }
+  };
 })(makeRequire(location), module, stash[location])
 if (module.exports) {
   delete stash[location];
   stash[location] = module.exports;
 }
 ````
+
 
 where `location` is a unique identifier passed down from the compiler to indicate where the module lives, so that `require()` can later retrieve it.
 The `makeRequire()` factory must be able to construct specifically crafted `require()` functions for given locations.
