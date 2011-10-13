@@ -17,41 +17,44 @@ distinguishes modul8.</p>
 
 <p>A CommonJS parser must turn this:</p>
 
-<pre><code>var private = 5;
+<p><code>javascript
+var private = 5;
 var b = require('b');
 exports.publicFn = function(){
   console.log(private);
-}
-</code></pre>
+};
+</code></p>
 
 <p>into</p>
 
-<pre><code>var module = {}
+<p><code>javascript
+var module = {};
 (function(require, module, exports){
   var private = 5;
   var b = require('b');
   exports.publicFn = function(){
     console.log(private);
-  }
+  };
 })(makeRequire(location), module, stash[location])
 if (module.exports) {
   delete stash[location];
   stash[location] = module.exports;
 }
-</code></pre>
+</code></p>
 
 <p>where <code>location</code> is a unique identifier passed down from the compiler to indicate where the module lives, so that <code>require()</code> can later retrieve it.
 The <code>makeRequire()</code> factory must be able to construct specifically crafted <code>require()</code> functions for given locations.
 <code>stash</code> will be a pre-defined object on which all modules are exported.  Wrapping up this behaviour inside a function, we can write something like this.</p>
 
-<pre><code>define(location, function(require, module, exports) {
+<p><code>javascript
+define(location, function(require, module, exports) {
   var private = 5;
   var b = require('b');
   exports.publicFn = function(){
     console.log(private);
   }
 });
-</code></pre>
+</code></p>
 
 <p>The <code>makeRequire()</code> and <code>define()</code> functions can cleverly be defined inside a closure with access to <code>stash</code>. This way only these functions can access your modules.</p>
 

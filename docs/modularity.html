@@ -56,13 +56,14 @@ It does, however, take certain disipline to constantly police your files for mul
 
 <p>We have, on the other hand, got functions. Functions with closures.</p>
 
-<pre><code>(function(){
+<p><code>javascript
+(function(){
   var private = 5;
   window.publicFn = function(){
     console.log(private);
   }
 })();
-</code></pre>
+</code></p>
 
 <p>This is the commonly employed method of encapsulating and exposing objects and functions that can reference private variable through a closure.
 This works; <code>private</code> is inaccessible outside this anonymous function.</p>
