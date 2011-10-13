@@ -126,7 +126,7 @@ Data can by incjected at compile time from the server by specifying keys and pul
 modul8('app.js')
   .data()
     .add('models', myParser) //myParser is a function returning a string
-````javascript
+````
 
 The data API is particularly useful for web applications:
 

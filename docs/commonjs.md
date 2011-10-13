@@ -7,45 +7,38 @@ distinguishes modul8.
 #### Basics
 A CommonJS parser must turn this:
 
-````javascript
-var private = 5;
-var b = require('b');
-exports.publicFn = function(){
-  console.log(private);
-};
-````
+    var private = 5;
+    var b = require('b');
+    exports.publicFn = function(){
+      console.log(private);
+    };
 
 into
 
-````javascript
-var module = {};
-(function(require, module, exports){
-  var private = 5;
-  var b = require('b');
-  exports.publicFn = function(){
-    console.log(private);
-  };
-})(makeRequire(location), module, stash[location])
-if (module.exports) {
-  delete stash[location];
-  stash[location] = module.exports;
-}
-````
-
+    var module = {};
+    (function(require, module, exports){
+      var private = 5;
+      var b = require('b');
+      exports.publicFn = function(){
+        console.log(private);
+      };
+    })(makeRequire(location), module, stash[location])
+    if (module.exports) {
+      delete stash[location];
+      stash[location] = module.exports;
+    }
 
 where `location` is a unique identifier passed down from the compiler to indicate where the module lives, so that `require()` can later retrieve it.
 The `makeRequire()` factory must be able to construct specifically crafted `require()` functions for given locations.
 `stash` will be a pre-defined object on which all modules are exported.  Wrapping up this behaviour inside a function, we can write something like this.
 
-````javascript
-define(location, function(require, module, exports) {
-  var private = 5;
-  var b = require('b');
-  exports.publicFn = function(){
-    console.log(private);
-  }
-});
-````
+    define(location, function(require, module, exports) {
+      var private = 5;
+      var b = require('b');
+      exports.publicFn = function(){
+        console.log(private);
+      }
+    });
 
 The `makeRequire()` and `define()` functions can cleverly be defined inside a closure with access to `stash`. This way only these functions can access your modules.
 
