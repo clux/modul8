@@ -1,7 +1,7 @@
 <html>
   <head>
     <meta charset="utf8">
-    <title>modul8 - modularity enforcing code packager and analyzer for nodejs web applications</title>
+    <title>modul8 : Browser-side CommonJS - a lightweight code packager and analyzer for NodeJS web applications.</title>
     <link rel='stylesheet' href='../main.css' />
   </head>
   <body class="subpage">
@@ -17,18 +17,16 @@ distinguishes modul8.</p>
 
 <p>A CommonJS parser must turn this:</p>
 
-<p><code>javascript
-var private = 5;
+<pre><code>var private = 5;
 var b = require('b');
 exports.publicFn = function(){
   console.log(private);
 };
-</code></p>
+</code></pre>
 
 <p>into</p>
 
-<p><code>javascript
-var module = {};
+<pre><code>var module = {};
 (function(require, module, exports){
   var private = 5;
   var b = require('b');
@@ -40,21 +38,20 @@ if (module.exports) {
   delete stash[location];
   stash[location] = module.exports;
 }
-</code></p>
+</code></pre>
 
 <p>where <code>location</code> is a unique identifier passed down from the compiler to indicate where the module lives, so that <code>require()</code> can later retrieve it.
 The <code>makeRequire()</code> factory must be able to construct specifically crafted <code>require()</code> functions for given locations.
 <code>stash</code> will be a pre-defined object on which all modules are exported.  Wrapping up this behaviour inside a function, we can write something like this.</p>
 
-<p><code>javascript
-define(location, function(require, module, exports) {
+<pre><code>define(location, function(require, module, exports) {
   var private = 5;
   var b = require('b');
   exports.publicFn = function(){
     console.log(private);
   }
 });
-</code></p>
+</code></pre>
 
 <p>The <code>makeRequire()</code> and <code>define()</code> functions can cleverly be defined inside a closure with access to <code>stash</code>. This way only these functions can access your modules.</p>
 

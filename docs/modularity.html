@@ -1,7 +1,7 @@
 <html>
   <head>
     <meta charset="utf8">
-    <title>modul8 - modularity enforcing code packager and analyzer for nodejs web applications</title>
+    <title>modul8 : Browser-side CommonJS - a lightweight code packager and analyzer for NodeJS web applications.</title>
     <link rel='stylesheet' href='../main.css' />
   </head>
   <body class="subpage">
@@ -56,14 +56,13 @@ It does, however, take certain disipline to constantly police your files for mul
 
 <p>We have, on the other hand, got functions. Functions with closures.</p>
 
-<p><code>javascript
-(function(){
+<pre><code>(function(){
   var private = 5;
   window.publicFn = function(){
     console.log(private);
   }
 })();
-</code></p>
+</code></pre>
 
 <p>This is the commonly employed method of encapsulating and exposing objects and functions that can reference private variable through a closure.
 This works; <code>private</code> is inaccessible outside this anonymous function.</p>
