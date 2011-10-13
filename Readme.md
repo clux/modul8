@@ -1,27 +1,63 @@
-# modul8 - modularize your web applications
+# Extensible CommonJS in the browser
 
-modul8 is a modularity enforcing code packager and analyzer for JavaScript web applications.
-Like a normal code packager, it will dynamically pull in dependencies from multiple paths and compile and combine the dynamically ordered set of dependencies
-into a single browser compatible JavaScript file.
+Browser side `require()` - automatically compiled and analyzed.
 
-Additionally, modul8 encourages best practises such as loose coupling and code sharing between the server and the client.
-Sharing is done by allowing several _require domains_ on the client, represented by different paths on the server.
-Code from the app domain can pull in dependencies from any domains, whereas each other domain
-consists of standalone code referencable by both. What modules that are somehow pulled in from the app domain is loggable as
-an npm like dependency **tree** (this structure is enforced) - so that no surprise bloating affects your JavaScript file.
+Write a `main.js` as the entry point
+````javascript
+var determine = require('./determine');
+console.log(determine.isCool(['clux', 'pibbz']));
+````
+then a the required module `determine.coffee` (or .js if you prefer)
+````coffeescript
+cool = require('shared::cool')
+exports.isCool = (input) -> input.filter(cool)
+````
+and finally its required `cool` module on the `shared` domain
+````javascript
+module.exports = function(name){
+  return (name === 'clux');
+};
+````
 
-modul8 encapsulates all the exports objects in a closure where only `require()` and a couple of extra functions are defined.
-Because the export container can only be accessed through functions with access to that closure,
-you cannot have invisible dependencies in your application - even globals like `jQuery` and `$` can be deleted and integrated easily into the require system.
+To compile these files invoke `modul8` as follows
+````javascript
+modul8('main.js')
+  .domains()
+    .add('app', path+'/client/')
+    .add('shared', path+'/shared/')
+  .compile('./out.js')
+````
 
-The extra functions that can touch the exports container are debug functions (for console read only access), and some hook-in functions to allow live
-extentions to parts of the exports container.
-These functions can be used from the server to attach dynamic data to the `data` domain,
-or live from the client to attach results of third-party script loaders to the `external` domain.
+This will construct an `out.js` in your execution path and the generated dependency tree will look as follows:
 
-For more information consult the [extensive documentation](http://clux.github.com/modul8).
+    app::main
+    └──┬app::determine
+       └───shared::cool
 
-## Features
+
+## Quick Overview
+
+modul8 is an extensible CommonJS code packager and analyzer for JavaScript and CoffeeScript web applications.
+Applications are recursively analyzed for dependencies from an entry point and will pull in + compile just what is needed.
+
+Code can be shared with the server by isolating modules/libraries in  shared _domains_. This means stand alone logic
+can exist on the server and be referenced via a normal `require(path+'module')`, but also be referenced via `require('shared::module')` on the client.
+
+To give you full overview and control over what code is pulled in, modul8 automatically generates a depedency tree. This allows
+fast analysis and identification of extraneous links, and it is for me, one of the most important tools for refactoring.
+Note that the depedency tree is truly a tree because we enforce a strict no circular dependencies rule.
+
+modul8 supports live extensions of certain exports containers via third party script loaders, and server side data injection at compile time.
+No need for hacks.
+
+Lastly, modul8 aims to eliminate most global variables from your code. It does so by the following approaches
+
+ - Encapsulate all exported data in the closure inhabited by `require()`
+ - Incorporate globally available libraries into the module system via automatic arbiters using `delete`
+
+For more information consult the [documentation](http://clux.github.com/modul8/api.html).
+
+## Feature List
 
  - client side require
  - automatically share code between the server and the client
@@ -33,33 +69,34 @@ For more information consult the [extensive documentation](http://clux.github.co
  - no need to ever maintain include lists or order
  - inject requireable data from the server directly
  - inject requireable data live from the client
- - minimizes global usage, encapsulates exports in closures
+ - exports containers encapsulates in closures
+ - incorporates globals into the require system intelligently
  - ideal for single page web applications, 1/2 HTTP request to get all code
 
 ## Installation
 
-via npm: `npm install modul8`
+via npm: `$ npm install modul8`
 
-or for the development version `git clone git://github.com/clux/modul8`
+or for the development version `$ git clone git://github.com/clux/modul8`
 
 ## Usage
-Basic use only needs one data domain, and an entry point (here `app.js` - assumed to lie on the domain `add()`ed first).
+Basic use only needs one data domain, and an entry point. The entry point is assumed to lie on the first domain (i.e. /app/client/app.js must exist)
+````javascript
+var modul8 = require('modul8');
+modul8('app.js')
+  .domains()
+    .add('app', path+'/client/')
+    .add('shared', path+'/shared/')
+  .compile('./out.js')
+````
+This compiles everything referenced explicitly thorugh `app.js` to the single browser compatible `out.js`.
 
-    var modul8 = require('modul8');
-    modul8('app.js')
-      .domains()
-        .add('app', '/app/client/')
-        .add('shared', '/app/shared/')
-      .compile('./out.js')
-
-This adds two domains, and compiles all files from the two domains that have been explicitly `require()`d to `./out.js`.
 Every `require()` call is tracked and the resulting dependency tree is loggable. Cross domain `require()`s are namespaced
-C++ style, i.e. `require('shared::validation')` will look for a .js then .coffee file named validation on the shared domain.
+C++ style: `require('shared::validation')` will look for a `.js` then `.coffee` file named `validation` on the shared domain.
 
-Non-application domains like _shared_ can potentially (if they are domain-isolated) be used on the server as well, To
-ensure this, any `require()` calls should be relative to preserve server side compatibility. As an example,
-a same-origin include of shared::defs should be done with a **./** prefix:  `require('./defs')`.
-
+To ensure that the `shared` domain here can work on the server and the client, any `require()` calls
+should be relative and not pull in anything outside that folder.
+As an example, a same-origin include of shared::defs should be done with a **./** prefix:  `require('./defs')`.
 
 A typical dependency tree output will look like this.
 
@@ -69,15 +106,18 @@ A typical dependency tree output will look like this.
     ├──┬app::controllers/entries
     │  └───app::models/entry
     └──┬shared::validation
-       └───shared::defs
+    │  └───shared::defs
+    └───M8::jQuery
 
 
 ## Injecting Data
 
-modul8 allows data to be _safely_ attached to the private exports container both from the server and live on the client.
-This allows for easy transportation of dynamically generated data from the server to the client by passing it through `modul8.data()`.
-Client side manipulation allows integration with third party asynchronous script loaders by passing results
-to `require('M8::external')`.
+Data can by incjected at compile time from the server by specifying keys and pull functions.
+````javascript
+modul8('app.js')
+  .data()
+    .add('models', myParser) //myParser is a function returning a string
+````javascript
 
 The data API is particularly useful for web applications:
 
@@ -85,6 +125,13 @@ The data API is particularly useful for web applications:
  - Or, want a versioning system for your templates so that the newest can be stored in LocalStorage? Send the versions down.
  - Want mongoose logic on the client? Let modul8 pull the data down through such plugins.
 
+The data domain can also be safely extended live on the client using the extender function available in `require('M8::data')`.
+
+Code loaded in via third party asynchronous script loaders can be attached to the `external` domain live via the
+extender function available in `require('M8::external')`.
+
+These functions can be used, and any code on these domains can be referenced without messing up the code analysis at compile time.
+They can, however, show up in the dependency tree if desirable.
 
 ## Learn more
 The [docs](http://clux.github.com/modul8) should contain everything you could ever want to know about modul8 and probably more.
@@ -97,11 +144,11 @@ I hope it will be useful.
 
 Install development dependencies:
 
-    npm install
+    $ npm install
 
-Then:
+Then run expresso
 
-    expresso verify
+    $ expresso
 
 Actively tested with node:
 

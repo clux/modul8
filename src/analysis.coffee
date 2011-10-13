@@ -6,7 +6,7 @@ utils       = require './utils'
 
 
 # constructor
-CodeAnalysis = (@entryPoint, @domains, @mainDomain, @premw, arbiters) ->
+CodeAnalysis = (@entryPoint, @domains, @mainDomain, @premw, arbiters, @ignoreDomains) ->
   @resolver = new Resolver(@domains, arbiters, @mainDomain)
   @resolveDependencies() # automatically resolves dependency tree on construction, stores in @tree
   return
@@ -17,6 +17,7 @@ CodeAnalysis::loadDependencies = (absReq, subFolders, dom) ->
   code = utils.compile(@domains[dom]+absReq)
   code = @premw(code) if @premw # apply pre-processing middleware here
   @resolver.locate(dep, subFolders, dom) for dep in detective(code) when isLegalRequire(dep)
+
 
 
 
@@ -36,7 +37,6 @@ CodeAnalysis::resolveDependencies = -> # private
 
   ((t) =>
     for [dep, domain, fake] in @loadDependencies(t.name, t.subFolders, t.domain)
-      #TODO: TEST that dep never have domain parts in it
       uid = domain+'::'+dep
       t.deps[uid] = {name: dep, parent: t, deps: {}, subFolders: dep.split('/')[0...-1], domain: domain, level: t.level+1, fake: fake}
 
@@ -48,10 +48,11 @@ CodeAnalysis::resolveDependencies = -> # private
   return
 
 # helpers for print
-objCount = (obj) ->
-  i = 0
-  i++ for own key of obj
-  i
+makeCounter = (ignores) ->
+  (obj) ->
+    i = 0
+    i++ for own key of obj when !(obj[key].domain in ignores)
+    i
 
 formatName = (name, extSuffix, domPrefix, dom) ->
   n = if extSuffix then name else name.split('.')[0] # fine as all names at this point have been absolutized
@@ -61,10 +62,11 @@ formatName = (name, extSuffix, domPrefix, dom) ->
 # public method, returns an npm like dependency tree
 CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
   lines = [formatName(@entryPoint, extSuffix, domPrefix, @mainDomain)]
+  objCount = makeCounter(ignores=@ignoreDomains)
   ((branch, level, parentAry) ->
     idx = 0
     bSize = objCount(branch.deps)
-    for key, {name, deps, domain} of branch.deps
+    for key, {name, deps, domain} of branch.deps when !(domain in ignores)
       hasChildren = objCount(deps) > 0
       forkChar = if hasChildren then "┬" else "─" # this char only occurs near the leaf
       isLast = ++idx is bSize
@@ -76,6 +78,7 @@ CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
       arguments.callee(branch.deps[key], level+1, parentAry.concat(isLast)) if hasChildren #recurse into key's dependency tree keeping track of parent lines
     return
   )(@tree, 0, [])
+
   lines.join('\n')
 
 
@@ -100,11 +103,11 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
 
 
 # requiring this gives a function which returns a closured object with access to only the public methods of a bound instance
-module.exports = (entryPoint, domains, mainDomain, premw, arbiters) ->
+module.exports = (entryPoint, domains, mainDomain, premw, arbiters, ignoreDomains) ->
   throw new Error("modul8::analysis requires an entryPoint") if !entryPoint
   throw new Error("modul8::analysis requires a domains object and a matching mainDomain. Got #{domains}, main: #{mainDomain}") if !domains or !domains[mainDomain]
   throw new Error("modul8::analysis requires a composed function of pre-processing middlewares to work. Got #{premw}") if !premw instanceof Function
-  o = new CodeAnalysis(entryPoint, domains, mainDomain, premw, arbiters)
+  o = new CodeAnalysis(entryPoint, domains, mainDomain, premw, arbiters, ignoreDomains)
   {
     printed : -> o.printed.apply(o, arguments)   # returns a big string
     sorted  : -> o.sorted.apply(o, arguments)    # returns array of pairs of form [name, domain]
