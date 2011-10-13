@@ -3,11 +3,13 @@ FUTURE / 2011-??-??
   TODO:
   * Ensure a separate libs file will not get overwritten if no changes has been made
   * Provide more levels of logging on the client
-  * Add option to show external requires in the dependency tree.
   * More tests
-  * `.data()` and `.domains()` now both can take objects directly instead of adding. Note that this means you do not implicitly specify a main domain,
-  so to use this, you will have to name your application domain `app`.
 
+0.5.0 / 2011-10-14
+==================
+  * `.data()` and `.domains()` now both can take objects directly instead of adding
+  * `.libraries()` can be specified without all the 3 sub-calls, just specify all htree parameters direcly on this instead
+  * `.analysis().ignore(domain)` can be used to supress certain domains from printed depedency tree (perhaps good to hide `external` or `M8`)
 
 0.4.0 / 2011-10-13
 ==================
