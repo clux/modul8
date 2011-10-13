@@ -161,11 +161,13 @@ domloader_fn = function(code){
  return "jQuery(function(){"+code+"});"
 }
 ````
+
 Note that the namespace does not actually contain the exported objects from each module, or the data attachments.
 This information is encapsulated in a closure. The namespace'd object simply contains the public debug API.
 It is there if you want to write a simpler prefix than than capital M, 8 all the time, maybe you would like 'QQ' or 'TT'.
 
 Options can be set by chaining them on `modul8()` using the `set(option, value)` method. For example:
+
 ````javascript
 modul8('app.js')
   .set('namespace', 'QQ')

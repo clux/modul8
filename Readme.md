@@ -3,16 +3,21 @@
 Browser side `require()` - automatically compiled and analyzed.
 
 Write a `main.js` as the entry point
+
 ````javascript
 var determine = require('./determine');
 console.log(determine.isCool(['clux', 'pibbz']));
 ````
+
 then a the required module `determine.coffee` (or .js if you prefer)
+
 ````coffeescript
 cool = require('shared::cool')
 exports.isCool = (input) -> input.filter(cool)
 ````
+
 and finally its required `cool` module on the `shared` domain
+
 ````javascript
 module.exports = function(name){
   return (name === 'clux');
@@ -20,6 +25,7 @@ module.exports = function(name){
 ````
 
 To compile these files invoke `modul8` as follows
+
 ````javascript
 modul8('main.js')
   .domains()
@@ -81,6 +87,7 @@ or for the development version `$ git clone git://github.com/clux/modul8`
 
 ## Usage
 Basic use only needs one data domain, and an entry point. The entry point is assumed to lie on the first domain (i.e. /app/client/app.js must exist)
+
 ````javascript
 var modul8 = require('modul8');
 modul8('app.js')
@@ -89,6 +96,7 @@ modul8('app.js')
     .add('shared', path+'/shared/')
   .compile('./out.js')
 ````
+
 This compiles everything referenced explicitly thorugh `app.js` to the single browser compatible `out.js`.
 
 Every `require()` call is tracked and the resulting dependency tree is loggable. Cross domain `require()`s are namespaced
@@ -113,6 +121,7 @@ A typical dependency tree output will look like this.
 ## Injecting Data
 
 Data can by incjected at compile time from the server by specifying keys and pull functions.
+
 ````javascript
 modul8('app.js')
   .data()
