@@ -24,7 +24,7 @@ module.exports = function(name){
 };
 ````
 
-To compile these files invoke `modul8` as follows
+To compile these files invoke `modul8()` and chain on options
 
 ````javascript
 modul8('main.js')
@@ -51,17 +51,17 @@ can exist on the server and be referenced via a normal `require(path+'module')`,
 
 To give you full overview and control over what code is pulled in, modul8 automatically generates a depedency tree. This allows
 fast analysis and identification of extraneous links, and it is for me, one of the most important tools for refactoring.
-Note that the depedency tree is truly a tree because we enforce a strict no circular dependencies rule.
+Note that the depedency tree is truly a tree because we enforce a strict no circular dependencies rule - they are just bad for modularity.
 
 modul8 supports live extensions of certain exports containers via third party script loaders, and server side data injection at compile time.
 No need for hacks.
 
-Lastly, modul8 aims to eliminate most global variables from your code. It does so by the following approaches
+Lastly, modul8 aims to eliminate most global variables from your code. It does so using the following approaches
 
  - Encapsulate all exported data in the closure inhabited by `require()`
  - Incorporate globally available libraries into the module system via automatic arbiters using `delete`
 
-For more information consult the [documentation](http://clux.github.com/modul8/api.html).
+For more information consult the [api docs](http://clux.github.com/modul8/docs/api.html).
 
 ## Feature List
 
@@ -94,7 +94,7 @@ modul8('app.js')
   .domains()
     .add('app', path+'/client/')
     .add('shared', path+'/shared/')
-  .compile('./out.js')
+  .compile('./out.js');
 ````
 
 This compiles everything referenced explicitly thorugh `app.js` to the single browser compatible `out.js`.
@@ -143,7 +143,7 @@ These functions can be used, and any code on these domains can be referenced wit
 They can, however, show up in the dependency tree if desirable.
 
 ## Learn more
-The [docs](http://clux.github.com/modul8) should contain everything you could ever want to know about modul8 and probably more.
+The [full documentation site](http://clux.github.com/modul8) should contain everything you could ever want to know about modul8 and probably more.
 Read it, try it out, and give feedback if you like or hate it / parts of it, or if you want to contribute.
 
 modul8 is a relatively fresh project of mine. It was crafted out of necessity, but it has grown into something larger.
