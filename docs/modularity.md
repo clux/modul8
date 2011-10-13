@@ -43,14 +43,12 @@ _Shit_.
 
 We have, on the other hand, got functions. Functions with closures.
 
-````javascript
-(function(){
-  var private = 5;
-  window.publicFn = function(){
-    console.log(private);
-  }
-})();
-````
+    (function(){
+      var private = 5;
+      window.publicFn = function(){
+        console.log(private);
+      }
+    })();
 
 This is the commonly employed method of encapsulating and exposing objects and functions that can reference private variable through a closure.
 This works; `private` is inaccessible outside this anonymous function.
