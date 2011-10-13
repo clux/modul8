@@ -5,6 +5,8 @@ FUTURE / 2011-??-??
   * Provide more levels of logging on the client
   * Add option to show external requires in the dependency tree.
   * More tests
+  * `.data()` and `.domains()` now both can take objects directly instead of adding. Note that this means you do not implicitly specify a main domain,
+  so to use this, you will have to name your application domain `app`.
 
 
 0.4.0 / 2011-10-13

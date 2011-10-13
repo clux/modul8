@@ -56,6 +56,7 @@ start = (entry) ->
     pre         : []
     post        : []
     options     : {}
+    ignoreDoms  : []
     entryPoint  : entry
   new Modul8()
 
@@ -63,8 +64,9 @@ start = (entry) ->
 
 
 
-Modul8::data = ->
+Modul8::data = (input) ->
   return @ if !@environmentMatches
+  obj.data[key] = val for key,val of input if input
   new Data()
 
 Data = ->
@@ -78,8 +80,19 @@ Data::add = (key, val) ->
 
 
 
-Modul8::domains = ->
+Modul8::domains = (input) ->
   return @ if !@environmentMatches
+  if input
+    for key,val of input
+      if key is 'app'
+        obj.mainDomain = key
+        obj.hasMain = true
+      obj.domains[key] = val
+    if !obj.hasMain # if app does not exist we simply try one at random
+      for key of input
+        obj.mainDomain = key
+        break
+
   new Domains()
 
 Domains = ->
@@ -96,8 +109,11 @@ Domains::add = (key, val, primary) ->
 
 
 
-Modul8::libraries = ->
+Modul8::libraries = (list, dir, target) ->
   return @ if !@environmentMatches
+  obj.libFiles = list if list
+  obj.libDir = dir if dir
+  obj.libsOnlyTarget = target if target
   new Libraries()
 
 Libraries = ->
@@ -108,15 +124,16 @@ Libraries::list = (list) ->
   obj.libFiles = list if @environmentMatches
   @
 
+Libraries::path = (dir) ->
+  return @ if !@subclassMatches('Libraries','path')
+  obj.libDir = dir if @environmentMatches
+  @
+
 Libraries::target = (target) ->
   return @ if !@subclassMatches('Libraries','target')
   obj.libsOnlyTarget = target if @environmentMatches
   @
 
-Libraries::path = (dir) ->
-  return @ if !@subclassMatches('Libraries','path')
-  obj.libDir = dir if @environmentMatches
-  @
 
 
 
@@ -142,7 +159,14 @@ Analysis::suffix = (suffix) ->
   obj.extSuffix = suffix if @environmentMatches
   @
 
-
+Analysis::ignore = (domain) ->
+  return @ if !@subclassMatches('Analysis','suffix')
+  if @environmentMatches
+    domains = if domain.length then [domain] else domain
+    for d in domains
+      throw new Error("modul8::analysis cannot ignore the main #{obj.mainDomain} domain") if obj.mainDomain and obj.mainDomain is d
+      obj.ignoreDoms.push d
+  @
 
 Modul8::arbiters = ->
   return @ if !@environmentMatches

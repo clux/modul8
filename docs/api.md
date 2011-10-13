@@ -1,30 +1,36 @@
 # API
 
 modul8's API is in its basic form extremely simple, all we need to do is `add()` domains to `domains()`,
-an entry point for the first domain to modul8 itself, and the target JavaScript file to write
+specify an entry point (for the first domain) to the constructor, and the target JavaScript file to output ot `compile()`.
 
-    var modul8 = require('modul8');
-    var dir = __dirname;
+````javascript
+var modul8 = require('modul8');
+var dir = __dirname;
 
-    modul8('app.js')
-      .domains()
-        .add('app', dir+'/app/client/')
-        .add('shared', dir+'/app/shared/')
-      .compile('./out.js');
+modul8('app.js')
+  .domains()
+    .add('app', dir+'/app/client/')
+    .add('shared', dir+'/app/shared/')
+  .compile('./out.js');
+````
+
+Your domains can alternatively be supplied as an object directly to `.domains({app:path, ..})`, but being an object, non guaranteed to be ordered,
+modul8 cannot guarantee that the first object is unambiguous, so it will assume its name is `app` if this domain exists. If not, you are in unspecified territory.
 
 
-You can add any number of domains to be scanned, but the first domain added must be the location of the entry point; 'app.js'.
-Files on these domains can be required specifically with `require('domain::name')`.
+You can add any number of domains to be scanned, and files on these domains can be required specifically with `require('domain::name')`.
 Both the domain and file extension can be omitted if there are no conflicts (if there are, the main domain will be scanned first).
 
-The following are equivalent from the file: 'helper.js' on the 'shared' domain.
+The following are equivalent from the file: `helper.js` on the `shared` domain.
 
-    require('shared::validation.js') //extension not necessary
-    require('./helpers.js') //relative require searches only this domain
-    require('./helpers') //.js extension always gets searched before .coffee
+````javascript
+require('shared::validation.js') //extension not necessary
+require('./helpers.js') //relative require searches only this domain
+require('./helpers') //.js extension always gets searched before .coffee
+````
 
-Additionally, `require('helpers')` will resolve to the same file if there are no helpers.js in the root of any other domains.
-More information on `require` is available in [this section](require.html)
+Additionally, `require('helpers')` will resolve to the same file if there are no `helpers.js` in the root of any other domains.
+More information on `require()` is available in [this section](require.html)
 
 ### API Chaining Note
 
@@ -48,13 +54,17 @@ To export these to the server, you will have to obtain the data somehow - your j
 
 The data API simply consists of `add()`ing data keys and functions to `data()`
 
-    modul8('app.js')
-      .domains().add('app', dir+'/app/client/')
-      .data()
-        .add('versions', myVersionParser)
-        .add('models', myModelParser)
-        .add('templates', myTemplateCompiler)
-      .compile('./out.js');
+````javascript
+modul8('app.js')
+  .domains({app : dir+'/app/client/'})
+  .data()
+    .add('versions', myVersionParser)
+    .add('models', myModelParser)
+    .add('templates', myTemplateCompiler)
+  .compile('./out.js');
+````
+
+Alternatively, as with `.domains()`, you can do a single `.data()` call with an object instead of chaining `.add()` if you prefer.
 
 Under the covers, modul8 attaches the output of the myX functions to the reserved `data` domain.
 Data exported to this domain is `require()`able as if it were exported from a file (named versions|templates|models) on a domain named data:
@@ -65,30 +75,38 @@ In other words the function output is attached verbatim to modul8's exports cont
 This should be easy to detect in a console though.
 
 As a small example our personal version parser operates something like the following:
-
-    function versionParser(){
-      //code to scan template directory for version numbers stored on the first line
-      return "{'user/view':[0,2,4], 'user/register':[0,3,1]}";
-    }
+````javascript
+function versionParser(){
+  //code to scan template directory for version numbers stored on the first line
+  return "{'user/view':[0,2,4], 'user/register':[0,3,1]}";
+}
+````
 
 Chaining on `.add('versions', versionParser)` will allow:
 
-    var versions = require('data::versions');
-    console.log(versions['users/view']) // -> [0,2,4]
+````javascript
+var versions = require('data::versions');
+console.log(versions['users/view']) // -> [0,2,4]
+````
 
 ## Adding Libraries
 
 Appending standard (window exporting) JavaScript and CoffeeScript files is easy. Call `.libraries()` and chain on your options as below.
 
-    modul8('app.js')
-      .domains().add('app', dir+'/app/client/')
-      .libraries()
-        .list(['jQuery.js','history.js'])
-        .path(dir+'/app/client/libs/')
-        .target('out-libs.js')
-      .compile('./out.js');
+````javascript
+modul8('app.js')
+  .domains({app : dir+'/app/client/'})
+  .libraries()
+    .list(['jQuery.js','history.js'])
+    .path(dir+'/app/client/libs/')
+    .target('out-libs.js')
+  .compile('./out.js');
+````
 
 Note that without the `.target()` option added, the libraries would be inserted in the same file before you application code.
+
+Alternatively, this `.list()` call can be avoided by more succinctly placing this array in the first parameter of `.libraries()` instead.
+Similarly, we can also avoid `.path()` and `.target()` by specifying second and third parameters to `.libraries()`.
 
 Libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
 And nmodified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response. Thus, using `.target()` and
@@ -116,11 +134,13 @@ modul8 comes bundled with one of each of these:
 
 To use these they must be chained on `modul8()` via `before()` or `after()` depending on what type of middleware it is.
 
-    modul8('app.js')
-      .domains().add('app', dir+'/app/client/')
-      .before(modul8.testcutter)
-      .after(modul8.minifier)
-      .compile('./out.js');
+````javascript
+modul8('app.js')
+  .domains({app : dir+'/app/client/'})
+  .before(modul8.testcutter)
+  .after(modul8.minifier)
+  .compile('./out.js');
+````
 
 **WARNING:** testcutter is not very intelligent at the moment, if you reference `require.main` in your module,
 expect that everything from the line of reference to be removed.
@@ -136,22 +156,24 @@ Below are the settings available:
 **You have to** set `domloader` if you do not use jQuery. If you are familiar with the DOM or any other library this should be fairly trivial.
 The default jQuery implementation is as follows:
 
-    domloader_fn = function(code){
-     return "jQuery(function(){"+code+"});"
-    }
-
+````javascript
+domloader_fn = function(code){
+ return "jQuery(function(){"+code+"});"
+}
+````
 Note that the namespace does not actually contain the exported objects from each module, or the data attachments.
 This information is encapsulated in a closure. The namespace'd object simply contains the public debug API.
 It is there if you want to write a simpler prefix than than capital M, 8 all the time, maybe you would like 'QQ' or 'TT'.
 
 Options can be set by chaining them on `modul8()` using the `set(option, value)` method. For example:
-
-    modul8('app.js')
-      .set('namespace', 'QQ')
-      .set('domloader', domloader_fn)
-      .set('logging', true)
-      .domains().add('app', dir+'/app/client/')
-      .compile('./out.js');
+````javascript
+modul8('app.js')
+  .set('namespace', 'QQ')
+  .set('domloader', domloader_fn)
+  .set('logging', true)
+  .domains({app : dir+'/app/client/'})
+  .compile('./out.js');
+````
 
 ## Code Analysis
 
@@ -178,13 +200,16 @@ While this usually grows much lot bigger than what is seen here, by putting this
 that perhaps should not need to be required at a particular point. In essence, we feel this helps promote more loosely coupled applications.
 We strongly encourage you to use it if possible. The API consists of chaining 1-3 methods on `analysis()`:
 
-    modul8('app.js')
-      .domains().add('app', dir+'/app/client/')
-      .analysis()
-        .output(console.log)
-        .prefix(false)
-        .suffix(true)
-      .compile('./out.js')
+````javascript
+modul8('app.js')
+  .domains({app : dir+'/app/client/'})
+  .analysis()
+    .output(console.log)
+    .prefix(false)
+    .suffix(true)
+    .hide('external')
+  .compile('./out.js')
+````
 
 The `output()` method must be set for `analysis()` to have any effect.
 It must take either a function to pipe the tree to, or a filepath to write it out to.
@@ -193,34 +218,40 @@ The additional boolean methods, `prefix()` and `suffix()` simply control the lay
 Prefix refers to the domain (name::) prefix that may or may not have been used in the require, and similarly, suffix refers to the file extension.
 Defaults for thes are : `{prefix: true, suffix: false}`.
 
+The `.hide()` call specifies what domains to suppress in the dependency tree. Takes a domain name string or an array of such strings.
+
 ## Environment Conditionals
 
 We can conditionally perform the following action, if __NODE_ENV__ matches specified environment.
 
-    modul8('app.js')
-      .domains().add('app', dir+'/app/client/')
-      .in('development').after(modul8.minifier)
-      .in('development').compile('./out.js')
-      .in('production').compile('./out.js')
+````javascript
+modul8('app.js')
+  .domains().add('app', dir+'/app/client/')
+  .in('development').after(modul8.minifier)
+  .in('development').compile('./out.js')
+  .in('production').compile('./out.js')
+````
 
 The environment conditionals may be applied to several calls:
 
-    modul8('app.js')
-      .domains().add('app', dir+'/app/client/')
-      .in('development')
-        .after(modul8.minifier)
-        .analysis()
-          .output(console.log)
-          .prefix(true)
-          .suffix(false)
-        .domains()
-          .add('debug', dir+'/app/debug/')
-      .in('production')
-        .libraries()
-          .list(['analytics.js'])
-          .path(dir+'/app/client/libs/')
-      .in('all')
-       .compile('./out.js')
+````javascript
+modul8('app.js')
+  .domains().add('app', dir+'/app/client/')
+  .in('development')
+    .after(modul8.minifier)
+    .analysis()
+      .output(console.log)
+      .prefix(true)
+      .suffix(false)
+    .domains()
+      .add('debug', dir+'/app/debug/')
+  .in('production')
+    .libraries()
+      .list(['analytics.js'])
+      .path(dir+'/app/client/libs/')
+  .in('all')
+   .compile('./out.js')
+````
 
 If we perform the same action for environments, set them before
 the first `in()` call, or use `in('all')`.
@@ -254,11 +285,13 @@ The domains `M8`, `data` and `external` have been whitelisted for this purpose, 
 
 Both these functions will overwrite on repeat calls. For example:
 
-     var dataAdd = require('M8::data');
-     dataAdd('libX', libXobj);
-     require('data::libX'); // -> libXobj
-     dataAdd('libX', {});
-     require('data::libX'); // -> {}
+````javascript
+var dataAdd = require('M8::data');
+dataAdd('libX', libXobj);
+require('data::libX'); // -> libXobj
+dataAdd('libX', {});
+require('data::libX'); // -> {}
+````
 
 Although inteded for the console, if you don't like `require()`ing in these functions, they are aliased on the namespaced object.
 Just remember that if you change the name of your namespace, you will have to change these references everywhere.
@@ -273,15 +306,17 @@ Or, more generally; `#{namespace}.data === require('M8::data')`.
 
 These help reveal invisible dependencies by reduce the amounts global variables in your code.
 
-    modul8('app.js')
-      .domains().add('app', dir+'/app/client/')
-      .libraries()
-        .list(['jQuery.js','Spile.coffee'])
-        .path(dir+'/app/client/libs/')
-      .arbiters()
-        .add('jQuery', ['$', 'jQuery'])
-        .add('Spine')
-      .compile('./out.js')
+````javascript
+modul8('app.js')
+  .domains().add('app', dir+'/app/client/')
+  .libraries()
+    .list(['jQuery.js','Spile.coffee'])
+    .path(dir+'/app/client/libs/')
+  .arbiters()
+    .add('jQuery', ['$', 'jQuery'])
+    .add('Spine')
+  .compile('./out.js')
+````
 
 This code would delete objects `$`, `jQuery` and `Spine` from `window` and under the covers add closure bound alternatives that are `require()`able.
 The second parameter to `arbiters().add()` is the variable name/names to be deleted. If only a single variable should be deleted,

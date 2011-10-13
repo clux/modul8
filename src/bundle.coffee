@@ -92,7 +92,7 @@ module.exports = (o) ->
   premw = if o.pre and o.pre.length > 0 then compose(o.pre) else (a) -> a
   postmw = if o.post and o.post.length > 0 then compose(o.post) else (a) -> (a)
 
-  ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, premw, o.arbiters)
+  ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, premw, o.arbiters, o.ignoreDoms)
 
   if o.target
 
