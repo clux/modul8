@@ -12,27 +12,25 @@ specify an entry point (for the first domain) to the constructor, and the target
         .add('shared', dir+'/app/shared/')
       .compile('./out.js');
 
-Your domains can alternatively be supplied as an object directly to `.domains({app:path, ..})`, but being an object, non guaranteed to be ordered,
-modul8 cannot guarantee that the first object is unambiguous, so it will assume its name is `app` if this domain exists. If not, you are in unspecified territory.
+Your domains can alternatively be supplied as an object directly to `.domains({app:path, ..})`. However, objects are not ordered, so modul8 cannot unambiguously determine what is
+the first element, so it will assume the main domain is `app` if this is passed in.  If this is not passed in, it will take a guess..
 
+You can add any number of domains to be scanned. Files on these domains can be required specifically with `require('domain::name')`.
+Both the domain and file extension can be omitted if there are no conflicts (current domain gets scanned first, .js scanned before .coffee).
 
-You can add any number of domains to be scanned, and files on these domains can be required specifically with `require('domain::name')`.
-Both the domain and file extension can be omitted if there are no conflicts (if there are, the main domain will be scanned first).
+The following are equivalent from the file: `helpers.js` in the root of the `app` domain.
 
-The following are equivalent from the file: `helper.js` on the `shared` domain.
+    require('app::validation.js') //extension not necessary
+    require('./validation.js') //relative require searches only this domain
+    require('./validation') //.js extension always gets searched before .coffee
+    require('validation') // scans this domain first, but will try other domains if it fails here
 
-
-    require('shared::validation.js') //extension not necessary
-    require('./helpers.js') //relative require searches only this domain
-    require('./helpers') //.js extension always gets searched before .coffee
-
-Additionally, `require('helpers')` will resolve to the same file if there are no `helpers.js` in the root of any other domains.
 More information on `require()` is available in [this section](require.html)
 
 ### API Chaining Note
 
 As indicated by the first example, the modul8 API is controlled by chaining methods together. For style and semanticity
-we apply extra indentation when we break into a subroutine like in the `.data()` call above, or, if only one method is chained on a subclass,
+we apply extra indentation when we break into a subclass method like in the `.data()` call above, or, if only one method is chained on a subclass,
 we sometimes write it on the same line.
 
 We recommend sticking to this notation as subroutines from different methods often have identical names.
@@ -265,13 +263,15 @@ The domains `M8`, `data` and `external` have been whitelisted for this purpose, 
 
 Both these functions will overwrite on repeat calls. For example:
 
-    var dataAdd = require('M8::data');
-    dataAdd('libX', libXobj);
+    var dataModify = require('M8::data');
+    dataModify('libX', libXobj);
     require('data::libX'); // -> libXobj
-    dataAdd('libX', {});
+    dataModify('libX', {});
     require('data::libX'); // -> {}
+    dataModify('libX'); //unsets
+    require('data::libX'); // -> null
 
-Although inteded for the console, if you don't like `require()`ing in these functions, they are aliased on the namespaced object.
+Although inteded for the console, if you don't like using `require()` to get these functions, they are aliased on the namespaced object.
 Just remember that if you change the name of your namespace, you will have to change these references everywhere.
 Also note that changing the namespace does not change the domain these two functions lie on. The aliases are as follows:
 

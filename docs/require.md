@@ -45,6 +45,15 @@ There are four different ways to use require:
  If there is one thing to learn from it is is that you absolutely **DO NOT omit extensions and keep .js and .coffee versions in the same folder**
  or you will quickly become very frustrated as to why your coffee changes arent doing anything.
 
+### Require Folders
+
+Require strings not resolving as a file, or ending in a slash will try to resolve the name as a folder and look for a file named `index` following the above logic.
+In short the following are almost equivalent:
+
+    require('controllers/index');
+    require('controllers/'); //looks for controllers/index+extension
+    require('controllers'); //looks for controllers+extension then controllers/index+extension
+
 ### Require Priority
 
 Requires are attempted resolved with the following priority:
@@ -62,6 +71,17 @@ Requires are attempted resolved with the following priority:
     //error
 
 In other words, collisions should not occur unless you have duplicate files in different domains, and you are very relaxed about your domain specifiers or arbiter prefixes.
+
+### Conflicts
+
+CoffeeScript and JavaScript are a wonderful mix. Some people prefer CoffeeScript and some people vanilla JavaScript - and that's fine.
+modul8 allows mixing and matching of these anywhere.
+
+One word of caution however. The browser has no notion of file extensions. If you require both _fileName.coffee_ and _fileName.js_ from the same directory,
+there will only be one exports object available under _domain::fileName_.
+
+This might change in the future, but for now, we feel this is already an error prone practice,
+and that you should not be doing this anyway.
 
 ### Hooking into define
 

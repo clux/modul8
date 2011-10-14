@@ -5,6 +5,10 @@ FUTURE / 2011-??-??
   * Provide more levels of logging on the client
   * More tests
 
+0.5.1 / 2011-10-??
+==================
+  * `require('folder')` will look for `folder/index`
+
 0.5.0 / 2011-10-14
 ==================
   * `.data()` and `.domains()` now both can take objects directly instead of adding
