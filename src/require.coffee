@@ -43,8 +43,15 @@ makeRequire = (dom, pathName) -> # each (path, domain) gets its own unique requi
       scannable = [dom].concat domains.filter((e) -> e isnt dom)
 
     reqStr = reqStr.split('.')[0] # ignore extensions if exists
+    if reqStr[-1...] is '/'
+      reqStr += 'index'
+      noTryFolder = true
 
-    return exports[o][reqStr] for o in scannable when exports[o][reqStr]
+    for o in scannable
+      return exports[o][reqStr] if exports[o][reqStr]
+      continue if noTryFolder
+      return exports[o][reqStr+'/index'] if exports[o][reqStr+'/index']
+
     console.error("Unable to resolve require for: #{reqStr}") if base.logging
     null
 

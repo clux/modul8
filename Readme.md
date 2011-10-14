@@ -1,22 +1,22 @@
 # Extensible CommonJS in the browser
 
-Browser side `require()` - automatically compiled and analyzed.
+Extended `require()` browser side - with simple code compilation and analysis.
 
 Write a `main.js` as the entry point
 
 ````javascript
 var determine = require('./determine');
-console.log(determine.isCool(['clux', 'pibbz']));
+console.log(determine.isCool(['clux', 'lava']));
 ````
 
-then a the required module `determine.coffee` (or .js if you prefer)
+the required module `determine.coffee` (or .js if you prefer)
 
-````coffeescript
+````coffeescritp
 cool = require('shared::cool')
 exports.isCool = (input) -> input.filter(cool)
 ````
 
-and finally its required `cool` module on the `shared` domain
+and finally its required `cool.js` on the `shared` domain
 
 ````javascript
 module.exports = function(name){
@@ -34,7 +34,7 @@ modul8('main.js')
   .compile('./out.js')
 ````
 
-This will construct a browser compatible `out.js` in your execution path and the generated dependency tree will look as follows:
+This will construct a single, browser compatible `out.js` in your execution path and the generated dependency tree will look as follows:
 
     app::main
     └──┬app::determine
@@ -113,7 +113,7 @@ A typical dependency tree output will look like this.
     │  └───app::models/user
     ├──┬app::controllers/entries
     │  └───app::models/entry
-    └──┬shared::validation
+    ├──┬shared::validation
     │  └───shared::defs
     └───M8::jQuery
 
@@ -162,3 +162,7 @@ Then run expresso
 Actively tested with node:
 
   - 0.4.10
+
+## License
+
+MIT License - See LICENSE file for details
