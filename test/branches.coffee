@@ -50,8 +50,8 @@ options =
       { folder: 'branch1/'}
     ]
     'internal' : [
-      { folder: '' }#, mix: ['']}
-      { folder: 'control/', mix: ['../']} #mixin of self causes loop!! analysis bug
+      { folder: ''}#, mix: ['']} # mixin of self is circular and does throw
+      { folder: 'control/', mix: ['../']}
     ]
     'crazy'   : [
       {folder: 'waa/', cross: [{dom:'shared', branch: 'branch1/'}, {dom:'internal', branch:''}] }
@@ -100,7 +100,7 @@ exports["test analyzer#order"] = ->
   testCount = 1
 
   included = []
-  for [name, domain] in order
+  for [domain, name] in order
     assert.ok(domain, "domain found for #{name}")
     assert.ok(utils.exists(options.domains[domain]+name), "file #{domain}::#{name} resolves on #{options.domains[domain]}")
     testCount+=2

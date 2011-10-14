@@ -5,46 +5,49 @@ utils       = require './utils'
 {Resolver, isLegalRequire} = require './resolver'
 
 
-# constructor
+# constructor - resolves dependency tree and stores in @tree
 CodeAnalysis = (@entryPoint, @domains, @mainDomain, @premw, arbiters, @ignoreDomains) ->
   @resolver = new Resolver(@domains, arbiters, @mainDomain)
-  @resolveDependencies() # automatically resolves dependency tree on construction, stores in @tree
+  @buildTree()
   return
 
-# finds all dependencies of a module (+whether or not they are fake) based on reqStr + domain & subFolders array of requirees position
-CodeAnalysis::loadDependencies = (absReq, subFolders, dom) ->
-  # we will only get name as absolute names because we convert everything that comes in 4 lines below (and initial is entryPoint)
+# finds all dependencies of a module based on reqStr + domain & folders array of requirees position
+CodeAnalysis::resolveDependencies = (absReq, folders, dom) ->
+  # get javascript
   code = utils.compile(@domains[dom]+absReq)
-  code = @premw(code) if @premw # apply pre-processing middleware here
-  @resolver.locate(dep, subFolders, dom) for dep in detective(code) when isLegalRequire(dep)
+
+  # apply pre-processing middleware here if any
+  code = @premw(code) if @premw
+
+  # absolutize and locate everything here so we have a unique representation of each file
+  @resolver.locate(dep, folders, dom) for dep in detective(code) when isLegalRequire(dep)
 
 
+# private - loads each files depedencies and recursively calls itself on each new branch
+CodeAnalysis::buildTree = ->
+  @tree = {name: @entryPoint, domain: @mainDomain, folders: [], deps: {}, fake: 0, level: 0}
 
-
-# main analyzer - called on CodeAnalysis instatiation
-# recursively walks the tree and calls loadDependencies on it
-CodeAnalysis::resolveDependencies = -> # private
-  @tree = {name: @entryPoint, deps: {}, subFolders: [], domain: @mainDomain, fake: false, level: 0}
-
-  circularCheck = (t, dep, dom) -> # makes sure no circular references exists for dep going up from current point in tree (tree starts at top)
-    chain = [dom+'::'+dep]
+  circularCheck = (t, uid) -> # follows branch up to make sure it does not find itself
+    chain = [uid]
     loop
-      return if t.parent is undefined # got all the way to @entryPoint without finding self => good
+      return if t.parent is undefined # branch clean
       chain.push t.domain+'::'+t.name
-      t = t.parent # follow the chain up
-      throw new Error("modul8::analysis revealed a circular dependency: #{chain.join(' <- ')}") if chain[chain.length-1] is chain[0]
+      t = t.parent
+      if chain[chain.length-1] is chain[0]
+        throw new Error("modul8::analysis revealed a circular dependency: "+chain.join(' <- '))
     return
 
   ((t) =>
-    for [dep, domain, fake] in @loadDependencies(t.name, t.subFolders, t.domain)
-      uid = domain+'::'+dep
-      t.deps[uid] = {name: dep, parent: t, deps: {}, subFolders: dep.split('/')[0...-1], domain: domain, level: t.level+1, fake: fake}
+    for [name, domain, fake] in @resolveDependencies(t.name, t.folders, t.domain)
+      uid = domain+'::'+name
+      folders = name.split('/')[0...-1]
+      t.deps[uid] = {name, domain, fake, folders, deps:{}, parent: t, level: t.level+1}
 
       if !fake
-        circularCheck(t, dep, domain) # also checks for self-inclusions
+        circularCheck(t, uid) # throw on circular ref
         arguments.callee.call(@, t.deps[uid]) # preserve context and recurse
     return
-  )(@tree) # call detective recursively and resolve each require
+  )(@tree) # resolve and recurse
   return
 
 # helpers for print
@@ -54,8 +57,8 @@ makeCounter = (ignores) ->
     i++ for own key of obj when !(obj[key].domain in ignores)
     i
 
-formatName = (name, extSuffix, domPrefix, dom) ->
-  n = if extSuffix then name else name.split('.')[0] # fine as all names at this point have been absolutized
+formatName = (absReq, extSuffix, domPrefix, dom) ->
+  n = if extSuffix then absReq else absReq.split('.')[0]
   n = dom+'::'+n if domPrefix
   n
 
@@ -63,19 +66,22 @@ formatName = (name, extSuffix, domPrefix, dom) ->
 CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
   lines = [formatName(@entryPoint, extSuffix, domPrefix, @mainDomain)]
   objCount = makeCounter(ignores=@ignoreDomains)
+
   ((branch, level, parentAry) ->
     idx = 0
     bSize = objCount(branch.deps)
-    for key, {name, deps, domain} of branch.deps when !(domain in ignores)
+    for uid, {name, deps, domain} of branch.deps when !(domain in ignores)
       hasChildren = objCount(deps) > 0
-      forkChar = if hasChildren then "┬" else "─" # this char only occurs near the leaf
+      forkChar = if hasChildren then "┬" else "─"
       isLast = ++idx is bSize
       turnChar = if isLast then "└" else "├"
-      indent = " "+((if parentAry[i] then " " else "│")+"  " for i in [0...level]).join('')
+      indent = ((if parentAry[i] then " " else "│")+"  " for i in [0...level]).join('')
 
       displayName = formatName(name, extSuffix, domPrefix, domain)
-      lines.push indent+turnChar+"──"+forkChar+displayName
-      arguments.callee(branch.deps[key], level+1, parentAry.concat(isLast)) if hasChildren #recurse into key's dependency tree keeping track of parent lines
+      lines.push " "+indent+turnChar+"──"+forkChar+displayName
+
+      if hasChildren # recurse into uid's dependency tree keeping track of parent lines
+        arguments.callee(branch.deps[uid], level+1, parentAry.concat(isLast))
     return
   )(@tree, 0, [])
 
@@ -87,29 +93,31 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj = {}
   obj[@mainDomain+'::'+@entryPoint] = 0
   ((t) ->
-    for name,dep of t.deps
-      continue if dep.fake # dont include arbiters/externals in code list, bundle wont be able to use them
-      name = dep.domain+'::'+dep.name
-      obj[name] = Math.max(dep.level, obj[name] or 0)
+    for uid,dep of t.deps when !dep.fake # impossible to compile fake files
+      obj[uid] = Math.max(dep.level, obj[uid] or 0)
       arguments.callee(dep)
     return
-  )(@tree) # populates obj of form: key=domain::name, val=level
+  )(@tree)
 
-  ([name,level] for name,level of obj) # convert obj to (sortable) array
-    .sort((a,b) -> b[1] - a[1])        # sort by level
-    .map (e) ->                        # return after mapping to pairs of form [domain, name]
-      ary = e[0].split('::')
-      [ary[1], ary[0]]
+  ([uid,level] for uid,level of obj)  # convert obj to (sortable) array
+    .sort((a,b) -> b[1] - a[1])       # sort by level descending
+    .map((e) -> e[0].split('::'))     # return after mapping to pairs of form [domain, name]
 
 
-# requiring this gives a function which returns a closured object with access to only the public methods of a bound instance
+# export a closure bound instance of CodeAnalysis and an object of public methods
 module.exports = (entryPoint, domains, mainDomain, premw, arbiters, ignoreDomains) ->
-  throw new Error("modul8::analysis requires an entryPoint") if !entryPoint
-  throw new Error("modul8::analysis requires a domains object and a matching mainDomain. Got #{domains}, main: #{mainDomain}") if !domains or !domains[mainDomain]
-  throw new Error("modul8::analysis requires a composed function of pre-processing middlewares to work. Got #{premw}") if !premw instanceof Function
+  # sanity checks
+  if !entryPoint
+    throw new Error("modul8::analysis requires an entryPoint")
+
+  if !domains or !domains[mainDomain]
+    throw new Error("modul8::analysis requires a domains object and a matching mainDomain. Got #{domains}, main: #{mainDomain}")
+
+  if !premw instanceof Function
+    throw new Error("modul8::analysis requires a function of composed pre-processing middlewares to work. Got #{premw}")
+
   o = new CodeAnalysis(entryPoint, domains, mainDomain, premw, arbiters, ignoreDomains)
   {
-    printed : -> o.printed.apply(o, arguments)   # returns a big string
-    sorted  : -> o.sorted.apply(o, arguments)    # returns array of pairs of form [name, domain]
+    printed : -> o.printed.apply(o, arguments)   # -> dependency tree string
+    sorted  : -> o.sorted.apply(o, arguments)    # -> array of [domain, name] pairs in the order they should be inserted
   }
-

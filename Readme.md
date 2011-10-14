@@ -34,7 +34,7 @@ modul8('main.js')
   .compile('./out.js')
 ````
 
-This will construct an `out.js` in your execution path and the generated dependency tree will look as follows:
+This will construct a browser compatible `out.js` in your execution path and the generated dependency tree will look as follows:
 
     app::main
     └──┬app::determine

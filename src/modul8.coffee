@@ -84,11 +84,9 @@ Modul8::domains = (input) ->
   return @ if !@environmentMatches
   if input
     for key,val of input
-      if key is 'app'
-        obj.mainDomain = key
-        obj.hasMain = true
+      hasApp = true if key is 'app'
       obj.domains[key] = val
-    if !obj.hasMain # if app does not exist we simply try one at random
+    if !hasApp # if app does not exist we simply try one at random
       for key of input
         obj.mainDomain = key
         break
