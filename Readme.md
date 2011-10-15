@@ -106,7 +106,7 @@ To ensure that the `shared` domain here can work on the server and the client, a
 should be relative and not pull in anything outside that folder.
 As an example, a same-origin include of shared::defs should be done with a **./** prefix:  `require('./defs')`.
 
-A typical dependency tree output will look like this.
+The dependency analyzer will typically output something like this if configured
 
     app::app
     ├──┬app::controllers/user
@@ -120,7 +120,7 @@ A typical dependency tree output will look like this.
 
 ## Injecting Data
 
-Data can by incjected at compile time from the server by specifying keys and pull functions.
+Data can by injected at compile time from the server by specifying keys and pull functions.
 
 ````javascript
 modul8('app.js')

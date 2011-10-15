@@ -39,6 +39,11 @@ Modul8::after = (fn) ->
   obj.post.push fn if @environmentMatches
   @
 
+Modul8::register = (ext, compiler) ->
+  @removeSubClassMethods()
+  obj.compilers[ext] = compiler if @environmentMatches
+  @
+
 
 Modul8::set = (key, val) ->
   @removeSubClassMethods()
@@ -57,6 +62,7 @@ start = (entry) ->
     post        : []
     options     : {}
     ignoreDoms  : []
+    compilers   : {}
     entryPoint  : entry
   new Modul8()
 
@@ -203,6 +209,7 @@ if module is require.main
     .set('domloader', (code) -> code)
     .set('namespace', 'QQ')
     .set('logging', true)
+    .register('.cs', (code) -> coffee.compile(code))
     .before(modul8.testcutter)
     #.set('compiler', {extension:'.coca', fn: (fileName) -> (js)}) # not worth it yet.
     #.set('working directory', path) # maybe do this to avoid having to prefix dir+ on almost all API inputs
