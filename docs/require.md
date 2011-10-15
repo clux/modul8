@@ -29,26 +29,31 @@ There are four different ways to use require:
 
 ### File extensions
 
- File extensions are never necessary, but you can (and sometimes should) include them for specificity (except for on the data domain).
+File extensions are never necessary, but you can (and sometimes should) include them for specificity (except for on the data domain).
 
- To see why you perhaps should, consider the simplified algorithm `require()` uses to resolve the files you required on the server:
+modul8 allows mixing and matching JavaScript, CoffeeScript, and other altJs languages, but is only as forgiving with such mixing as you deserve.
+To see why you perhaps should, consider the simplified algorithm used to resolve (non-external and non-data) requires on from the server
 
-    name = require input, domain = current domait (stored in closure)
+    name = require input, domain = domain of requiree
     while(domain)
       return true if exists(domain + name)
       return true if exists(domain + name + '.js')
       return true if exists(domain + name + '.coffee')
-      domain = nextDomain
+      return true if exists(domain + name + altJsExt) //if used .register('altJsExt', compiler)
+      domain = nextDomain // if applicable (see require priority below)
     return false
 
+If you use _CoffeeScript_ or other registered compilers for altJs languages,
+and if there is even a chance of a file of the same name with a `.js` extension popping up in the same folder:
+then you should only use `require()` with an explicitly specified file extension.
 
- If there is one thing to learn from it is is that you absolutely **DO NOT omit extensions and keep .js and .coffee versions in the same folder**
- or you will quickly become very frustrated as to why your coffee changes arent doing anything.
+In short: **DO NOT omit extensions and keep .js and .coffee versions in the same folder**
+or you will quickly become very frustrated as to why your coffee changes arent doing anything.
 
 ### Require Folders
 
 Require strings not resolving as a file, or ending in a slash will try to resolve the name as a folder and look for a file named `index` following the above logic.
-In short the following are almost equivalent:
+The following will all resolve a folder, but the last has the possiblility of a collision with a file of the same name as the folder:
 
     require('controllers/index');
     require('controllers/'); //looks for controllers/index+extension
@@ -65,23 +70,13 @@ Requires are attempted resolved with the following priority:
     else //arbiter search
       resolve require string on the M8 domain
 
-    if none of the above worked
-      resolve on all other domains
+    if none of the above true
+      resolve on all domains, starting with current domain
 
     //error
 
 In other words, collisions should not occur unless you have duplicate files in different domains, and you are very relaxed about your domain specifiers or arbiter prefixes.
 
-### Conflicts
-
-CoffeeScript and JavaScript are a wonderful mix. Some people prefer CoffeeScript and some people vanilla JavaScript - and that's fine.
-modul8 allows mixing and matching of these anywhere.
-
-One word of caution however. The browser has no notion of file extensions. If you require both _fileName.coffee_ and _fileName.js_ from the same directory,
-there will only be one exports object available under _domain::fileName_.
-
-This might change in the future, but for now, we feel this is already an error prone practice,
-and that you should not be doing this anyway.
 
 ### Hooking into define
 

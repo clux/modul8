@@ -2,6 +2,7 @@
 base = _modul8RequireConfig
 ns = window[base.namespace] # a couple of helpers will be exported globally
 domains = base.domains # array of used domain names
+exts = base.exts # array of extensions to scan
 
 # construct our storage container
 exports = {}
@@ -42,15 +43,16 @@ makeRequire = (dom, pathName) -> # each (path, domain) gets its own unique requi
       # NB: disallow cross-domain absolutes to lookup the data/external/M8 domains - else analysis() fail
       scannable = [dom].concat domains.filter((e) -> e isnt dom)
 
-    reqStr = reqStr.split('.')[0] # ignore extensions if exists
     if reqStr[-1...] is '/'
       reqStr += 'index'
       noTryFolder = true
 
     for o in scannable
-      return exports[o][reqStr] if exports[o][reqStr]
+      for e in exts
+        return exports[o][reqStr+e] if exports[o][reqStr+e]
       continue if noTryFolder
-      return exports[o][reqStr+'/index'] if exports[o][reqStr+'/index']
+      for e in exts
+        return exports[o][reqStr+'/index'+e] if exports[o][reqStr+'/index'+e]
 
     console.error("Unable to resolve require for: #{reqStr}") if base.logging
     null

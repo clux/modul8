@@ -1,7 +1,7 @@
 fs          = require 'fs'
 path        = require 'path'
 codeAnalyis = require './analysis'
-{compile, exists} = require './utils'
+{makeCompiler, exists} = require './utils'
 
 # helpers
 pullData = (parser, name) -> # parser interface
@@ -27,7 +27,7 @@ compose = (funcs) ->
       args = [fn.apply(@, args)]
     args[0]
 
-bundle = (codeList, ns, domload, mw, o) ->
+bundle = (codeList, ns, domload, mw, compile, exts, o) ->
   l = []
 
   # 1. construct the global namespace object
@@ -43,6 +43,7 @@ bundle = (codeList, ns, domload, mw, o) ->
     arbiters  : o.arbiters
     logging   : o.logging ? false
     main      : o.mainDomain
+    exts      : exts
   l.push "var _modul8RequireConfig = #{JSON.stringify(config)};"
   l.push anonWrap(compile(__dirname + '/require.coffee'))
 
@@ -53,9 +54,7 @@ bundle = (codeList, ns, domload, mw, o) ->
   # 5. filter function split code into app code and non-app code
   harvest = (onlyMain) ->
     for [domain, name] in codeList when (domain is o.mainDomain) == onlyMain
-      code = compile(o.domains[domain] + name)
-      basename = name.split('.')[0]
-      defineWrap(basename, domain, mw(code)) # middleware applied to code first
+      defineWrap(name, domain, mw(compile(o.domains[domain] + name))) # middleware applied to code first
 
   # 6.a) include modules not on the app domain
   l.push harvest(false).join('\n')
@@ -94,11 +93,13 @@ module.exports = (o) ->
   premw = if o.pre and o.pre.length > 0 then compose(o.pre) else (a) -> a
   postmw = if o.post and o.post.length > 0 then compose(o.post) else (a) -> (a)
 
-  ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, premw, o.arbiters, o.ignoreDoms ? [])
+  compile = makeCompiler(o.compilers) # will throw if reusing extensions or invalid compile functions
+  exts = (ext for ext of o.compilers).concat(['','.js','.coffee'])
+  ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, premw, o.arbiters, compile, exts, o.ignoreDoms ? [])
 
   if o.target
 
-    c = bundle(ca.sorted(), namespace, domloader, premw, o)
+    c = bundle(ca.sorted(), namespace, domloader, premw, compile, exts, o)
     c = postmw(c)
 
     if o.libDir and o.libFiles

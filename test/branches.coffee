@@ -92,8 +92,10 @@ generateApp = ()-> # dont call this with size < 4 otherwise we wont get the mixi
 
 exports["test analyzer#order"] = ->
   generateApp()
-  resolver = new Resolver(options.domains, {}, 'app') # no arbiters, main=='app'
-  ca = analysis('entry.js', options.domains, 'app', ((a) -> a), {})
+  exts = ['','.js','.coffee']
+  resolver = new Resolver(options.domains, {}, 'app', exts) # no arbiters, main=='app'
+  compile = utils.makeCompiler()
+  ca = analysis('entry.js', options.domains, 'app', ((a) -> a), {}, compile, exts, [])
   order = ca.sorted()
 
   assert.ok(order.length, "order is a non-empty array") # we are testing the giant app
@@ -107,7 +109,7 @@ exports["test analyzer#order"] = ->
 
     # now detective directly and hook into resolver to see if requirements have been included previously!
     subFolders = name.split('/')[0...-1]
-    code = utils.compile(options.domains[domain]+name)
+    code = compile(options.domains[domain]+name)
     deps = (resolver.locate(dep, subFolders, domain) for dep in detective(code) when isLegalRequire(dep)) # should trivially resolve because we know full string and domain
 
     for [n,d,fake] in deps when !fake
@@ -123,10 +125,12 @@ exports["test require#branches"] = ->
   generateApp()
   num = options.size
 
+  compile = utils.makeCompiler()
+
   browser = new zombie.Browser()
   browser.visit 'file:///'+dir+"/output/empty.html", (err, browser, status) ->
     throw err if err
-    mainCode = utils.compile(dir+'/output/output.js')
+    mainCode = compile(dir+'/output/output.js')
 
     assert.isUndefined(browser.evaluate(mainCode), ".compile() result evaluates successfully") # will throw if it fails
     assert.isDefined(browser.evaluate("M8"), "global namespace is defined")

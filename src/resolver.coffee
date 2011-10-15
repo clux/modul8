@@ -28,15 +28,18 @@ toAbsPath = (name, subFolders, domain) -> # subFolders is array of folders after
   prependStr = if folderStr then folderStr+'/' else ''
   [prependStr+name, domain] # relative request => domain is this domain
 
-# resolver constructor
-Resolver = (@domains, @arbiters, @mainDomain) ->
 
 # exists helper for locate
-findCode = (path, req) ->
-  return req              if exists(path + req)
-  return req + '.js'      if exists(path + req + '.js')
-  return req + '.coffee'  if exists(path + req + '.coffee')
-  return false
+makeFinder = (exts) ->
+  (path, req) ->
+    for ext in exts
+      return req+ext if exists(path+req+ext)
+    return false
+
+# resolver constructor
+Resolver = (@domains, @arbiters, @mainDomain, exts) ->
+  @finder = makeFinder(exts)
+  return
 
 # locate location of file from absReq (assumed only called on files that pass isLegalRequire)
 Resolver::locate = (reqStr, subFolders, domain) ->
@@ -61,11 +64,11 @@ Resolver::locate = (reqStr, subFolders, domain) ->
 
   for dom in scannable
     # req ends in valid filename ?
-    return [found, dom, false] if found = findCode(@domains[dom], absReq)
+    return [found, dom, false] if found = @finder(@domains[dom], absReq)
 
     # req ends in valid folder ?
     continue if noTryFolder # already done this test
-    return [found, dom, false] if found = findCode(@domains[dom], req + '/index')
+    return [found, dom, false] if found = @finder(@domains[dom], absReq + '/index')
 
 
   throw new Error("modul8::analysis could not resolve a require for #{reqStr} from #{domain} - looked in #{scannable}")

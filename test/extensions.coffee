@@ -45,10 +45,11 @@ generateApp = (options)-> # dont call this with size < 4 otherwise we wont get t
 
 exports["test require#extensions"] = ->
   generateApp()
+  compile = utils.makeCompiler()
   browser = new zombie.Browser()
   browser.visit 'file:///'+dir+"/output/empty.html", (err, browser, status) ->
     throw err if err
-    mainCode = utils.compile(dir+'/output/flat.js')
+    mainCode = compile(dir+'/output/flat.js')
 
     assert.isUndefined(browser.evaluate(mainCode), ".compile() result evaluates successfully") # will throw if it fails
     assert.isDefined(browser.evaluate("QQ"), "global namespace is defined")

@@ -6,15 +6,15 @@ utils       = require './utils'
 
 
 # constructor - resolves dependency tree and stores in @tree
-CodeAnalysis = (@entryPoint, @domains, @mainDomain, @premw, arbiters, @ignoreDomains) ->
-  @resolver = new Resolver(@domains, arbiters, @mainDomain)
+CodeAnalysis = (@entryPoint, @domains, @mainDomain, @premw, arbiters, @compile, exts, @ignoreDomains) ->
+  @resolver = new Resolver(@domains, arbiters, @mainDomain, exts)
   @buildTree()
   return
 
 # finds all dependencies of a module based on reqStr + domain & folders array of requirees position
 CodeAnalysis::resolveDependencies = (absReq, folders, dom) ->
   # get javascript
-  code = utils.compile(@domains[dom]+absReq)
+  code = @compile(@domains[dom]+absReq)
 
   # apply pre-processing middleware here if any
   code = @premw(code) if @premw
@@ -105,7 +105,7 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
 
 
 # export a closure bound instance of CodeAnalysis and an object of public methods
-module.exports = (entryPoint, domains, mainDomain, premw, arbiters, ignoreDomains) ->
+module.exports = (entryPoint, domains, mainDomain, premw, arbiters, compile, exts, ignoreDomains) ->
   # sanity checks
   if !entryPoint
     throw new Error("modul8::analysis requires an entryPoint")
@@ -116,7 +116,7 @@ module.exports = (entryPoint, domains, mainDomain, premw, arbiters, ignoreDomain
   if !premw instanceof Function
     throw new Error("modul8::analysis requires a function of composed pre-processing middlewares to work. Got #{premw}")
 
-  o = new CodeAnalysis(entryPoint, domains, mainDomain, premw, arbiters, ignoreDomains)
+  o = new CodeAnalysis(entryPoint, domains, mainDomain, premw, arbiters, compile, exts, ignoreDomains)
   {
     printed : -> o.printed.apply(o, arguments)   # -> dependency tree string
     sorted  : -> o.sorted.apply(o, arguments)    # -> array of [domain, name] pairs in the order they should be inserted

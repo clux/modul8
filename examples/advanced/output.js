@@ -1,8 +1,8 @@
 (function(){  window.monolith = "I am a huge library";
 })();
 (function(){window.QQ = {data:{}};
-var _modul8RequireConfig = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"logging":false,"main":"app"};
-(function(){var a, arbiters, ary, base, domains, exports, glob, makeRequire, name, ns, toAbsPath, _i, _j, _len, _len2, _ref;
+var _modul8RequireConfig = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"logging":false,"main":"app","exts":["",".js",".coffee"]};
+(function(){var a, arbiters, ary, base, domains, exports, exts, glob, makeRequire, name, ns, toAbsPath, _i, _j, _len, _len2, _ref;
 var __indexOf = Array.prototype.indexOf || function(item) {
   for (var i = 0, l = this.length; i < l; i++) {
     if (this[i] === item) return i;
@@ -12,6 +12,7 @@ var __indexOf = Array.prototype.indexOf || function(item) {
 base = _modul8RequireConfig;
 ns = window[base.namespace];
 domains = base.domains;
+exts = base.exts;
 exports = {};
 for (_i = 0, _len = domains.length; _i < _len; _i++) {
   name = domains[_i];
@@ -40,7 +41,7 @@ makeRequire = function(dom, pathName) {
     return reqStr.slice(0, 2) === './';
   };
   return function(reqStr) {
-    var o, scannable, _k, _len3;
+    var e, noTryFolder, o, scannable, _k, _l, _len3, _len4, _len5, _m;
     if (base.logging) {
       console.log("" + dom + ":" + pathName + " <- " + reqStr);
     }
@@ -57,11 +58,26 @@ makeRequire = function(dom, pathName) {
         return e !== dom;
       }));
     }
-    reqStr = reqStr.split('.')[0];
+    if (reqStr.slice(-1) === '/') {
+      reqStr += 'index';
+      noTryFolder = true;
+    }
     for (_k = 0, _len3 = scannable.length; _k < _len3; _k++) {
       o = scannable[_k];
-      if (exports[o][reqStr]) {
-        return exports[o][reqStr];
+      for (_l = 0, _len4 = exts.length; _l < _len4; _l++) {
+        e = exts[_l];
+        if (exports[o][reqStr + e]) {
+          return exports[o][reqStr + e];
+        }
+      }
+      if (noTryFolder) {
+        continue;
+      }
+      for (_m = 0, _len5 = exts.length; _m < _len5; _m++) {
+        e = exts[_m];
+        if (exports[o][reqStr + '/index' + e]) {
+          return exports[o][reqStr + '/index' + e];
+        }
       }
     }
     if (base.logging) {
@@ -110,29 +126,29 @@ exports.M8.external = ns.external = function(name, exported) {
     exports.extenal[name] = exported;
   }
 };})();
-QQ.define('calc','shared',function(require, module, exports){module.exports = {
+QQ.define('calc.coffee','shared',function(require, module, exports){module.exports = {
   divides: function(d, n) {
     return !(d % n);
   }
 };});
-QQ.define('validation','shared',function(require, module, exports){var divides;
+QQ.define('validation.coffee','shared',function(require, module, exports){var divides;
 divides = require('./calc').divides;
 exports.isLeapYear = function(yr) {
   return divides(yr, 4) && (!divides(yr, 100) || divides(yr, 400));
 };});
-(function(){QQ.define('bigthing/sub2','app',function(require, module, exports){module.exports = function(str) {
+(function(){QQ.define('bigthing/sub2.coffee','app',function(require, module, exports){module.exports = function(str) {
   return console.log(str);
 };});
-QQ.define('helper','app',function(require, module, exports){var testRunner;
+QQ.define('helper.coffee','app',function(require, module, exports){var testRunner;
 module.exports = function(str) {
   return console.log(str);
 };});
-QQ.define('bigthing/sub1','app',function(require, module, exports){var sub2;
+QQ.define('bigthing/sub1.coffee','app',function(require, module, exports){var sub2;
 sub2 = require('./sub2');
 exports.doComplex = function(str) {
   return sub2(str + ' (sub1 added this, passing to sub2)');
 };});
-QQ.define('main','app',function(require, module, exports){var b, helper, m, v;
+QQ.define('main.coffee','app',function(require, module, exports){var b, helper, m, v;
 helper = require('./helper');
 helper('hello from app via helper');
 b = require('bigthing/sub1');
