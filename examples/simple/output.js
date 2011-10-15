@@ -1,7 +1,7 @@
 (function(){
 window.M8 = {data:{}};
-var _modul8RequireConfig = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["$","jQuery"]},"logging":false,"main":"app","exts":["",".js",".coffee"]};
-(function(){var a, arbiters, ary, base, domains, exports, exts, glob, makeRequire, name, ns, toAbsPath, _i, _j, _len, _len2, _ref;
+var _modul8RequireConfig = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["$","jQuery"]},"logging":false,"main":"app"};
+(function(){var DomReg, a, arbiters, ary, base, domains, exports, glob, makeRequire, name, ns, toAbsPath, _i, _j, _len, _len2, _ref;
 var __indexOf = Array.prototype.indexOf || function(item) {
   for (var i = 0, l = this.length; i < l; i++) {
     if (this[i] === item) return i;
@@ -11,7 +11,6 @@ var __indexOf = Array.prototype.indexOf || function(item) {
 base = _modul8RequireConfig;
 ns = window[base.namespace];
 domains = base.domains;
-exts = base.exts;
 exports = {};
 for (_i = 0, _len = domains.length; _i < _len; _i++) {
   name = domains[_i];
@@ -33,18 +32,14 @@ for (name in _ref) {
   }
   exports.M8[name] = a;
 }
+DomReg = /^(.*)::/;
 makeRequire = function(dom, pathName) {
-  var DomReg, isRelative;
-  DomReg = /^(.*)::/;
-  isRelative = function(reqStr) {
-    return reqStr.slice(0, 2) === './';
-  };
   return function(reqStr) {
-    var e, noTryFolder, o, scannable, _k, _l, _len3, _len4, _len5, _m;
+    var o, scannable, skipFolder, _k, _len3;
     if (base.logging) {
       console.log("" + dom + ":" + pathName + " <- " + reqStr);
     }
-    if (isRelative(reqStr)) {
+    if (reqStr.slice(0, 2) === './') {
       scannable = [dom];
       reqStr = toAbsPath(dom, pathName, reqStr.slice(2));
     } else if (DomReg.test(reqStr)) {
@@ -57,26 +52,18 @@ makeRequire = function(dom, pathName) {
         return e !== dom;
       }));
     }
+    reqStr = reqStr.split('.')[0];
     if (reqStr.slice(-1) === '/') {
       reqStr += 'index';
-      noTryFolder = true;
+      skipFolder = true;
     }
     for (_k = 0, _len3 = scannable.length; _k < _len3; _k++) {
       o = scannable[_k];
-      for (_l = 0, _len4 = exts.length; _l < _len4; _l++) {
-        e = exts[_l];
-        if (exports[o][reqStr + e]) {
-          return exports[o][reqStr + e];
-        }
+      if (exports[o][reqStr]) {
+        return exports[o][reqStr];
       }
-      if (noTryFolder) {
-        continue;
-      }
-      for (_m = 0, _len5 = exts.length; _m < _len5; _m++) {
-        e = exts[_m];
-        if (exports[o][reqStr + '/index' + e]) {
-          return exports[o][reqStr + '/index' + e];
-        }
+      if (!skipFolder && exports[o][reqStr + '/index']) {
+        return exports[o][reqStr + '/index'];
       }
     }
     if (base.logging) {
@@ -126,11 +113,11 @@ exports.M8.external = ns.external = function(name, exported) {
   }
 };})();
 
-M8.require('M8::jQuery')(function(){M8.define('utils/validation.js','app',function(require, module, exports){exports.nameOk = function(name){
+M8.require('M8::jQuery')(function(){M8.define('utils/validation','app',function(require, module, exports){exports.nameOk = function(name){
   return (name != 'jill');
 };
 });
-M8.define('models/user.js','app',function(require, module, exports){var validation = require('utils/validation.js');
+M8.define('models/user','app',function(require, module, exports){var validation = require('utils/validation.js');
 
 var User = {
   records : ['jack', 'jill'],
@@ -146,7 +133,7 @@ var User = {
 
 module.exports = User;
 });
-M8.define('controllers/users.js','app',function(require, module, exports){var User = require('models/user');
+M8.define('controllers/users','app',function(require, module, exports){var User = require('models/user');
 
 var Users = {
   init : function(){
@@ -156,7 +143,7 @@ var Users = {
 
 module.exports = Users;
 });
-M8.define('app.js','app',function(require, module, exports){var Users = require('controllers/users');
+M8.define('app','app',function(require, module, exports){var Users = require('controllers/users');
 var $ = require('jQuery');
 
 var App = {

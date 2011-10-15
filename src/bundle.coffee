@@ -27,7 +27,17 @@ compose = (funcs) ->
       args = [fn.apply(@, args)]
     args[0]
 
-bundle = (codeList, ns, domload, mw, compile, exts, o) ->
+collisionCheck = (codeList) ->
+  for [dom, file] in codeList
+    uid = dom+'::'+file.split('.')[0]
+    for [d,f] in codeList when (dom isnt d and file isnt f)
+      uidi = d+'::'+f.split('.')[0]
+      if uid is uidi
+        throw new Error("modul8: too dangerous to require two files of the same name on the same path with different extensions: #{dom}::#{file} and #{d}::{#f} ")
+
+  return
+
+bundle = (codeList, ns, domload, mw, compile, o) ->
   l = []
 
   # 1. construct the global namespace object
@@ -43,7 +53,6 @@ bundle = (codeList, ns, domload, mw, compile, exts, o) ->
     arbiters  : o.arbiters
     logging   : o.logging ? false
     main      : o.mainDomain
-    exts      : exts
   l.push "var _modul8RequireConfig = #{JSON.stringify(config)};"
   l.push anonWrap(compile(__dirname + '/require.coffee'))
 
@@ -54,7 +63,9 @@ bundle = (codeList, ns, domload, mw, compile, exts, o) ->
   # 5. filter function split code into app code and non-app code
   harvest = (onlyMain) ->
     for [domain, name] in codeList when (domain is o.mainDomain) == onlyMain
-      defineWrap(name, domain, mw(compile(o.domains[domain] + name))) # middleware applied to code first
+      code = mw(compile(o.domains[domain] + name)) # middleware applied to code first
+      basename = name.split('.')[0] # take out extension on the client (we throw if collisions requires have happened on the server)
+      defineWrap(basename, domain, code)
 
   # 6.a) include modules not on the app domain
   l.push harvest(false).join('\n')
@@ -97,9 +108,18 @@ module.exports = (o) ->
   exts = (ext for ext of o.compilers).concat(['','.js','.coffee'])
   ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, premw, o.arbiters, compile, exts, o.ignoreDoms ? [])
 
-  if o.target
+  if o.treeTarget # do tree before collisionCheck (so that we can identify what triggers collision)
+    tree = ca.printed(o.extSuffix, o.domPrefix)
+    if o.treeTarget instanceof Function
+      o.treeTarget(tree)
+    else
+      fs.writeFileSync(o.treeTarget, tree)
 
-    c = bundle(ca.sorted(), namespace, domloader, premw, compile, exts, o)
+  if o.target
+    codelist = ca.sorted()
+    collisionCheck(codelist)
+
+    c = bundle(codelist, namespace, domloader, premw, compile, o)
     c = postmw(c)
 
     if o.libDir and o.libFiles
@@ -111,12 +131,5 @@ module.exports = (o) ->
         c = libs + c
 
     fs.writeFileSync(o.target, c)
-
-  if o.treeTarget
-    tree = ca.printed(o.extSuffix, o.domPrefix)
-    if o.treeTarget instanceof Function
-      o.treeTarget(tree)
-    else
-      fs.writeFileSync(o.treeTarget, tree)
 
   return
