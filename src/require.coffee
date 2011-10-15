@@ -2,7 +2,6 @@
 base = _modul8RequireConfig
 ns = window[base.namespace] # a couple of helpers will be exported globally
 domains = base.domains # array of used domain names
-exts = base.exts # array of extensions to scan
 
 # construct our storage container
 exports = {}
@@ -20,14 +19,12 @@ for name, ary of base.arbiters
   delete window[glob] for glob in ary
   exports.M8[name] = a
 
+DomReg = /^(.*)::/
 
 makeRequire = (dom, pathName) -> # each (path, domain) gets its own unique require function to help resolving
-  DomReg = /^(.*)::/
-  isRelative = (reqStr) -> reqStr[0...2] is './'
-
   (reqStr) ->
     console.log("#{dom}:#{pathName} <- #{reqStr}") if base.logging
-    if isRelative(reqStr)
+    if reqStr[0...2] is './'
       # relative require: only look through the current domain
       scannable = [dom]
       reqStr = toAbsPath(dom, pathName, reqStr[2...])
@@ -43,16 +40,14 @@ makeRequire = (dom, pathName) -> # each (path, domain) gets its own unique requi
       # NB: disallow cross-domain absolutes to lookup the data/external/M8 domains - else analysis() fail
       scannable = [dom].concat domains.filter((e) -> e isnt dom)
 
+    reqStr = reqStr.split('.')[0] # take out extension
     if reqStr[-1...] is '/'
       reqStr += 'index'
-      noTryFolder = true
+      skipFolder = true
 
     for o in scannable
-      for e in exts
-        return exports[o][reqStr+e] if exports[o][reqStr+e]
-      continue if noTryFolder
-      for e in exts
-        return exports[o][reqStr+'/index'+e] if exports[o][reqStr+'/index'+e]
+      return exports[o][reqStr] if exports[o][reqStr]
+      return exports[o][reqStr+'/index'] if !skipFolder and exports[o][reqStr+'/index']
 
     console.error("Unable to resolve require for: #{reqStr}") if base.logging
     null

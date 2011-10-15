@@ -18,9 +18,9 @@ the first element, so it will assume the main domain is `app` if this is passed 
 You can add any number of domains to be scanned. Files on these domains can be required specifically with `require('domain::name')`.
 Both the domain and file extension can be omitted if there are no conflicts (current domain gets scanned first, .js scanned before .coffee).
 
-The following are equivalent from the file: `helpers.js` in the root of the `app` domain.
+The following are equivalent from a file in the root of the `app` domain, having the file `validation.js` in the same folder
 
-    require('app::validation.js') //extension not necessary
+    require('app::validation.js') //domain specific searches only specified domain
     require('./validation.js') //relative require searches only this domain
     require('./validation') //.js extension always gets searched before .coffee
     require('validation') // scans this domain first, but will try other domains if it fails here

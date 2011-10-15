@@ -5,9 +5,13 @@ FUTURE / 2011-??-??
   * Provide more levels of logging on the client
   * More tests
 
-0.5.1 / 2011-10-??
+0.6.0 / 2011-10-??
 ==================
-  * `require('folder')` will look for `folder/index`
+  * `require('folder')` will look for a `folder` file then an `index` file under `folder/`
+  * `require('folder/') will look for an `index` file under `folder/`
+  * `require()` collision priority updated
+  * `.compile()` will throw error if multiple files with same unique identifier (extensionless dom::filename) are attempted included - but helpfully after `.analysis()`
+  * `.register('.ext', extCompiler)` will allow bundling of other altJs languages
 
 0.5.0 / 2011-10-14
 ==================

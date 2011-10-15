@@ -31,8 +31,11 @@ There are four different ways to use require:
 
 File extensions are never necessary, but you can (and sometimes should) include them for specificity (except for on the data domain).
 
-modul8 allows mixing and matching JavaScript, CoffeeScript, and other altJs languages, but is only as forgiving with such mixing as you deserve.
-To see why you perhaps should, consider the simplified algorithm used to resolve (non-external and non-data) requires on from the server
+The reason you perhaps should is that  modul8 allows mixing and matching JavaScript, CoffeeScript, and other altJs languages,
+but is only as forgiving with such mixing as you deserve.
+
+#### Server Behaviour
+To see why, consider a simplified resolver algorithm from the server
 
     name = require input, domain = domain of requiree
     while(domain)
@@ -49,6 +52,22 @@ then you should only use `require()` with an explicitly specified file extension
 
 In short: **DO NOT omit extensions and keep .js and .coffee versions in the same folder**
 or you will quickly become very frustrated as to why your coffee changes arent doing anything.
+
+#### Client Behaviour
+
+modul8 will truncate the extension from the name passed to the internal `define()` wrapper.
+This has two advantages:
+
+ - `require()` lookups on the client will be performant and slim (no need to do multiple lookups against multiple possible extensions - as it will simply chuck the extension part)
+ - It discourages the unsafe practice having files of the same name in the same directory
+
+However, the server side collision problem applies. modul8 will only be able to `define()` one of
+
+ - domain::filename.coffee
+ - domain::fiename.js
+
+If you do use extensions (even partially), then modul8 will throw an error if multiple versions of domain::filename was attempted to be included.
+This error will be usefully be thrown after the `.analysis()` dependency tree was logged, allowing you to pinpoint the careless `require()`.
 
 ### Require Folders
 
