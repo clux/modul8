@@ -27,8 +27,8 @@ makeCompiler = (external={}) ->
 # simple fs extension to check if a file exists [used to verify require calls' validity]
 exists = (file) ->
   try
-    fs.statSync(file)
-    return true
+    stat = fs.statSync(file)
+    return not stat.isDirectory()
   catch e
     return false
 

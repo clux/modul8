@@ -59,9 +59,10 @@ options =
     ]
   size : 6
 
-
-generateApp = ()-> # dont call this with size < 4 otherwise we wont get the mixins
-
+hasRun = false
+generateApp = -> # dont call this with size < 4 otherwise we wont get the mixins
+  return if hasRun
+  hasRun = true
   l = [] # generate an entry point simultaneously with module generation
 
   # clean out old directory
