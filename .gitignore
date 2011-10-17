@@ -2,3 +2,4 @@ node_modules/
 gh-pages/
 test/input/
 test/output/
+test/collisions

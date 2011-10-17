@@ -105,7 +105,7 @@ module.exports = (o) ->
   postmw = if o.post and o.post.length > 0 then compose(o.post) else (a) -> (a)
 
   compile = makeCompiler(o.compilers) # will throw if reusing extensions or invalid compile functions
-  exts = (ext for ext of o.compilers).concat(['','.js','.coffee'])
+  exts = ['','.js','.coffee'].concat(ext for ext of o.compilers)
   ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, premw, o.arbiters, compile, exts, o.ignoreDoms ? [])
 
   if o.treeTarget # do tree before collisionCheck (so that we can identify what triggers collision)

@@ -31,8 +31,11 @@ toAbsPath = (name, subFolders, domain) -> # subFolders is array of folders after
 
 # exists helper for locate
 makeFinder = (exts) ->
+  #console.log exts
   (path, req) ->
     for ext in exts
+      #if ext is '.coca'
+      #  console.log 'checking'+path+req+ext
       return req+ext if exists(path+req+ext)
     return false
 
