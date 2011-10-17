@@ -38,19 +38,59 @@ arbiters domain. If this cooexistence is necessary, any arbiters must be <code>r
 
 <p>File extensions are never necessary, but you can (and sometimes should) include them for specificity (except for on the data domain).</p>
 
-<p>To see why you perhaps should, consider the simplified algorithm <code>require()</code> uses to resolve the files you required on the server:</p>
+<p>The reason you perhaps should is that  modul8 allows mixing and matching JavaScript, CoffeeScript, and other altJs languages,
+but is only as forgiving with such mixing as you deserve.</p>
 
-<pre><code>name = require input, domain = current domait (stored in closure)
+<h4>Server Behaviour</h4>
+
+<p>To see why, consider a simplified resolver algorithm from the server</p>
+
+<pre><code>name = require input, domain = domain of requiree
 while(domain)
   return true if exists(domain + name)
   return true if exists(domain + name + '.js')
   return true if exists(domain + name + '.coffee')
-  domain = nextDomain
+  return true if exists(domain + name + altJsExt) //if used .register('altJsExt', compiler)
+  domain = nextDomain // if applicable (see require priority below)
 return false
 </code></pre>
 
-<p>If there is one thing to learn from it is is that you absolutely <strong>DO NOT omit extensions and keep .js and .coffee versions in the same folder</strong>
- or you will quickly become very frustrated as to why your coffee changes arent doing anything.</p>
+<p>If you use <em>CoffeeScript</em> or other registered compilers for altJs languages,
+and if there is even a chance of a file of the same name with a <code>.js</code> extension popping up in the same folder:
+then you should only use <code>require()</code> with an explicitly specified file extension.</p>
+
+<p>In short: <strong>DO NOT omit extensions and keep .js and .coffee versions in the same folder</strong>
+or you will quickly become very frustrated as to why your coffee changes arent doing anything.</p>
+
+<h4>Client Behaviour</h4>
+
+<p>modul8 will truncate the extension from the name passed to the internal <code>define()</code> wrapper.
+This has two advantages:</p>
+
+<ul>
+<li><code>require()</code> lookups on the client will be performant and slim (no need to do multiple lookups against multiple possible extensions - as it will simply chuck the extension part)</li>
+<li>It discourages the unsafe practice having files of the same name in the same directory</li>
+</ul>
+
+<p>However, the server side collision problem applies. modul8 will only be able to <code>define()</code> one of</p>
+
+<ul>
+<li>domain::filename.coffee</li>
+<li>domain::fiename.js</li>
+</ul>
+
+<p>If you do use extensions (even partially), then modul8 will throw an error if multiple versions of domain::filename was attempted to be included.
+This error will be usefully be thrown after the <code>.analysis()</code> dependency tree was logged, allowing you to pinpoint the careless <code>require()</code>.</p>
+
+<h3>Require Folders</h3>
+
+<p>Require strings not resolving as a file, or ending in a slash will try to resolve the name as a folder and look for a file named <code>index</code> following the above logic.
+The following will all resolve a folder, but the last has the possiblility of a collision with a file of the same name as the folder:</p>
+
+<pre><code>require('controllers/index');
+require('controllers/'); //looks for controllers/index+extension
+require('controllers'); //looks for controllers+extension then controllers/index+extension
+</code></pre>
 
 <h3>Require Priority</h3>
 
@@ -63,8 +103,8 @@ else if require string includes domain prefix
 else //arbiter search
   resolve require string on the M8 domain
 
-if none of the above worked
-  resolve on all other domains
+if none of the above true
+  resolve on all domains, starting with current domain
 
 //error
 </code></pre>

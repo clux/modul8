@@ -21,26 +21,26 @@ modul8('app.js')
   .compile('./out.js');
 </code></pre>
 
-<p>Your domains can alternatively be supplied as an object directly to <code>.domains({app:path, ..})</code>, but being an object, non guaranteed to be ordered,
-modul8 cannot guarantee that the first object is unambiguous, so it will assume its name is <code>app</code> if this domain exists. If not, you are in unspecified territory.</p>
+<p>Your domains can alternatively be supplied as an object directly to <code>.domains({app:path, ..})</code>. However, objects are not ordered, so modul8 cannot unambiguously determine what is
+the first element, so it will assume the main domain is <code>app</code> if this is passed in.  If this is not passed in, it will take a guess..</p>
 
-<p>You can add any number of domains to be scanned, and files on these domains can be required specifically with <code>require('domain::name')</code>.
-Both the domain and file extension can be omitted if there are no conflicts (if there are, the main domain will be scanned first).</p>
+<p>You can add any number of domains to be scanned. Files on these domains can be required specifically with <code>require('domain::name')</code>.
+Both the domain and file extension can be omitted if there are no conflicts (current domain gets scanned first, .js scanned before .coffee).</p>
 
-<p>The following are equivalent from the file: <code>helper.js</code> on the <code>shared</code> domain.</p>
+<p>The following are equivalent from a file in the root of the <code>app</code> domain, having the file <code>validation.js</code> in the same folder</p>
 
-<pre><code>require('shared::validation.js') //extension not necessary
-require('./helpers.js') //relative require searches only this domain
-require('./helpers') //.js extension always gets searched before .coffee
+<pre><code>require('app::validation.js') //domain specific searches only specified domain
+require('./validation.js') //relative require searches only this domain
+require('./validation') //.js extension always gets searched before .coffee
+require('validation') // scans this domain first, but will try other domains if it fails here
 </code></pre>
 
-<p>Additionally, <code>require('helpers')</code> will resolve to the same file if there are no <code>helpers.js</code> in the root of any other domains.
-More information on <code>require()</code> is available in <a href="require.html">this section</a></p>
+<p>More information on <code>require()</code> is available in <a href="require.html">this section</a></p>
 
 <h3>API Chaining Note</h3>
 
 <p>As indicated by the first example, the modul8 API is controlled by chaining methods together. For style and semanticity
-we apply extra indentation when we break into a subroutine like in the <code>.data()</code> call above, or, if only one method is chained on a subclass,
+we apply extra indentation when we break into a subclass method like in the <code>.data()</code> call above, or, if only one method is chained on a subclass,
 we sometimes write it on the same line.</p>
 
 <p>We recommend sticking to this notation as subroutines from different methods often have identical names.
@@ -297,14 +297,16 @@ separately, it will not be found on the server. The solution to this is the same
 
 <p>Both these functions will overwrite on repeat calls. For example:</p>
 
-<pre><code>var dataAdd = require('M8::data');
-dataAdd('libX', libXobj);
+<pre><code>var dataModify = require('M8::data');
+dataModify('libX', libXobj);
 require('data::libX'); // -&gt; libXobj
-dataAdd('libX', {});
+dataModify('libX', {});
 require('data::libX'); // -&gt; {}
+dataModify('libX'); //unsets
+require('data::libX'); // -&gt; null
 </code></pre>
 
-<p>Although inteded for the console, if you don't like <code>require()</code>ing in these functions, they are aliased on the namespaced object.
+<p>Although inteded for the console, if you don't like using <code>require()</code> to get these functions, they are aliased on the namespaced object.
 Just remember that if you change the name of your namespace, you will have to change these references everywhere.
 Also note that changing the namespace does not change the domain these two functions lie on. The aliases are as follows:</p>
 
@@ -321,9 +323,7 @@ Also note that changing the namespace does not change the domain these two funct
 
 <pre><code>modul8('app.js')
   .domains().add('app', dir+'/app/client/')
-  .libraries()
-    .list(['jQuery.js','Spile.coffee'])
-    .path(dir+'/app/client/libs/')
+  .libraries(['jQuery.js','Spile.coffee'], dir+'/app/client/libs/')
   .arbiters()
     .add('jQuery', ['$', 'jQuery'])
     .add('Spine')
