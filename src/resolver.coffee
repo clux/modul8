@@ -40,8 +40,8 @@ makeFinder = (exts) ->
     return false
 
 # resolver constructor
-Resolver = (@domains, @arbiters, @mainDomain, exts) ->
-  @finder = makeFinder(exts)
+Resolver = (@domains, @arbiters, @mainDomain, @exts) ->
+  @finder = makeFinder(@exts)
   return
 
 # locate location of file from absReq (assumed only called on files that pass isLegalRequire)
@@ -74,7 +74,7 @@ Resolver::locate = (reqStr, subFolders, domain) ->
     return [found, dom, false] if found = @finder(@domains[dom], absReq + '/index')
 
 
-  throw new Error("modul8::analysis could not resolve a require for #{reqStr} from #{domain} - looked in #{scannable}")
+  throw new Error("modul8::analysis could not resolve a require for #{reqStr} from #{domain} - looked in #{scannable}, trying extensions #{@exts[1...]}")
 
 module.exports = {
   isLegalRequire
