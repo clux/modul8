@@ -31,11 +31,8 @@ toAbsPath = (name, subFolders, domain) -> # subFolders is array of folders after
 
 # exists helper for locate
 makeFinder = (exts) ->
-  #console.log exts
   (path, req) ->
     for ext in exts
-      #if ext is '.coca'
-      #  console.log 'checking'+path+req+ext
       return req+ext if exists(path+req+ext)
     return false
 
@@ -55,7 +52,7 @@ Resolver::locate = (reqStr, subFolders, domain) ->
     throw new Error("modul8 does not allow other domains to reference the app #{@mainDomain} domain. required from #{domain}")
 
   return [absReq, 'M8', true] if foundDomain is 'M8' or absReq of @arbiters # arbiter or API require
-  return [absReq, foundDomain, true] if foundDomain is 'external' # externally loaded
+  return [absReq, 'external', true] if foundDomain is 'external' # externally loaded
 
 
   # else we have to verify the file exists (if we know domain, easy, else, scan all, starting in requiree's domain)

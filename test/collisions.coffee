@@ -35,7 +35,7 @@ makeFiles = (domain, name, num) ->
 
   fs.writeFileSync(dir+'/collisions/'+domain+'/'+name+num+'/index'+ext2, "exports.inside = true"+sc)
 
-generateApp = ()-> # dont call this with size < 4 otherwise we wont get the mixins
+generateApp = ->
 
   l = [] # generate an entry point simultaneously with module generation
 
@@ -84,7 +84,7 @@ generateApp = ()-> # dont call this with size < 4 otherwise we wont get the mixi
     .set('domloader', (a) -> (a)) # dont test jQuery functionality here
     #.analysis().output(console.log).suffix(true)
     .domains(options.domains)
-    .register('.coco', (code) -> coffee.compile(code, {bare:true})) #TODO: test bad extension entering
+    .register('.coco', (code) -> coffee.compile(code, {bare:true})) #alias coco as this compiler for simplicity
     .compile(dir+'/output/outc.js')
 
 
