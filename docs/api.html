@@ -1,10 +1,16 @@
 <html>
   <head>
     <meta charset="utf8">
-    <title>modul8 : Browser-side CommonJS - a lightweight code packager and analyzer for NodeJS web applications.</title>
+    <title>modul8 - Extensible CommonJS for the Browser</title>
     <link rel='stylesheet' href='../main.css' />
   </head>
   <body class="subpage">
+    <ul id="nav">
+      <li><a href="api.html" title="API documentation">API</a></li>
+      <li><a href="require.html" title="require() types and priorities">require</a></li>
+      <li><a href="commonjs.html" title="CommonJS parsing - our implementation">CommonJS</a></li>
+      <li><a href="modularity.html" title="Modularity issues and advice">Modularity</a></li>
+    </ul>
     <div id="content">
 <h1>API</h1>
 
@@ -32,7 +38,7 @@ Both the domain and file extension can be omitted if there are no conflicts (cur
 <pre><code>require('app::validation.js') //domain specific searches only specified domain
 require('./validation.js') //relative require searches only this domain
 require('./validation') //.js extension always gets searched before .coffee
-require('validation') // scans this domain first, but will try other domains if it fails here
+require('validation') // resolves this domain first (but moves on if this fails)
 </code></pre>
 
 <p>More information on <code>require()</code> is available in <a href="require.html">this section</a></p>
@@ -113,6 +119,12 @@ console.log(versions['users/view']) // -&gt; [0,2,4]
 
 <p>Alternatively, this <code>.list()</code> call can be avoided by more succinctly placing this array in the first parameter of <code>.libraries()</code> instead.
 Similarly, we can also avoid <code>.path()</code> and <code>.target()</code> by specifying second and third parameters to <code>.libraries()</code>.</p>
+
+<pre><code>modul8('app.js')
+  .domains({app : dir+'/app/client/'}
+  .libraries(['jQuery.js','history.js'], dir+'/app/client/libs/', 'out-libs.js')
+  .compile('./out.js');
+</code></pre>
 
 <p>Libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
 And nmodified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response. Thus, using <code>.target()</code> and
@@ -220,7 +232,7 @@ We strongly encourage you to use it if possible. The API consists of chaining 1-
     .prefix(false)
     .suffix(true)
     .hide('external')
-  .compile('./out.js')
+  .compile('./out.js');
 </code></pre>
 
 <p>The <code>output()</code> method must be set for <code>analysis()</code> to have any effect.
@@ -240,7 +252,7 @@ Defaults for thes are : <code>{prefix: true, suffix: false}</code>.</p>
   .domains().add('app', dir+'/app/client/')
   .in('development').after(modul8.minifier)
   .in('development').compile('./out.js')
-  .in('production').compile('./out.js')
+  .in('production').compile('./out.js');
 </code></pre>
 
 <p>The environment conditionals may be applied to several calls:</p>
@@ -260,7 +272,7 @@ Defaults for thes are : <code>{prefix: true, suffix: false}</code>.</p>
       .list(['analytics.js'])
       .path(dir+'/app/client/libs/')
   .in('all')
-   .compile('./out.js')
+   .compile('./out.js');
 </code></pre>
 
 <p>If we perform the same action for environments, set them before
@@ -298,10 +310,13 @@ separately, it will not be found on the server. The solution to this is the same
 <p>Both these functions will overwrite on repeat calls. For example:</p>
 
 <pre><code>var dataModify = require('M8::data');
+
 dataModify('libX', libXobj);
 require('data::libX'); // -&gt; libXobj
+
 dataModify('libX', {});
 require('data::libX'); // -&gt; {}
+
 dataModify('libX'); //unsets
 require('data::libX'); // -&gt; null
 </code></pre>
@@ -327,14 +342,44 @@ Also note that changing the namespace does not change the domain these two funct
   .arbiters()
     .add('jQuery', ['$', 'jQuery'])
     .add('Spine')
-  .compile('./out.js')
+  .compile('./out.js');
 </code></pre>
 
-<p>This code would delete objects <code>$</code>, <code>jQuery</code> and <code>Spine</code> from <code>window</code> and under the covers add closure bound alternatives that are <code>require()</code>able.
+<p>This code would delete objects <code>$</code>, <code>jQuery</code> and <code>Spine</code> from <code>window</code> and under the covers add closure bound alternatives you can <code>require()</code>
 The second parameter to <code>arbiters().add()</code> is the variable name/names to be deleted. If only a single variable should be deleted,
 it can be entered as a string, but if this is the same as as the arbiter's name, then it can be omitted completely - as with Spine above.</p>
 
-<p>Arbitered libraries can be should be referenced simply with <code>require('jQuery')</code>, or <code>require('M8::jQuery')</code> it there isnt a conflicting
-jQuery.js file on your current domain. Normally this specificity should not be required.</p>    </div>
+<p>Arbitered libraries can be should be referenced simply with <code>require('jQuery')</code>, or <code>require('M8::jQuery')</code> it there is a conflicting
+jQuery.js file on your current domain. Normally this specificity should not be required.</p>
+
+<p>Alternative adding syntax is to add an object directly to <code>arbiters()</code>, but this means that the second parameters must always be specified</p>
+
+<pre><code>.arbiters({
+  jQuery : ['$', 'jQuery']
+  Spine  : Spine
+})
+</code></pre>
+
+<h2>Registering a Compile-to-JS Language</h2>
+
+<p>It is possible to extend the parsers capabilities by sending the extension and compiler down to modul8.
+For instance, registering Coffee-Script (if it wasn't already done automatically) would be done like this</p>
+
+<pre><code>var coffee = require('coffee-script');
+modul8('app.js')
+  .domains({app:dir+'/app/client/'})
+  .register('.coffee', function(code, bare){
+    coffee.compile(code, {bare:bare})
+  })
+  .compile('./out.js');
+</code></pre>
+
+<p>Note the boolean <code>bare</code> option is to let modul8 fine tune when it is necessary to include the safety wrapper - if the compile to language includes one by default.</p>
+
+<p>CoffeeScript uses a safety wrapper by default, but it is irrelevant for application code as we define wrap each file in a function anyway.
+However, if you included library code written in CoffeeScript, then modul8 will call the compile function with bare:false.</p>
+
+<p>You should implement the bare compilation option if your language supports it, as an optimization (less function wrapping for app code). If your code already contains wrapper,
+or if your language always safety-wraps, then this is fine too.</p>    </div>
   </body>
 </html>

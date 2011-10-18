@@ -1,10 +1,16 @@
 <html>
   <head>
     <meta charset="utf8">
-    <title>modul8 : Browser-side CommonJS - a lightweight code packager and analyzer for NodeJS web applications.</title>
+    <title>modul8 - Extensible CommonJS for the Browser</title>
     <link rel='stylesheet' href='../main.css' />
   </head>
   <body class="subpage">
+    <ul id="nav">
+      <li><a href="api.html" title="API documentation">API</a></li>
+      <li><a href="require.html" title="require() types and priorities">require</a></li>
+      <li><a href="commonjs.html" title="CommonJS parsing - our implementation">CommonJS</a></li>
+      <li><a href="modularity.html" title="Modularity issues and advice">Modularity</a></li>
+    </ul>
     <div id="content">
 <h1>require()</h1>
 
@@ -20,18 +26,19 @@ the necessary context for the <code>require()</code> calls it may make. All cont
 <li><p><strong>Globally</strong>:        <code>require('subfolder/module.js')</code>. This will scan all the domains (except data) for a matching structure, starting the search at your current location.
 A gloabl require does not care about your current location.</p></li>
 <li><p><strong>Relatively</strong>:      <code>require('./module.js')</code>. This will scan only the current domain and the current folder
-You can keep chaining on '../' to go up directories, but this has to happen in the beginning of the require string:
-<code>require('./../subfolder/../basemodule.js')</code> <strong>is not legal</strong> while <code>require('./../basemodule.js')</code> <strong>is</strong>.</p>
+You can keep chaining on '../' to go up directories, but this has to happen in the beginning of the require string:</p>
 
-<ul><li><strong>Domain Specific</strong>  <code>require('shared::val.js')</code>. Scans the specified domain (only) as if it were a global require from within that domain.
+<p><code>require('./../subfolder/../basemodule.js')</code> <strong>is not legal</strong> while <code>require('./../basemodule.js')</code> <strong>is</strong>.</p></li>
+<li><p><strong>Domain Specific</strong>  <code>require('shared::val.js')</code>. Scans the specified domain (only) as if it were a global require from within that domain.
 You cannot do relative requires combined with domain prefixes as this is either non-sensical (cross domain case: folder structure between domains lost on the browser),
-or unnecessary (same origin case: you should simply be using relative requires).</li></ul></li>
+or unnecessary (same origin case: you should simply be using relative requires).</p></li>
 <li><p><strong>Data Domain</strong>:     <code>require('data::datakey')</code>. The data domain is special. It is there to allow requiring of data that was <code>add()</code>-chained on the <code>data()</code> method.
 It does not arise from physical files, and will not show up in the dependency tree. It is simply data you have attached deliberately.</p></li>
 <li><p><strong>Through Arbiters</strong> <code>require('jQuery')</code> - given that <code>arbiters().add('jQuery',['$','jQuery'])</code> was passed in on the server.
-This will have deleted the global shortcuts included. Since these are probably commonly dependend upon they can be used without specifying their default domain: <code>M8::</code>.
-Note that this domain name is not related to the namespace setting. If a jQuery.js file is found on the current domain, however, it will gain priority over the
-arbiters domain. If this cooexistence is necessary, any arbiters must be <code>require()</code>d domainspecifically: <code>$ = require('M8::jQuery')</code>.</p></li>
+This will have deleted the global shortcuts included. Since these are probably commonly dependend upon they can be used without specifying their default domain: <code>M8::</code>.</p>
+
+<p>Note that this domain name is not related to the namespace setting. If a jQuery.js file is found on the current domain, however, it will gain priority over the
+arbiters domain. If this coexistence is necessary, any arbiters must be  required by specifying the internal domain: <code>$ = require('M8::jQuery')</code>.</p></li>
 </ul>
 
 <h3>File extensions</h3>
@@ -50,14 +57,14 @@ while(domain)
   return true if exists(domain + name)
   return true if exists(domain + name + '.js')
   return true if exists(domain + name + '.coffee')
-  return true if exists(domain + name + altJsExt) //if used .register('altJsExt', compiler)
+  return true if exists(domain + name + altJsExt) //optional
   domain = nextDomain // if applicable (see require priority below)
 return false
 </code></pre>
 
 <p>If you use <em>CoffeeScript</em> or other registered compilers for altJs languages,
-and if there is even a chance of a file of the same name with a <code>.js</code> extension popping up in the same folder:
-then you should only use <code>require()</code> with an explicitly specified file extension.</p>
+and if there is even a chance of a file of the same name with a <code>.js</code> extension popping up in the same folder,
+then you <em>should only</em> use <code>require()</code> with an explicitly specified file extension.</p>
 
 <p>In short: <strong>DO NOT omit extensions and keep .js and .coffee versions in the same folder</strong>
 or you will quickly become very frustrated as to why your coffee changes arent doing anything.</p>

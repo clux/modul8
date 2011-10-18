@@ -1,10 +1,16 @@
 <html>
   <head>
     <meta charset="utf8">
-    <title>modul8 : Browser-side CommonJS - a lightweight code packager and analyzer for NodeJS web applications.</title>
+    <title>modul8 - Extensible CommonJS for the Browser</title>
     <link rel='stylesheet' href='../main.css' />
   </head>
   <body class="subpage">
+    <ul id="nav">
+      <li><a href="api.html" title="API documentation">API</a></li>
+      <li><a href="require.html" title="require() types and priorities">require</a></li>
+      <li><a href="commonjs.html" title="CommonJS parsing - our implementation">CommonJS</a></li>
+      <li><a href="modularity.html" title="Modularity issues and advice">Modularity</a></li>
+    </ul>
     <div id="content">
 <h1>Modularity</h1>
 
@@ -43,9 +49,9 @@ It does, however, take certain disipline to constantly police your files for mul
 
 <p>You may shrug and say, well, I'm only going to write this once anyway..</p>
 
-<p>..and you will be right. You will write it once and quickly realize you that it would have been even better if you hade written it zero times. Trust me.</p>
+<p>..and you will be right. You will write it once and probably wish you wrote it zero times.</p>
 
-<p>There's simply no way around it. The biggest mistake you can make as a learning programmer is to not factor out behaviour as early as possible.
+<p>The biggest mistake you can make as a learning programmer is to not factor out behaviour as early as possible.
 <em></advice></em></p>
 
 <h2>Relation to JavaScript</h2>
@@ -83,7 +89,7 @@ Alternatively, it can replace the <code>module.exports</code> object to define a
 
 <p>By making sure each module is written this way, CommonJS parsers can implement clever trickery on top of it to make this behaviour work.
 I.e. having each module's exports objects stored somewhere for <code>require()</code> and every module will export a singleton.
-For more information on this goto the <a href="commonjs.html">CommonJS document</a> describing how a module system works.</p>
+For more information on this goto the <a href="commonjs.html">CommonJS section</a> describing how a module system works - and what we have done.</p>
 
 <h2>Best Practices</h2>
 
@@ -118,12 +124,15 @@ and call it at appropriate stages above.</li>
 <li>Limit the areas from which you reference global variables.</li>
 <li>Look for opportunities to move independent code onto different domains.</li>
 <li>Look for opportunities to refactor code to make bits of it independent.</li>
-<li>Enforce basic rules of JavaScript modularity: don't try to make circular dependencies work, analyse your require tree. If you are requiring the same library from every file, chances are you are doing something wrong.</li>
+<li>Enforce basic rules of JavaScript modularity: don't try to make circular dependencies work, analyse your require tree.
+If you are requiring the same library from every file, chances are you are doing something wrong.</li>
 </ul>
 
 <p>Decouple your code this way and you will save yourself the trouble of later having to learn from your mistakes the hard way.</p>
 
 <h2>Going Further</h2>
+
+<h3>Killing Globals</h3>
 
 <p>Global variable are evil, and should be kept to a minimum. We know this, and this is were a require system really shines, but you are generally
 going to depend on a few global variables. Not all libraries are CommonJS compliant, and having jQuery plugins in showing up in your
@@ -131,9 +140,9 @@ dependency tree under every branch that requires jQuery might just make things m
 
 <p>Besides, you may want to load it in from a separate CDN anyway.</p>
 
-<p>Even in such an environment, it is possible rid yourself of the global $ and jQuery symbols without breaking everything.</p>
+<p>Even in such an environment, it is possible rid yourself of the global <code>$</code> and <code>jQuery</code> symbols without breaking everything.</p>
 
-<p>We will demonstrate such a solution. Begin by constructing a jQuery.js file on your application domain containing:</p>
+<p>We will demonstrate such a solution. Begin by constructing a <code>jQuery.js</code> file on your application domain containing:</p>
 
 <pre><code>module.exports = window.jQuery;
 delete window.jQuery;
@@ -151,12 +160,12 @@ internal module system by using the <code>arbiters()</code> call.
 This example could be automated by chaining on <code>arbiters().add('jQuery', ['jQuery', '$'])</code>. See the <a href="api.html">API docs</a> for more details.</p>
 
 <p>Note that modul8 only allows one domain to be DOM dependent (the application domain), so with correct usage -
-i.e. not stuffing every module in that domain - you might not have any big revelations there anyway. You are likely
-having to <code>require('jQuery')</code> in most places. But if you just find some areas that do not use it, and as a result move them to a
-environment agnostic domain, then this has been a success.</p>
+i.e. not just using that domain - you might not have any big revelations there anyway. You are likely going to have
+<code>require('jQuery')</code> in most places. But if you just find some areas that do not use it, and as a result move those files to an
+environment agnostic domain, then this has in my book, been a success.</p>
 
 <p>If you can efficiently separate code on the domain level, try to keep above advice in mind
-(always aim to factor out behavior into small loosely coupled modules),  then you are already
+(always aim to factor out behavior into small loosely coupled modules), then you are already
 good on your way to resolving spaghetti hell. The rest is tackling the correct signaling model for your events.
 And for that there are MVC/MVVM frameworms of varying sizes.</p>
 

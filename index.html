@@ -1,29 +1,27 @@
 <html>
   <head>
-    <title>modul8 - Extensible CommonJS in the browser</title>
+    <title>modul8 - Extensible CommonJS for the browser</title>
     <meta charset="utf8">
     <link rel='stylesheet' href='main.css' />
   </head>
   <body>
     <h1>modul8</h1>
-    <span class="description">Extensible CommonJS in the browser via <a href="http://nodejs.org">nodejs</a> web applications.</span>
+    <span class="description">Extensible CommonJS in the browser via <a href="http://nodejs.org">NodeJS</a>.</span>
 
     <ul id="features">
-      <li>client side require</li>
+      <li>client side require of CoffeeScript and JavaScript files</li>
       <li>share code between the server and the client</li>
       <li>dynamic resolution and compilation of dependencies server-side</li>
-      <li>compiles CommonJS compatible JavaScript or CoffeeScript</li>
       <li>low footprint - only ~100 lines prepended to output source</li>
       <li>enforces modularity best practices, and logs an npm style dependency tree</li>
       <li>inject require data dynamically from the server or live from the client</li>
-      <li>minimizes global usage, encapsulates exports in closures</li>
-      <li>ideal for single page web applications, 1/2 HTTP request to get all code</li>
+      <li>minimizes global usage, encapsulates exports in closures, absorbs library globals</li>
     </ul>
 
     <ul id="plugins">
       <li><a href="docs/api.html">API</a> documentation</li>
-      <li><a href="docs/require.html">require()</a> uses and distinctions</li>
-      <li><a href="docs/commonjs.html">CommonJS</a> parsing and modul8 deviations - how a module system works</li>
+      <li><a href="docs/require.html">require()</a> types and priorities</li>
+      <li><a href="docs/commonjs.html">CommonJS</a> parsing - our implementation</li>
       <li><a href="docs/modularity.html">Modularity</a> issues and advice</li>
     </ul>
 

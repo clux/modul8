@@ -137,3 +137,19 @@ p code {
   border: 0;
   padding: 0;
 }
+
+#nav {
+  list-style: none;
+  border: 1px solid #ccc;
+  width: 700px;
+  margin: 10px auto;
+  margin-top: -70px;
+  font-weight: bold;
+  font-size: 17px;
+
+}
+
+#nav li {
+  display:inline;
+  padding-right: 25px;
+}
