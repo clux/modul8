@@ -1,6 +1,6 @@
 {
   "name": "modul8",
-  "description": "Extensible CommonJS in the browser - a code packager and analyzer for NodeJS web applications",
+  "description": "Extensible CommonJS in the browser",
   "version": "0.6.0",
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
   "repository": {
