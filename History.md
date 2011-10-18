@@ -3,13 +3,19 @@ FUTURE / 2011-??-??
   TODO:
   * Ensure a separate libs file will not get overwritten if no changes has been made
   * Provide more levels of logging on the client
-  * More tests
+  * More tests?
 
-0.6.0 / 2011-10-??
+0.6.1 / 2011-10-18
+==================
+  * `.arbiters()` allows an object to be inserted at once
+  * Biggish documentation improvements
+
+0.6.0 / 2011-10-17
 ==================
   * `require('folder')` will look for a `folder` file then an `index` file under `folder/`
   * `require('folder/') will look for an `index` file under `folder/`
   * `require()` collision priority updated
+  *  collision test suite included
   * `.compile()` will throw error if multiple files with same unique identifier (extensionless dom::filename) are attempted included - but helpfully after `.analysis()`
   * `.register('.ext', extCompiler)` will allow bundling of other altJs languages
 

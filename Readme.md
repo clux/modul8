@@ -68,7 +68,7 @@ For more information consult the [api docs](http://clux.github.com/modul8/docs/a
  - client side require
  - automatically share code between the server and the client
  - dynamic resolution and compilation of dependencies server-side
- - compiles CommonJS compatible JavaScript or CoffeeScript
+ - compiles CommonJS compatible JavaScript, CoffeeScript or hooked in AltJS
  - low footprint - only ~100 lines prepended to output source
  - enforces modularity best practices
  - dependency tree loggable in `npm list` style

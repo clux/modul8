@@ -23,7 +23,7 @@ The following are equivalent from a file in the root of the `app` domain, having
     require('app::validation.js') //domain specific searches only specified domain
     require('./validation.js') //relative require searches only this domain
     require('./validation') //.js extension always gets searched before .coffee
-    require('validation') // scans this domain first, but will try other domains if it fails here
+    require('validation') // resolves this domain first (but moves on if this fails)
 
 More information on `require()` is available in [this section](require.html)
 
@@ -95,6 +95,12 @@ Note that without the `.target()` option added, the libraries would be inserted 
 
 Alternatively, this `.list()` call can be avoided by more succinctly placing this array in the first parameter of `.libraries()` instead.
 Similarly, we can also avoid `.path()` and `.target()` by specifying second and third parameters to `.libraries()`.
+
+    modul8('app.js')
+      .domains({app : dir+'/app/client/'}
+      .libraries(['jQuery.js','history.js'], dir+'/app/client/libs/', 'out-libs.js')
+      .compile('./out.js');
+
 
 Libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
 And nmodified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response. Thus, using `.target()` and
@@ -191,7 +197,7 @@ We strongly encourage you to use it if possible. The API consists of chaining 1-
         .prefix(false)
         .suffix(true)
         .hide('external')
-      .compile('./out.js')
+      .compile('./out.js');
 
 The `output()` method must be set for `analysis()` to have any effect.
 It must take either a function to pipe the tree to, or a filepath to write it out to.
@@ -210,7 +216,7 @@ We can conditionally perform the following action, if __NODE_ENV__ matches speci
       .domains().add('app', dir+'/app/client/')
       .in('development').after(modul8.minifier)
       .in('development').compile('./out.js')
-      .in('production').compile('./out.js')
+      .in('production').compile('./out.js');
 
 The environment conditionals may be applied to several calls:
 
@@ -229,7 +235,7 @@ The environment conditionals may be applied to several calls:
           .list(['analytics.js'])
           .path(dir+'/app/client/libs/')
       .in('all')
-       .compile('./out.js')
+       .compile('./out.js');
 
 If we perform the same action for environments, set them before
 the first `in()` call, or use `in('all')`.
@@ -264,10 +270,13 @@ The domains `M8`, `data` and `external` have been whitelisted for this purpose, 
 Both these functions will overwrite on repeat calls. For example:
 
     var dataModify = require('M8::data');
+
     dataModify('libX', libXobj);
     require('data::libX'); // -> libXobj
+
     dataModify('libX', {});
     require('data::libX'); // -> {}
+
     dataModify('libX'); //unsets
     require('data::libX'); // -> null
 
@@ -290,11 +299,40 @@ These help reveal invisible dependencies by reduce the amounts global variables 
       .arbiters()
         .add('jQuery', ['$', 'jQuery'])
         .add('Spine')
-      .compile('./out.js')
+      .compile('./out.js');
 
-This code would delete objects `$`, `jQuery` and `Spine` from `window` and under the covers add closure bound alternatives that are `require()`able.
+This code would delete objects `$`, `jQuery` and `Spine` from `window` and under the covers add closure bound alternatives you can `require()`
 The second parameter to `arbiters().add()` is the variable name/names to be deleted. If only a single variable should be deleted,
 it can be entered as a string, but if this is the same as as the arbiter's name, then it can be omitted completely - as with Spine above.
 
-Arbitered libraries can be should be referenced simply with `require('jQuery')`, or `require('M8::jQuery')` it there isnt a conflicting
+Arbitered libraries can be should be referenced simply with `require('jQuery')`, or `require('M8::jQuery')` it there is a conflicting
 jQuery.js file on your current domain. Normally this specificity should not be required.
+
+Alternative adding syntax is to add an object directly to `arbiters()`, but this means that the second parameters must always be specified
+
+    .arbiters({
+      jQuery : ['$', 'jQuery']
+      Spine  : Spine
+    })
+
+
+## Registering a Compile-to-JS Language
+
+It is possible to extend the parsers capabilities by sending the extension and compiler down to modul8.
+For instance, registering Coffee-Script (if it wasn't already done automatically) would be done like this
+
+    var coffee = require('coffee-script');
+    modul8('app.js')
+      .domains({app:dir+'/app/client/'})
+      .register('.coffee', function(code, bare){
+        coffee.compile(code, {bare:bare})
+      })
+      .compile('./out.js');
+
+Note the boolean `bare` option is to let modul8 fine tune when it is necessary to include the safety wrapper - if the compile to language includes one by default.
+
+CoffeeScript uses a safety wrapper by default, but it is irrelevant for application code as we define wrap each file in a function anyway.
+However, if you included library code written in CoffeeScript, then modul8 will call the compile function with bare:false.
+
+You should implement the bare compilation option if your language supports it, as an optimization (less function wrapping for app code). If your code already contains wrapper,
+or if your language always safety-wraps, then this is fine too.
