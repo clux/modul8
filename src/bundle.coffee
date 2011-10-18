@@ -33,10 +33,10 @@ collisionCheck = (codeList) ->
     for [d,f] in codeList when (dom isnt d and file isnt f)
       uidi = d+'::'+f.split('.')[0]
       if uid is uidi
-        throw new Error("modul8: too dangerous to require two files of the same name on the same path with different extensions: #{dom}::#{file} and #{d}::{#f} ")
-
+        throw new Error("modul8: does not support requiring of two files of the same name on the same path with different extensions: #{dom}::#{file} and #{d}::{#f} ")
   return
 
+# main packager
 bundle = (codeList, ns, domload, mw, compile, o) ->
   l = []
 
@@ -66,6 +66,7 @@ bundle = (codeList, ns, domload, mw, compile, o) ->
       code = mw(compile(o.domains[domain] + name)) # middleware applied to code first
       basename = name.split('.')[0] # take out extension on the client (we throw if collisions requires have happened on the server)
       defineWrap(basename, domain, code)
+
 
   # 6.a) include modules not on the app domain
   l.push harvest(false).join('\n')
