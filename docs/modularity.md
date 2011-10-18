@@ -30,9 +30,9 @@ It does, however, take certain disipline to constantly police your files for mul
 
 You may shrug and say, well, I'm only going to write this once anyway..
 
-..and you will be right. You will write it once and quickly realize you that it would have been even better if you hade written it zero times. Trust me.
+..and you will be right. You will write it once and probably wish you wrote it zero times.
 
-There's simply no way around it. The biggest mistake you can make as a learning programmer is to not factor out behaviour as early as possible.
+The biggest mistake you can make as a learning programmer is to not factor out behaviour as early as possible.
 *</advice>*
 
 ## Relation to JavaScript
@@ -69,7 +69,7 @@ Alternatively, it can replace the `module.exports` object to define all your exp
 
 By making sure each module is written this way, CommonJS parsers can implement clever trickery on top of it to make this behaviour work.
 I.e. having each module's exports objects stored somewhere for `require()` and every module will export a singleton.
-For more information on this goto the [CommonJS document](commonjs.html) describing how a module system works.
+For more information on this goto the [CommonJS section](commonjs.html) describing how a module system works - and what we have done.
 
 
 ## Best Practices
@@ -102,11 +102,14 @@ modul8 just tries to facilitate the building of maintainable code. To actually d
  - Limit the areas from which you reference global variables.
  - Look for opportunities to move independent code onto different domains.
  - Look for opportunities to refactor code to make bits of it independent.
- - Enforce basic rules of JavaScript modularity: don't try to make circular dependencies work, analyse your require tree. If you are requiring the same library from every file, chances are you are doing something wrong.
+ - Enforce basic rules of JavaScript modularity: don't try to make circular dependencies work, analyse your require tree.
+ If you are requiring the same library from every file, chances are you are doing something wrong.
 
 Decouple your code this way and you will save yourself the trouble of later having to learn from your mistakes the hard way.
 
 ## Going Further
+
+### Killing Globals
 
 Global variable are evil, and should be kept to a minimum. We know this, and this is were a require system really shines, but you are generally
 going to depend on a few global variables. Not all libraries are CommonJS compliant, and having jQuery plugins in showing up in your
@@ -114,9 +117,9 @@ dependency tree under every branch that requires jQuery might just make things m
 
 Besides, you may want to load it in from a separate CDN anyway.
 
-Even in such an environment, it is possible rid yourself of the global $ and jQuery symbols without breaking everything.
+Even in such an environment, it is possible rid yourself of the global `$` and `jQuery` symbols without breaking everything.
 
-We will demonstrate such a solution. Begin by constructing a jQuery.js file on your application domain containing:
+We will demonstrate such a solution. Begin by constructing a `jQuery.js` file on your application domain containing:
 
     module.exports = window.jQuery;
     delete window.jQuery;
@@ -133,12 +136,12 @@ internal module system by using the `arbiters()` call.
 This example could be automated by chaining on `arbiters().add('jQuery', ['jQuery', '$'])`. See the [API docs](api.html) for more details.
 
 Note that modul8 only allows one domain to be DOM dependent (the application domain), so with correct usage -
-i.e. not stuffing every module in that domain - you might not have any big revelations there anyway. You are likely
-having to `require('jQuery')` in most places. But if you just find some areas that do not use it, and as a result move them to a
-environment agnostic domain, then this has been a success.
+i.e. not just using that domain - you might not have any big revelations there anyway. You are likely going to have
+`require('jQuery')` in most places. But if you just find some areas that do not use it, and as a result move those files to an
+environment agnostic domain, then this has in my book, been a success.
 
 If you can efficiently separate code on the domain level, try to keep above advice in mind
-(always aim to factor out behavior into small loosely coupled modules),  then you are already
+(always aim to factor out behavior into small loosely coupled modules), then you are already
 good on your way to resolving spaghetti hell. The rest is tackling the correct signaling model for your events.
 And for that there are MVC/MVVM frameworms of varying sizes.
 

@@ -13,9 +13,10 @@ There are four different ways to use require:
 
  - **Relatively**:      `require('./module.js')`. This will scan only the current domain and the current folder
  You can keep chaining on '../' to go up directories, but this has to happen in the beginning of the require string:
+
  `require('./../subfolder/../basemodule.js')` **is not legal** while `require('./../basemodule.js')` **is**.
 
-  - **Domain Specific**  `require('shared::val.js')`. Scans the specified domain (only) as if it were a global require from within that domain.
+ - **Domain Specific**  `require('shared::val.js')`. Scans the specified domain (only) as if it were a global require from within that domain.
  You cannot do relative requires combined with domain prefixes as this is either non-sensical (cross domain case: folder structure between domains lost on the browser),
  or unnecessary (same origin case: you should simply be using relative requires).
 
@@ -24,8 +25,9 @@ There are four different ways to use require:
 
  - **Through Arbiters** `require('jQuery')` - given that `arbiters().add('jQuery',['$','jQuery'])` was passed in on the server.
  This will have deleted the global shortcuts included. Since these are probably commonly dependend upon they can be used without specifying their default domain: `M8::`.
+
  Note that this domain name is not related to the namespace setting. If a jQuery.js file is found on the current domain, however, it will gain priority over the
- arbiters domain. If this cooexistence is necessary, any arbiters must be `require()`d domainspecifically: `$ = require('M8::jQuery')`.
+ arbiters domain. If this coexistence is necessary, any arbiters must be  required by specifying the internal domain: `$ = require('M8::jQuery')`.
 
 ### File extensions
 
@@ -42,13 +44,13 @@ To see why, consider a simplified resolver algorithm from the server
       return true if exists(domain + name)
       return true if exists(domain + name + '.js')
       return true if exists(domain + name + '.coffee')
-      return true if exists(domain + name + altJsExt) //if used .register('altJsExt', compiler)
+      return true if exists(domain + name + altJsExt) //optional
       domain = nextDomain // if applicable (see require priority below)
     return false
 
 If you use _CoffeeScript_ or other registered compilers for altJs languages,
-and if there is even a chance of a file of the same name with a `.js` extension popping up in the same folder:
-then you should only use `require()` with an explicitly specified file extension.
+and if there is even a chance of a file of the same name with a `.js` extension popping up in the same folder,
+then you *should only* use `require()` with an explicitly specified file extension.
 
 In short: **DO NOT omit extensions and keep .js and .coffee versions in the same folder**
 or you will quickly become very frustrated as to why your coffee changes arent doing anything.

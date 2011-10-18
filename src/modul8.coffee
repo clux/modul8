@@ -172,9 +172,11 @@ Analysis::ignore = (domain) ->
       obj.ignoreDoms.push d
   @
 
-Modul8::arbiters = ->
+Modul8::arbiters = (arbObj) ->
   return @ if !@environmentMatches
-  new Arbiters()
+  arb = new Arbiters()
+  arb.add(key, val) for key,val of arbObj if arbObj
+  arb
 
 Arbiters = ->
 Arbiters:: = new Modul8('Arbiters')
@@ -182,7 +184,7 @@ Arbiters:: = new Modul8('Arbiters')
 Arbiters::add = (name, globs) ->
   return @ if !@subclassMatches('Arbiters','add')
   return @ if !@environmentMatches
-  if globs and globs.length #TODO: better array testing
+  if globs and globs.length #TODO: type testing
     obj.arbiters[name] = globs
   else if globs
     obj.arbiters[name] = [globs]
@@ -220,6 +222,9 @@ if module is require.main
     .arbiters()
       .add('jQuery', ['$','jQuery'])
       .add('Spine')
+    .arbiters({
+      'underscore', '_'
+    })
     .domains()
       .add('app', '/app/client/')
       .add('shared', '/app/shared/')
