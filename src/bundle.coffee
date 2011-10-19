@@ -1,7 +1,7 @@
 fs          = require 'fs'
 path        = require 'path'
 codeAnalyis = require './analysis'
-{makeCompiler, exists} = require './utils'
+{makeCompiler, exists, read} = require './utils'
 
 # helpers
 pullData = (parser, name) -> # parser interface
@@ -51,7 +51,7 @@ bundle = (codeList, ns, domload, mw, compile, o) ->
     namespace : ns
     domains   : name for name of o.domains
     arbiters  : o.arbiters
-    logging   : o.logging ? false
+    logging   : !!o.options.logging
     main      : o.mainDomain
   l.push "var _modul8RequireConfig = #{JSON.stringify(config)};"
   l.push anonWrap(compile(__dirname + '/require.coffee'))
@@ -99,11 +99,11 @@ module.exports = (o) ->
   for fnb in o.post
     throw new Error("modul8 requires a function as post-processing plugin") if !(fnb instanceof Function)
 
-
   namespace = o.options?.namespace ? 'M8'
   domloader = o.options?.domloader ? makeDOMWrap(namespace, 'jQuery' of o.arbiters)
   premw = if o.pre and o.pre.length > 0 then compose(o.pre) else (a) -> a
   postmw = if o.post and o.post.length > 0 then compose(o.post) else (a) -> (a)
+  useLog = !!o.options.logging
 
   compile = makeCompiler(o.compilers) # will throw if reusing extensions or invalid compile functions
   exts = ['','.js','.coffee'].concat(ext for ext of o.compilers)
@@ -120,17 +120,61 @@ module.exports = (o) ->
     codelist = ca.sorted()
     collisionCheck(codelist)
 
+    mTimesApp = {}
+    for [domain,file] in codelist
+      mTimesApp[domain+'::'+file] = fs.statSync(o.domains[domain]+file).mtime.valueOf()
+
+    appUpdated = mTimeCheck(o.target, mTimesApp, 'app', useLog)
+
     c = bundle(codelist, namespace, domloader, premw, compile, o)
     c = postmw(c)
 
     if o.libDir and o.libFiles
-      libs = (compile(o.libDir+file, false) for file in o.libFiles).join('\n') # concatenate libs as is - safetywrap any .coffee files
-      libs = postmw(libs) #TODO: always apply postmw to libs? it is only a minifier atm..
-      if o.libsOnlyTarget
-        fs.writeFileSync(o.libsOnlyTarget, libs) #TODO: only write this file if it hasnt changed!!!
-      else
-        c = libs + c
 
-    fs.writeFileSync(o.target, c)
+      mTimesLibs = {}
+      for file in o.libFiles
+        mTimesLibs[file] = fs.statSync(o.libDir+file).mtime.valueOf()
+
+      libsUpdated = mTimeCheck(o.libsOnlyTarget, mTimesLibs, 'libs', useLog)
+
+      if libsUpdated or (appUpdated and !o.libsOnlyTarget)
+        # necessary to do this work if libs changed
+        # but also if app changed and we write it to the same file
+        libs = (compile(o.libDir+file, false) for file in o.libFiles).join('\n') # concatenate libs as is - safetywrap any .coffee files
+        libs = postmw(libs)
+
+      if o.libsOnlyTarget and libsUpdated
+        fs.writeFileSync(o.libsOnlyTarget, libs)
+        libsUpdated = false # no need to take this state into account anymore since they are written separately
+      else if !o.libsOnlyTarget
+        c = libs + c
+    else
+      libsUpdated = false # no need to take lib state into account anymore since they dont exist
+
+    if libsUpdated or appUpdated
+      # write target if there were any changes relevant to this file
+      fs.writeFileSync(o.target, c)
 
   return
+
+mTimeCheck = (file, mTimes, type, log) ->
+  tempName = path.basename(file).split(path.extname(file))[0]
+  mStorage = __dirname+'/../states/'+type+'_'+tempName+'.json'
+  mTimesOld = if exists(mStorage) then JSON.parse(read(mStorage)) else {}
+
+  fs.writeFileSync(mStorage, JSON.stringify(mTimes)) # update state
+  mTimesUpdated(mTimes, mTimesOld, type, log)
+
+mTimesUpdated = (mTimes, mTimesOld, type, log) ->
+  for file,mtime of mTimes
+    if !(file of mTimesOld)
+      console.log "compiling #{type}: file(s) added" if log
+      return true
+    if mTimesOld[file] isnt mtime
+      console.log "compiling #{type}: file(s) modified" if log
+      return true
+  for file of mTimesOld
+    if !(file of mTimes)
+      console.log "compiling #{type}: file(s) removed" if log
+      return true
+  false
