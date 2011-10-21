@@ -165,6 +165,7 @@ mTimeCheck = (file, mTimes, type, log) ->
   fs.writeFileSync(mStorage, JSON.stringify(mTimes)) # update state
   mTimesUpdated(mTimes, mTimesOld, type, log)
 
+#NB: will say 'compiling libs' if we changed libs and libs are included in app bundle
 mTimesUpdated = (mTimes, mTimesOld, type, log) ->
   for file,mtime of mTimes
     if !(file of mTimesOld)

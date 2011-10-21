@@ -42,12 +42,12 @@ CodeAnalysis::buildTree = ->
       uid = domain+'::'+name
       folders = name.split('/')[0...-1]
       t.deps[uid] = {name, domain, fake, folders, deps:{}, parent: t, level: t.level+1}
-
       if !fake
         circularCheck(t, uid) # throw on circular ref
         arguments.callee.call(@, t.deps[uid]) # preserve context and recurse
     return
   )(@tree) # resolve and recurse
+
   return
 
 # helpers for print

@@ -163,7 +163,7 @@ Analysis::suffix = (suffix) ->
   obj.extSuffix = suffix if @environmentMatches
   @
 
-Analysis::ignore = (domain) ->
+Analysis::hide = (domain) ->
   return @ if !@subclassMatches('Analysis','suffix')
   if @environmentMatches
     domains = if domain.length then [domain] else domain
@@ -184,7 +184,7 @@ Arbiters:: = new Modul8('Arbiters')
 Arbiters::add = (name, globs) ->
   return @ if !@subclassMatches('Arbiters','add')
   return @ if !@environmentMatches
-  if globs and globs.length #TODO: type testing
+  if globs and globs instanceof Array
     obj.arbiters[name] = globs
   else if globs
     obj.arbiters[name] = [globs]
