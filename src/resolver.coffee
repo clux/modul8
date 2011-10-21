@@ -8,7 +8,7 @@ isRelative = (reqStr) -> reqStr[0...2] is './'
 domainIgnoresReg = /^data(?=::)|^external(?=::)|^M8(?=::)/
 domainReg = /^(.*::)/
 isLegalRequire = (reqStr) ->
-  return false if domainIgnoresReg.test(reqStr)
+  return true if domainIgnoresReg.test(reqStr)
   if domainReg.test(reqStr) and isRelative(stripDomain(reqStr))
     throw new Error("modul8::analysis found illegal require string combining domain prefix + relative")
   true
@@ -46,12 +46,19 @@ Resolver::locate = (reqStr, subFolders, domain) ->
   [absReq, foundDomain] = toAbsPath(reqStr, subFolders, domain)
 
   # sanity
-  if foundDomain? and !@domains[foundDomain]
-    throw new Error("modul8::analysis could not resolve a require for an unconfigured domain: #{foundDomain}")
-  if foundDomain is @mainDomain and domain isnt @mainDomain
-    throw new Error("modul8 does not allow other domains to reference the app #{@mainDomain} domain. required from #{domain}")
+  if !domainIgnoresReg.test(reqStr)
+    # do these tests if its not one of the normal domains
+    if foundDomain? and !@domains[foundDomain]
+      throw new Error("modul8::analysis could not resolve a require for an unconfigured domain: #{foundDomain}")
+    if foundDomain is @mainDomain and domain isnt @mainDomain
+      throw new Error("modul8 does not allow other domains to reference the app #{@mainDomain} domain. required from #{domain}")
 
-  return [absReq, 'M8', true] if foundDomain is 'M8' or absReq of @arbiters # arbiter or API require
+  if foundDomain is 'M8'
+    return [absReq, 'M8', true] if absReq of @arbiters # arbiter or API require
+    throw new Error("modul8::analysis could not resolve an arbiter require for #{reqStr} from #{domain} - looked in M8")
+  else if !isRelative(reqStr) and foundDomain is undefined and absReq of @arbiters
+    return [absReq, 'M8', true] # in case of collisions with normal domains, if not relative, arbiters must have priority over any domains, hence this line
+
   return [absReq, 'external', true] if foundDomain is 'external' # externally loaded
 
 
@@ -69,7 +76,6 @@ Resolver::locate = (reqStr, subFolders, domain) ->
     # req ends in valid folder ?
     continue if noTryFolder # already done this test
     return [found, dom, false] if found = @finder(@domains[dom], absReq + '/index')
-
 
   throw new Error("modul8::analysis could not resolve a require for #{reqStr} from #{domain} - looked in #{scannable}, trying extensions #{@exts[1...]}")
 

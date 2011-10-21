@@ -32,7 +32,7 @@ makeRequire = (dom, pathName) -> # each (path, domain) gets its own unique requi
       # domain specific require: only look at the specified domain
       scannable = [reqStr.match(DomReg)[1]]
       reqStr = reqStr.split('::')[1]
-    else if reqStr in arbiters
+    else if arbiters.indexOf(reqStr) >= 0
       # not relative or domain specific, check next most common: old globals
       scannable = ['M8'] # will automatically resolve if we are in here
     else

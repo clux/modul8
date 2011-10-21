@@ -1,9 +1,16 @@
 FUTURE / 2011-??-??
 ==================
   TODO:
-  * Ensure a separate libs file will not get overwritten if no changes has been made
   * Provide more levels of logging on the client
-  * More tests?
+
+0.7.0 / 2011-10-??
+==================
+  * `.compile()` will not recompile the file if no changes have been made to previously included files
+  * modified test suite included to ensure above works
+  * arbiter test suite included
+  * `.analysis.hide(domain)` was not working correctly
+  * server side resolver was ignoring resource names on other domains when clashing with arbiters
+
 
 0.6.1 / 2011-10-18
 ==================
