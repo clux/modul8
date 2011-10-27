@@ -2,12 +2,6 @@
 window.M8 = {data:{}};
 var _modul8RequireConfig = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["$","jQuery"]},"logging":false,"main":"app"};
 (function(){var DomReg, a, arbiters, ary, base, domains, exports, glob, makeRequire, name, ns, toAbsPath, _i, _j, _len, _len2, _ref;
-var __indexOf = Array.prototype.indexOf || function(item) {
-  for (var i = 0, l = this.length; i < l; i++) {
-    if (this[i] === item) return i;
-  }
-  return -1;
-};
 base = _modul8RequireConfig;
 ns = window[base.namespace];
 domains = base.domains;
@@ -45,7 +39,7 @@ makeRequire = function(dom, pathName) {
     } else if (DomReg.test(reqStr)) {
       scannable = [reqStr.match(DomReg)[1]];
       reqStr = reqStr.split('::')[1];
-    } else if (__indexOf.call(arbiters, reqStr) >= 0) {
+    } else if (arbiters.indexOf(reqStr) >= 0) {
       scannable = ['M8'];
     } else {
       scannable = [dom].concat(domains.filter(function(e) {

@@ -1,5 +1,9 @@
 FUTURE / 2011-??-??
 ==================
+  DONE:
+  * CLI
+  * recompiling now happens if settings were changed as well (bug)
+  * move underscore copied snippets out - require _ instead
   TODO:
   * Provide more levels of logging on the client
 

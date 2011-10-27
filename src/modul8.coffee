@@ -32,11 +32,13 @@ Modul8::in = (env) ->
 Modul8::before = (fn) ->
   @removeSubClassMethods()
   obj.pre.push fn if @environmentMatches
+  throw new Error("modul8::middeware must consist of functions got: #{fn}") if !(fn instanceof Function)
   @
 
 Modul8::after = (fn) ->
   @removeSubClassMethods()
   obj.post.push fn if @environmentMatches
+  throw new Error("modul8::middeware must consist of functions got: #{fn}") if !(fn instanceof Function)
   @
 
 Modul8::register = (ext, compiler) ->
@@ -92,10 +94,9 @@ Modul8::domains = (input) ->
     for key,val of input
       hasApp = true if key is 'app'
       obj.domains[key] = val
-    if !hasApp # if app does not exist we simply try one at random
-      for key of input
-        obj.mainDomain = key
-        break
+    obj.hasDomains = true
+    if hasApp and !obj.mainDomain # app was found in dict, and not set before
+      obj.mainDomain = 'app'
 
   new Domains()
 

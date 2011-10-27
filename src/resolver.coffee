@@ -43,7 +43,9 @@ Resolver = (@domains, @arbiters, @mainDomain, @exts) ->
 
 # locate location of file from absReq (assumed only called on files that pass isLegalRequire)
 Resolver::locate = (reqStr, subFolders, domain) ->
+  #console.log reqStr, subFolders, domain
   [absReq, foundDomain] = toAbsPath(reqStr, subFolders, domain)
+  #console.log absReq, foundDomain
 
   # sanity
   if !domainIgnoresReg.test(reqStr)
@@ -53,13 +55,15 @@ Resolver::locate = (reqStr, subFolders, domain) ->
     if foundDomain is @mainDomain and domain isnt @mainDomain
       throw new Error("modul8 does not allow other domains to reference the app #{@mainDomain} domain. required from #{domain}")
 
+  return [absReq, 'data', true] if foundDomain is 'data' # injected data
+  return [absReq, 'external', true] if foundDomain is 'external' # externally loaded
+
+  # M8 requires are allowed to happen without prefix (so we must preserve priority carefully)
   if foundDomain is 'M8'
     return [absReq, 'M8', true] if absReq of @arbiters # arbiter or API require
     throw new Error("modul8::analysis could not resolve an arbiter require for #{reqStr} from #{domain} - looked in M8")
   else if !isRelative(reqStr) and foundDomain is undefined and absReq of @arbiters
     return [absReq, 'M8', true] # in case of collisions with normal domains, if not relative, arbiters must have priority over any domains, hence this line
-
-  return [absReq, 'external', true] if foundDomain is 'external' # externally loaded
 
 
   # else we have to verify the file exists (if we know domain, easy, else, scan all, starting in requiree's domain)
@@ -83,6 +87,3 @@ module.exports = {
   isLegalRequire
   Resolver
 }
-
-if module is require.main
-  console.log toAbsPath('controllers/', [], 'app')

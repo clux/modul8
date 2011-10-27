@@ -13,7 +13,7 @@ dir       = __dirname
 {read} = utils
 {isLegalRequire, Resolver} = resolver
 
-setup = (sub, libPrefix = 'glob') -> #TOOD: setup('noglob', '') test to make sure everything is included now
+setup = (sub, libPrefix = 'glob') ->
   options =
     paths :
       app      : dir+'/arbiters/'+sub+'/app/'
@@ -44,7 +44,7 @@ setup = (sub, libPrefix = 'glob') -> #TOOD: setup('noglob', '') test to make sur
     arbs[k] = k for k in keys
 
     modul8('entry.js')
-      #.analysis().output(if sub is 'basiclibs' then console.log else false).suffix(true)
+      .analysis().output(if !libPrefix then console.log else false).suffix(true)
       .arbiters(if useLibs and useArbiters then arbs else {})
       #.set('logging', true)
       .set('domloader', (a) -> a)
@@ -59,6 +59,38 @@ setup = (sub, libPrefix = 'glob') -> #TOOD: setup('noglob', '') test to make sur
 
   [makeApp, compileApp, options]
 
+compile = utils.makeCompiler()
+
+
+exports["test arbiters#priority"] = ->
+  # clean out old directory
+  try rimraf.sync(dir+'/arbiters')
+  catch e
+  fs.mkdirSync(dir+'/arbiters', 0755)
+  count = 0
+
+  exts = ['','.js','.coffee']
+  compile = utils.makeCompiler()
+
+  run = (suf, libReq) ->
+    [makeApp, compileApp, opts] = setup('noglob'+suf, '')
+    doms = {}
+    doms[name] = path for name,path of opts.paths when name isnt 'libs'
+    makeApp(libReq)
+
+    arbs = if libReq then {'0':['0'], '1': ['1'], '2':['2']} else {}
+    ca = analysis('entry.js', doms, 'app', ((a) -> a), arbs, compile, exts, [])
+    order = ca.sorted()
+    assert.includes(order[order.length-1], 'entry.js', "ordered list includes entry when libsRequired=#{libReq}")
+    order.pop()
+    wantedLen = 6
+    assert.equal(order.length, wantedLen, "order contains all files when libsRequired=#{libReq}")
+    count += 2
+
+  run('a', false)
+  run('b', true)
+
+  console.log 'arbiters#priority - completed:', count
 
 
 
@@ -67,12 +99,11 @@ num_tests = 7
 testsDone = (count) ->
   testCount += count
   num_tests -= 1
-  #console.log 'arbiters#priority - partially completed:', testCount, 'run:', num_tests
-  console.log 'arbiters#priority - completed:', testCount if !num_tests
+  #console.log 'arbiters#handling - partially completed:', testCount, 'run:', num_tests
+  console.log 'arbiters#handling - completed:', testCount if !num_tests
 
 
-compile = utils.makeCompiler()
-exports["test arbiters#priority"] = ->
+exports["test arbiters#handling"] = ->
   # clean out old directory
   try rimraf.sync(dir+'/arbiters')
   catch e
