@@ -4,8 +4,11 @@ require('coffee-script');
  * By doing it here, we avoid having to compile the lib.
  */
 
+var fs = require('fs');
+
 var modul8 = require('./src/modul8.coffee');
 modul8.minifier = require('./src/plugins/minifier.coffee');
 modul8.testcutter = require('./src/plugins/testcutter.coffee');
+modul8.version = JSON.parse(fs.readFileSync(__dirname+'/package.json','utf8')).version
 
 module.exports = modul8;

@@ -1,3 +1,4 @@
+_           = require 'underscore'
 fs          = require 'fs'
 path        = require 'path'
 codeAnalyis = require './analysis'
@@ -16,16 +17,6 @@ makeDOMWrap = (ns, jQueryArbiter=false) ->
 anonWrap = (code) ->
   '(function(){'+code+'})();'
 
-
-compose = (funcs) ->
- ->
-    args = [].slice.call(arguments)
-    for i in [funcs.length-1..0]
-      fn = funcs[i]
-      if !(fn instanceof Function)
-        throw new Error("modul8::middeware must consist of functions got: #{fn}")
-      args = [fn.apply(@, args)]
-    args[0]
 
 collisionCheck = (codeList) ->
   for [dom, file] in codeList
@@ -79,6 +70,8 @@ bundle = (codeList, ns, domload, mw, compile, o) ->
 
 
 module.exports = (o) ->
+  forceUpdate = mustCompile(o.target, o)
+
   if !o.domains
     throw new Error("modul8 requires domains specified. Got "+JSON.stringify(o.domains))
   o.entryPoint ?= 'main.coffee'
@@ -95,23 +88,24 @@ module.exports = (o) ->
     throw new Error("modul8 reserves the 'M8' domain for its internal API")
 
   for fna in o.pre
-    throw new Error("modul8 requires a function as pre-processing plugin") if !(fna instanceof Function)
+    throw new Error("modul8 requires a function as pre-processing plugin") if !_.isFunction(fna)
   for fnb in o.post
-    throw new Error("modul8 requires a function as post-processing plugin") if !(fnb instanceof Function)
+    throw new Error("modul8 requires a function as post-processing plugin") if !_.isFunction(fnb)
 
   namespace = o.options?.namespace ? 'M8'
   domloader = o.options?.domloader ? makeDOMWrap(namespace, 'jQuery' of o.arbiters)
-  premw = if o.pre and o.pre.length > 0 then compose(o.pre) else (a) -> a
-  postmw = if o.post and o.post.length > 0 then compose(o.post) else (a) -> (a)
-  useLog = !!o.options.logging
+  premw = if o.pre.length > 0 then _.compose.apply({}, o.pre) else _.identity
+  postmw = if o.post.length > 0 then _.compose.apply({}, o.post) else _.identity
+  useLog = o.options.logging and !_.isFunction(o.target) # dont log if we output result to console.log for instance
 
   compile = makeCompiler(o.compilers) # will throw if reusing extensions or invalid compile functions
   exts = ['','.js','.coffee'].concat(ext for ext of o.compilers)
   ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, premw, o.arbiters, compile, exts, o.ignoreDoms ? [])
 
+
   if o.treeTarget # do tree before collisionCheck (so that we can identify what triggers collision)
     tree = ca.printed(o.extSuffix, o.domPrefix)
-    if o.treeTarget instanceof Function
+    if _.isFunction(o.treeTarget)
       o.treeTarget(tree)
     else
       fs.writeFileSync(o.treeTarget, tree)
@@ -129,15 +123,17 @@ module.exports = (o) ->
     c = bundle(codelist, namespace, domloader, premw, compile, o)
     c = postmw(c)
 
+    return o.target(c) if _.isFunction(o.target) # pipe output to fn without libs for now
+
     if o.libDir and o.libFiles
 
       mTimesLibs = {}
       for file in o.libFiles
         mTimesLibs[file] = fs.statSync(o.libDir+file).mtime.valueOf()
 
-      libsUpdated = mTimeCheck(o.libsOnlyTarget, mTimesLibs, 'libs', useLog)
+      libsUpdated = mTimeCheck(o.libsOnlyTarget, mTimesLibs, if o.libsOnlyTarget then 'libs' else 'app', useLog)
 
-      if libsUpdated or (appUpdated and !o.libsOnlyTarget)
+      if libsUpdated or (appUpdated and !o.libsOnlyTarget) or forceUpdate
         # necessary to do this work if libs changed
         # but also if app changed and we write it to the same file
         libs = (compile(o.libDir+file, false) for file in o.libFiles).join('\n') # concatenate libs as is - safetywrap any .coffee files
@@ -151,13 +147,24 @@ module.exports = (o) ->
     else
       libsUpdated = false # no need to take lib state into account anymore since they dont exist
 
-    if libsUpdated or appUpdated
+    if libsUpdated or appUpdated or forceUpdate
       # write target if there were any changes relevant to this file
       fs.writeFileSync(o.target, c)
+      #console.log 'writing app! bools: libsUp='+libsUpdated+', appUp='+appUpdated+', force='+forceUpdate
 
   return
 
+mustCompile = (file, o) ->
+  return true if !file or _.isFunction(file)
+  tempName = path.basename(file).split(path.extname(file))[0]
+  cfgStorage = __dirname+'/../states/'+tempName+'_cfg.json'
+  cfg = if exists(cfgStorage) then JSON.parse(read(cfgStorage)) else {}
+  return false if _.isEqual(cfg, JSON.parse(JSON.stringify(o))) #o must to mimic parse/stringify movement to pass
+  fs.writeFileSync(cfgStorage, JSON.stringify(o))
+  true
+
 mTimeCheck = (file, mTimes, type, log) ->
+  return if file instanceof Function
   tempName = path.basename(file).split(path.extname(file))[0]
   mStorage = __dirname+'/../states/'+type+'_'+tempName+'.json'
   mTimesOld = if exists(mStorage) then JSON.parse(read(mStorage)) else {}
@@ -165,7 +172,6 @@ mTimeCheck = (file, mTimes, type, log) ->
   fs.writeFileSync(mStorage, JSON.stringify(mTimes)) # update state
   mTimesUpdated(mTimes, mTimesOld, type, log)
 
-#NB: will say 'compiling libs' if we changed libs and libs are included in app bundle
 mTimesUpdated = (mTimes, mTimesOld, type, log) ->
   for file,mtime of mTimes
     if !(file of mTimesOld)

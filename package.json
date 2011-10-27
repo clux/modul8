@@ -7,11 +7,16 @@
     "type": "git",
     "url": "git://github.com/clux/modul8.git"
   },
-  "main": "./index.js",
+  "main": "index.js",
+  "bin": {
+    "modul8": "bin/cli.js"
+  },
   "dependencies": {
+    "commander": "0.1.0",
     "coffee-script": ">= 1.1.2",
     "uglify-js": ">= 1.1.0",
-    "detective": ">= 0.0.3"
+    "detective": ">= 0.0.3",
+    "underscore": ">= 1.2.1"
   },
   "devDependencies": {
     "zombie": ">= 0.10.2",

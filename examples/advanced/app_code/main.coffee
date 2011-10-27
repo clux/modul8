@@ -19,3 +19,8 @@ console.log('2004 isLeapYear?', v.isLeapYear(2004))
 #monolith uses an arbiter so only require can access it
 m = require('monolith')
 console.log("monolith:"+m)
+
+
+#injected data
+test = require('data::test')
+console.log 'injected data:', test

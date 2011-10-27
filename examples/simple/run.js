@@ -10,3 +10,5 @@ modul8('app.js')
     .output(console.log)
   .compile('./output.js');
 
+// alternatively use the CLI as following:
+// modul8 app_code/app.js -a jQuery:$.jQuery -z

@@ -1,14 +1,12 @@
-(function(){  window.monolith = "I am a huge library";
+(function(){
+  window.monolith = "I am a huge library";
 })();
-(function(){window.QQ = {data:{}};
+(function(){
+window.QQ = {data:{}};
+QQ.data.test = {"hi": "there"}
+;
 var _modul8RequireConfig = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"logging":false,"main":"app"};
 (function(){var DomReg, a, arbiters, ary, base, domains, exports, glob, makeRequire, name, ns, toAbsPath, _i, _j, _len, _len2, _ref;
-var __indexOf = Array.prototype.indexOf || function(item) {
-  for (var i = 0, l = this.length; i < l; i++) {
-    if (this[i] === item) return i;
-  }
-  return -1;
-};
 base = _modul8RequireConfig;
 ns = window[base.namespace];
 domains = base.domains;
@@ -46,7 +44,7 @@ makeRequire = function(dom, pathName) {
     } else if (DomReg.test(reqStr)) {
       scannable = [reqStr.match(DomReg)[1]];
       reqStr = reqStr.split('::')[1];
-    } else if (__indexOf.call(arbiters, reqStr) >= 0) {
+    } else if (arbiters.indexOf(reqStr) >= 0) {
       scannable = ['M8'];
     } else {
       scannable = [dom].concat(domains.filter(function(e) {
@@ -135,7 +133,7 @@ sub2 = require('./sub2');
 exports.doComplex = function(str) {
   return sub2(str + ' (sub1 added this, passing to sub2)');
 };});
-QQ.define('main','app',function(require, module, exports){var b, helper, m, v;
+QQ.define('main','app',function(require, module, exports){var b, helper, m, test, v;
 helper = require('./helper');
 helper('hello from app via helper');
 b = require('bigthing/sub1');
@@ -143,5 +141,7 @@ b.doComplex('app calls up to sub1');
 v = require('validation.coffee');
 console.log('2004 isLeapYear?', v.isLeapYear(2004));
 m = require('monolith');
-console.log("monolith:" + m);});})();
+console.log("monolith:" + m);
+test = require('data::test');
+console.log('injected data:', test);});})();
 })();
