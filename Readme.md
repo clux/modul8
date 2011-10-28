@@ -11,7 +11,7 @@ console.log(determine.isCool(['clux', 'lava']));
 
 the required module `determine.coffee` (or .js if you prefer)
 
-````coffeescritp
+````coffeescript
 cool = require('shared::cool')
 exports.isCool = (input) -> input.filter(cool)
 ````
@@ -39,6 +39,14 @@ This will construct a single, browser compatible `out.js` in your execution path
     app::main
     └──┬app::determine
        └───shared::cool
+
+### CLI
+
+Alternatively use the command line interface and do
+````bash
+$ modul8 client/main.js -p shared:shared/ > out.js
+````
+from `path`.
 
 
 ## Quick Overview
