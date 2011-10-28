@@ -1,21 +1,19 @@
 FUTURE / 2011-??-??
 ==================
-  DONE:
+  TODO:
+  * Provide more levels of logging on the client
+
+0.7.0 / 2011-10-28
+==================
   * Command Line Interface - documented under CLI
   * recompiling now happens if settings were changed as well (bug)
   * move underscore copied snippets out of src - require underscore instead
   * domloader API simplified to work with CLI, also now defaults to anonymous fn rather than jQuery domloader
-  TODO:
-  * Provide more levels of logging on the client
-
-0.7.0 / 2011-10-??
-==================
   * `.compile()` will not recompile the file if no changes have been made to previously included files
   * modified test suite included to ensure above works
   * arbiter test suite included
   * `.analysis.hide(domain)` was not working correctly
   * server side resolver was ignoring resource names on other domains when clashing with arbiters
-
 
 0.6.1 / 2011-10-18
 ==================
