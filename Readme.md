@@ -43,9 +43,11 @@ This will construct a single, browser compatible `out.js` in your execution path
 ### CLI
 
 Alternatively use the command line interface and do
+
 ````bash
 $ modul8 client/main.js -p shared:shared/ > out.js
 ````
+
 from `path`.
 
 
