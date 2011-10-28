@@ -21,8 +21,8 @@ program
 
   .option('-n, --namespace <str>', 'specify the target namespace used in the compiled file')
   .option('-w, --wrapper <str>', 'name of wrapping domloader function')
-  .option('-t, --testcut', 'enable pre-processing of files to cut out local tests and their dependencies')
-  .option('-m, --minify', 'enable uglifyjs post processing')
+  .option('-t, --testcutter', 'enable pre-processing of files to cut out local tests and their dependencies')
+  .option('-m, --minifier', 'enable uglifyjs post processing')
   .option('-l, --logging', 'enable logging of requires')
 
 program.on '--help', ->
@@ -53,8 +53,8 @@ namespace = program.namespace ? 'M8'
 logging = !!program.logging
 analyze = !!program.analyze
 i_d = (a) -> a
-testcutter = if program.testcut then modul8.testcutter else i_d
-minifier = if program.minify then modul8.minifier else i_d
+testcutter = if program.testcutter then modul8.testcutter else i_d
+minifier = if program.minifier then modul8.minifier else i_d
 
 #parse domains (if none, only app domain code)
 domains = {}
@@ -84,6 +84,10 @@ for d in (program.data?.split(',') or [])
 
 # first arg is entry
 entry = program.args[0]
+if !entry
+  console.error("usage: see modul8 --help")
+  process.exit()
+
 epath = join(dir, entry)
 efile = entry.split('/')[-1...][0] # get last element of split
 

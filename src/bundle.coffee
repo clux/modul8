@@ -1,5 +1,6 @@
 _           = require 'underscore'
 fs          = require 'fs'
+crypto      = require 'crypto'
 path        = require 'path'
 codeAnalyis = require './analysis'
 {makeCompiler, exists, read} = require './utils'
@@ -13,6 +14,12 @@ makeWrapper = (ns, fnstr, hasArbiter) ->
   selfexec = if !fnstr then '()' else '' # if fnstr is '' or was false'd -> we use a self executing anon fn
   (code) -> location+'(function(){'+code+'})'+selfexec+';'
 
+# creates a unique filename to use for the serializers
+# uniqueness based on execution path, target.js and targetlibs.js - should be sufficient
+makeGuid = (vals) ->
+  vals.push fs.realpathSync()
+  str = ((v+'').split('/').join('_').split('.')[0] for v in vals).join('__')
+  crypto.createHash('md5').update(str).digest("hex")
 
 # analyzer will find files of specified ext, but these may clash on client
 verifyCollisionFree = (codeList) ->
@@ -25,23 +32,18 @@ verifyCollisionFree = (codeList) ->
   return
 
 # checks whether serialized options object corresponds to the one we passed in
-isOptionsUnchanged = (file, o) ->
-  return true if !file or _.isFunction(file)
-  tempName = path.basename(file).split(path.extname(file))[0]
-  cfgStorage = __dirname+'/../states/'+tempName+'_cfg.json'
+isOptionsUnchanged = (guid, o) ->
+  cfgStorage = __dirname+'/../states/'+guid+'_cfg.json'
   cfg = if exists(cfgStorage) then JSON.parse(read(cfgStorage)) else {}
   return false if _.isEqual(cfg, JSON.parse(JSON.stringify(o))) #o must to mimic parse/stringify movement to pass
   fs.writeFileSync(cfgStorage, JSON.stringify(o))
   true
 
 # checks mTimes for a list of [dom, file] where dom is in domains
-mTimeCheck = (file, fileList, doms, type, log) ->
-  return if _.isFunction(file)
+mTimeCheck = (guid, fileList, doms, type, log) ->
   mTimes = {}
   mTimes[d+'::'+f] = fs.statSync(doms[d]+f).mtime.valueOf() for [d, f] in fileList
-
-  tempName = path.basename(file).split(path.extname(file))[0]
-  mStorage = __dirname+'/../states/'+type+'_'+tempName+'.json'
+  mStorage = __dirname+'/../states/'+guid+'_'+type+'.json'
   mTimesOld = if exists(mStorage) then JSON.parse(read(mStorage)) else {}
 
   fs.writeFileSync(mStorage, JSON.stringify(mTimes)) # update state
@@ -106,7 +108,8 @@ bundleApp = (codeList, ns, domload, compile, o) ->
 
 
 module.exports = (o) ->
-  forceUpdate = isOptionsUnchanged(o.target, o) or o.options.force # force option (using CLI)
+  guid = makeGuid([o.target, o.libsOnlyTarget])
+  forceUpdate = isOptionsUnchanged(guid, o) or o.options.force # force option (using CLI)
 
   ns = o.options.namespace ? 'M8'
 
@@ -133,7 +136,7 @@ module.exports = (o) ->
     codelist = ca.sorted()
     verifyCollisionFree(codelist)
 
-    appUpdated = mTimeCheck(o.target, o.domains, codelist, 'app', useLog)
+    appUpdated = mTimeCheck(guid, o.domains, codelist, 'app', useLog)
 
     c = bundleApp(codelist, ns, domloader, compile, o)
     c = o.after(c)
@@ -142,7 +145,7 @@ module.exports = (o) ->
 
     if o.libDir and o.libFiles
 
-      libsUpdated = mTimeCheck(o.target+'_libs', (['libs', f] for f in o.libFiles), {libs: o.libDir}, 'libs', useLog)
+      libsUpdated = mTimeCheck(guid, (['libs', f] for f in o.libFiles), {libs: o.libDir}, 'libs', useLog)
 
       if libsUpdated or (appUpdated and !o.libsOnlyTarget) or forceUpdate
         # necessary to do this work if libs changed
