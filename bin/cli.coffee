@@ -20,7 +20,7 @@ program
   .option('-a, --arbiters <shortcut:glob.glob2>,...', 'specify arbiters to be added to compiled file for deleted globals')
 
   .option('-n, --namespace <str>', 'specify the target namespace used in the compiled file')
-
+  .option('-w, --wrapper <str>', 'name of wrapping domloader function')
   .option('-t, --testcut', 'enable pre-processing of files to cut out local tests and their dependencies')
   .option('-m, --minify', 'enable uglifyjs post processing')
   .option('-l, --logging', 'enable logging of requires')
@@ -40,11 +40,15 @@ program.on '--help', ->
   console.log('    # specify arbiters')
   console.log('    $ modul8 app/entry.js -a jQuery:$.jQuery,Spine:Spine')
   console.log('')
+  console.log('    # wait for the DOM using the jQuery function')
+  console.log('    $ modul8 app/entry.js -a jQuery:$.jQuery -w jQuery')
+  console.log('')
 
 
 program.parse(process.argv);
 
 # simple options
+wrapper = program.wrapper
 namespace = program.namespace ? 'M8'
 logging = !!program.logging
 analyze = !!program.analyze
@@ -105,6 +109,7 @@ modul8(efile)
   .set('logging', logging)
   .before(testcutter)
   .after(minifier)
-  .compile(if analyze then null else console.log)
+  .set('domloader', wrapper or false)
+  .set('force', true)
+  .compile(if analyze then false else console.log)
 
-#TODO: domloader interface?

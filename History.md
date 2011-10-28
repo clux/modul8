@@ -1,9 +1,10 @@
 FUTURE / 2011-??-??
 ==================
   DONE:
-  * CLI
+  * Command Line Interface - documented under CLI
   * recompiling now happens if settings were changed as well (bug)
-  * move underscore copied snippets out - require _ instead
+  * move underscore copied snippets out of src - require underscore instead
+  * domloader API simplified to work with CLI, also now defaults to anonymous fn rather than jQuery domloader
   TODO:
   * Provide more levels of logging on the client
 

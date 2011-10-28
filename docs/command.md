@@ -19,36 +19,49 @@ If you have a directory structure like so:
 With your main application files in `code/app/`, with an entry point `entry.js` on that path, and shared code in `code/shared/`,
 then it suffices to:
 
-    $ modul8 app/entry.js -d shared:shared/ > output.js
+    $ modul8 app/entry.js -p shared:shared/ > output.js
 
 from the `code/` directory.
 
 This assumes the name of the main domain is the name of the folder where `entry` lives, i.e. `app` in this case.
 
+If you want to hold of the DOM using jQuery, append the `-w jQuery` option (see wrapper below).
+
 ### Advanced
 
 #### Domains
-Extra domains are specified using a comma separated list of name:path values.
+Multiple domains are specified using a comma separated list of name:path values.
 
-    $ modul8 app/entry.js -d shared:shared/,bot:../libs/bot/ > output.js
+    $ modul8 app/entry.js -p shared:shared/,bot:../libs/bot/ > output.js
 
 ### Arbiters
-Loading of arbiters works pretty much like the programmatic API:
+Loading of arbiters works like the programmatic API:
 
-    $ modul8 app/entry.js -d shared:shared/ -a jQuery:jQuery.$,Spine > output.js
+    $ modul8 app/entry.js -a jQuery:jQuery.$,Spine:Spine > output.js
 
-Omitting the colon on the second arbiter for `Spine` means create a shortcut for `Spine` taken from `window.Spine` then delete this global.
-The former means create a shortcut for `jQuery` using `window.jQuery` and delete this and `window.$`.
+We can omit the colon for arbiters were the shortcut has the same name as the global.
+
+    $ modul8 app/entry.js -a jQuery:jQuery.$,Spine > output.js
+
+The globals to delete for a given shortcut is delimited by a dot.
 
 ### Data Injection
 Data injection works fundamentally different from the shell than from your node program. Here you rely on your data pre-existing in a `.json` file and specify what key to attach it to.
 
-    $ modul8 app/entry.js -d shared:shared/ - > output.js
+    $ modul8 app/entry.js -d myKey:myData.json > output.js
+
+Multiple data files can be imported by comma separating the above -d input
+
+    $ modul8 app/entry.js -d myKey:myData.json,mySecondKey:mySecondData.json > output.js
 
 
-#### Misc Options
+### Extra Options
 
-    -n or --namespace sets the global namespace used inside the output code
+    -w or --wrapper <str> - name of global domloader (see API) function used to wait for DOM ready
+    -n or --namespace <str> - name of the single global object used by modul8's live API
+
+#### Booleans
+
     -l or --logging enables logging of client side requires
     -t or --testcut enables the use of the built in modul8.testcutter
     -m or --minify enables the use of the built in modul8.minifier

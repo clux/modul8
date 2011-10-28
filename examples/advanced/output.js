@@ -121,7 +121,7 @@ divides = require('./calc').divides;
 exports.isLeapYear = function(yr) {
   return divides(yr, 4) && (!divides(yr, 100) || divides(yr, 400));
 };});
-(function(){QQ.define('bigthing/sub2','app',function(require, module, exports){module.exports = function(str) {
+false(function(){QQ.define('bigthing/sub2','app',function(require, module, exports){module.exports = function(str) {
   return console.log(str);
 };});
 QQ.define('helper','app',function(require, module, exports){var testRunner;
@@ -143,5 +143,5 @@ console.log('2004 isLeapYear?', v.isLeapYear(2004));
 m = require('monolith');
 console.log("monolith:" + m);
 test = require('data::test');
-console.log('injected data:', test);});})();
+console.log('injected data:', test);});});
 })();

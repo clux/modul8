@@ -5,37 +5,73 @@ codeAnalyis = require './analysis'
 {makeCompiler, exists, read} = require './utils'
 
 # helpers
-pullData = (parser, name) -> # parser interface
-  throw new Error("modul8::data got a value supplied for #{name} which is not a function") if not parser instanceof Function
-  parser()
-
-makeDOMWrap = (ns, jQueryArbiter=false) ->
-  location = if jQueryArbiter then ns+".require('M8::jQuery')" else "jQuery"
-  (code) ->
-    location+'(function(){'+code+'});' # use jQuery to be no-conflict compatible and arbiter compatible
-
 anonWrap = (code) ->
   '(function(){'+code+'})();'
 
+makeWrapper = (ns, fnstr, hasArbiter) ->
+  location = if hasArbiter then ns+".require('M8::#{fnstr}')" else fnstr
+  selfexec = if !fnstr then '()' else '' # if fnstr is '' or was false'd -> we use a self executing anon fn
+  (code) -> location+'(function(){'+code+'})'+selfexec+';'
 
-collisionCheck = (codeList) ->
+
+# analyzer will find files of specified ext, but these may clash on client
+verifyCollisionFree = (codeList) ->
   for [dom, file] in codeList
     uid = dom+'::'+file.split('.')[0]
-    for [d,f] in codeList when (dom isnt d and file isnt f)
+    for [d,f] in codeList when (dom isnt d and file isnt f) # dont check self
       uidi = d+'::'+f.split('.')[0]
       if uid is uidi
         throw new Error("modul8: does not support requiring of two files of the same name on the same path with different extensions: #{dom}::#{file} and #{d}::{#f} ")
   return
 
+# checks whether serialized options object corresponds to the one we passed in
+isOptionsUnchanged = (file, o) ->
+  return true if !file or _.isFunction(file)
+  tempName = path.basename(file).split(path.extname(file))[0]
+  cfgStorage = __dirname+'/../states/'+tempName+'_cfg.json'
+  cfg = if exists(cfgStorage) then JSON.parse(read(cfgStorage)) else {}
+  return false if _.isEqual(cfg, JSON.parse(JSON.stringify(o))) #o must to mimic parse/stringify movement to pass
+  fs.writeFileSync(cfgStorage, JSON.stringify(o))
+  true
+
+# checks mTimes for a list of [dom, file] where dom is in domains
+mTimeCheck = (file, fileList, doms, type, log) ->
+  return if _.isFunction(file)
+  mTimes = {}
+  mTimes[d+'::'+f] = fs.statSync(doms[d]+f).mtime.valueOf() for [d, f] in fileList
+
+  tempName = path.basename(file).split(path.extname(file))[0]
+  mStorage = __dirname+'/../states/'+type+'_'+tempName+'.json'
+  mTimesOld = if exists(mStorage) then JSON.parse(read(mStorage)) else {}
+
+  fs.writeFileSync(mStorage, JSON.stringify(mTimes)) # update state
+  mTimesUpdated(mTimes, mTimesOld, type, log)
+
+# returns whether the serialized mTimes object is out of date
+mTimesUpdated = (mTimes, mTimesOld, type, log) ->
+  for file,mtime of mTimes
+    if !(file of mTimesOld)
+      console.log "compiling #{type}: file(s) added" if log
+      return true
+    if mTimesOld[file] isnt mtime
+      console.log "compiling #{type}: file(s) modified" if log
+      return true
+  for file of mTimesOld
+    if !(file of mTimes)
+      console.log "compiling #{type}: file(s) removed" if log
+      return true
+  false
+
+
 # main packager
-bundle = (codeList, ns, domload, mw, compile, o) ->
+bundleApp = (codeList, ns, domload, compile, o) ->
   l = []
 
   # 1. construct the global namespace object
   l.push "window.#{ns} = {data:{}};"
 
   # 2. pull in data from parsers
-  l.push "#{ns}.data.#{name} = #{pullData(pull_fn,name)};" for name, pull_fn of o.data
+  l.push "#{ns}.data.#{name} = #{pull_fn()};" for name, pull_fn of o.data
 
   # 3. attach require code
   config =
@@ -54,7 +90,7 @@ bundle = (codeList, ns, domload, mw, compile, o) ->
   # 5. filter function split code into app code and non-app code
   harvest = (onlyMain) ->
     for [domain, name] in codeList when (domain is o.mainDomain) == onlyMain
-      code = mw(compile(o.domains[domain] + name)) # middleware applied to code first
+      code = o.before(compile(o.domains[domain] + name)) # middleware applied to code first
       basename = name.split('.')[0] # take out extension on the client (we throw if collisions requires have happened on the server)
       defineWrap(basename, domain, code)
 
@@ -70,40 +106,23 @@ bundle = (codeList, ns, domload, mw, compile, o) ->
 
 
 module.exports = (o) ->
-  forceUpdate = mustCompile(o.target, o)
+  forceUpdate = isOptionsUnchanged(o.target, o) or o.options.force # force option (using CLI)
 
-  if !o.domains
-    throw new Error("modul8 requires domains specified. Got "+JSON.stringify(o.domains))
-  o.entryPoint ?= 'main.coffee'
-  o.mainDomain ?= 'app'
-  entry = o.domains[o.mainDomain] + o.entryPoint
-  if !exists(entry)
-    throw new Error("modul8 requires the entryPoint to be contained in the first domain. Could not find: "+entry)
+  ns = o.options.namespace ? 'M8'
 
-  if o.domains.data
-    throw new Error("modul8 reserves the 'data' domain for pulled in data")
-  if o.domains.external
-    throw new Error("modul8 reserves the 'external' domain for externally loaded code")
-  if o.domains.M8
-    throw new Error("modul8 reserves the 'M8' domain for its internal API")
+  domloader = _dl = o.options.domloader
+  domloader = makeWrapper(ns, _dl or '', (_dl or '') of o.arbiters) if !_dl or !_.isFunction(_dl) # force into string if not a fn
 
-  for fna in o.pre
-    throw new Error("modul8 requires a function as pre-processing plugin") if !_.isFunction(fna)
-  for fnb in o.post
-    throw new Error("modul8 requires a function as post-processing plugin") if !_.isFunction(fnb)
-
-  namespace = o.options?.namespace ? 'M8'
-  domloader = o.options?.domloader ? makeDOMWrap(namespace, 'jQuery' of o.arbiters)
-  premw = if o.pre.length > 0 then _.compose.apply({}, o.pre) else _.identity
-  postmw = if o.post.length > 0 then _.compose.apply({}, o.post) else _.identity
-  useLog = o.options.logging and !_.isFunction(o.target) # dont log if we output result to console.log for instance
+  o.before = if o.pre.length > 0 then _.compose.apply({}, o.pre) else _.identity
+  o.after = if o.post.length > 0 then _.compose.apply({}, o.post) else _.identity
+  useLog = o.options.logging and !_.isFunction(o.target) # dont log anything else if we output result to clog for instance TODO: ONLY do this for clog
 
   compile = makeCompiler(o.compilers) # will throw if reusing extensions or invalid compile functions
-  exts = ['','.js','.coffee'].concat(ext for ext of o.compilers)
-  ca = codeAnalyis(o.entryPoint, o.domains, o.mainDomain, premw, o.arbiters, compile, exts, o.ignoreDoms ? [])
+  o.exts = ['','.js','.coffee'].concat(ext for ext of o.compilers)
 
+  ca = codeAnalyis(o, compile)
 
-  if o.treeTarget # do tree before collisionCheck (so that we can identify what triggers collision)
+  if o.treeTarget # do tree before collisionCheck (so that we can identify what triggers collision) + works better with CLI
     tree = ca.printed(o.extSuffix, o.domPrefix)
     if _.isFunction(o.treeTarget)
       o.treeTarget(tree)
@@ -112,32 +131,24 @@ module.exports = (o) ->
 
   if o.target
     codelist = ca.sorted()
-    collisionCheck(codelist)
+    verifyCollisionFree(codelist)
 
-    mTimesApp = {}
-    for [domain,file] in codelist
-      mTimesApp[domain+'::'+file] = fs.statSync(o.domains[domain]+file).mtime.valueOf()
+    appUpdated = mTimeCheck(o.target, o.domains, codelist, 'app', useLog)
 
-    appUpdated = mTimeCheck(o.target, mTimesApp, 'app', useLog)
-
-    c = bundle(codelist, namespace, domloader, premw, compile, o)
-    c = postmw(c)
+    c = bundleApp(codelist, ns, domloader, compile, o)
+    c = o.after(c)
 
     return o.target(c) if _.isFunction(o.target) # pipe output to fn without libs for now
 
     if o.libDir and o.libFiles
 
-      mTimesLibs = {}
-      for file in o.libFiles
-        mTimesLibs[file] = fs.statSync(o.libDir+file).mtime.valueOf()
-
-      libsUpdated = mTimeCheck(o.libsOnlyTarget, mTimesLibs, if o.libsOnlyTarget then 'libs' else 'app', useLog)
+      libsUpdated = mTimeCheck(o.target+'_libs', (['libs', f] for f in o.libFiles), {libs: o.libDir}, 'libs', useLog)
 
       if libsUpdated or (appUpdated and !o.libsOnlyTarget) or forceUpdate
         # necessary to do this work if libs changed
         # but also if app changed and we write it to the same file
         libs = (compile(o.libDir+file, false) for file in o.libFiles).join('\n') # concatenate libs as is - safetywrap any .coffee files
-        libs = postmw(libs)
+        libs = o.after(libs)
 
       if o.libsOnlyTarget and libsUpdated
         fs.writeFileSync(o.libsOnlyTarget, libs)
@@ -147,41 +158,9 @@ module.exports = (o) ->
     else
       libsUpdated = false # no need to take lib state into account anymore since they dont exist
 
-    if libsUpdated or appUpdated or forceUpdate
+    if appUpdated or (libsUpdated and !o.libsOnlyTarget) or forceUpdate
       # write target if there were any changes relevant to this file
       fs.writeFileSync(o.target, c)
       #console.log 'writing app! bools: libsUp='+libsUpdated+', appUp='+appUpdated+', force='+forceUpdate
 
   return
-
-mustCompile = (file, o) ->
-  return true if !file or _.isFunction(file)
-  tempName = path.basename(file).split(path.extname(file))[0]
-  cfgStorage = __dirname+'/../states/'+tempName+'_cfg.json'
-  cfg = if exists(cfgStorage) then JSON.parse(read(cfgStorage)) else {}
-  return false if _.isEqual(cfg, JSON.parse(JSON.stringify(o))) #o must to mimic parse/stringify movement to pass
-  fs.writeFileSync(cfgStorage, JSON.stringify(o))
-  true
-
-mTimeCheck = (file, mTimes, type, log) ->
-  return if file instanceof Function
-  tempName = path.basename(file).split(path.extname(file))[0]
-  mStorage = __dirname+'/../states/'+type+'_'+tempName+'.json'
-  mTimesOld = if exists(mStorage) then JSON.parse(read(mStorage)) else {}
-
-  fs.writeFileSync(mStorage, JSON.stringify(mTimes)) # update state
-  mTimesUpdated(mTimes, mTimesOld, type, log)
-
-mTimesUpdated = (mTimes, mTimesOld, type, log) ->
-  for file,mtime of mTimes
-    if !(file of mTimesOld)
-      console.log "compiling #{type}: file(s) added" if log
-      return true
-    if mTimesOld[file] isnt mtime
-      console.log "compiling #{type}: file(s) modified" if log
-      return true
-  for file of mTimesOld
-    if !(file of mTimes)
-      console.log "compiling #{type}: file(s) removed" if log
-      return true
-  false
