@@ -1,11 +1,11 @@
-# Command line tool
+# Command Line Interface
 
-modul8 defines an optional command line tool if installed globally with npm, i.e.
+modul8 defines an optional command line interface if installed globally with npm, i.e.
 
     $ npm install -g modul8
 
-This tool is more restrictive than modul8, because it tries to expose the core functionality in as minimal way as possible.
-You cannot use it to include your libraries, but these are just concatenated on before the main output anyway, so you could do this manually yourself.
+This tool is more restrictive than the programmatic API, because it tries to expose the core functionality in as minimal way as possible.
+You cannot use it to include your libraries, but these are just concatenated on before the main output anyway.
 
 ## Usage
 
