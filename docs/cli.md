@@ -56,13 +56,17 @@ Multiple data files can be imported by comma separating the above -d input
 
 
 ### Extra Options
+The following are equivalent methods for the programmatic API calls to `.set()`
 
-    -w or --wrapper <str> - name of global domloader (see API) function used to wait for DOM ready
-    -n or --namespace <str> - name of the single global object used by modul8's live API
+    -w or --wrapper <str> <==> set('domloader', <str>)
+    -n or --namespace <str> <==> set('namespace', <str>)
+    -l or --logging <==> set('logging', true)
 
 #### Booleans
+The following are fairly limited versions of the programmatic API's `.before()`, `.after()` and `.analysis()`
 
-    -l or --logging enables logging of client side requires
-    -t or --testcut enables the use of the built in modul8.testcutter
-    -m or --minify enables the use of the built in modul8.minifier
-    -z or --analyze enables the analyzer and returns its output rather than the compiled result
+    -t or --testcut <==> before(modul8.testcutter)
+    -m or --minify <==> after(modul8.minifier)
+    -z or --analyze <==> analysis(console.log) && !compile()
+
+The `-z` flag will in other words not compile anything, just print the dependency tree.
