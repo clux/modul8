@@ -63,10 +63,10 @@ The following are equivalent methods for the programmatic API calls to `.set()`
     -l or --logging <==> set('logging', true)
 
 #### Booleans
-The following are fairly limited versions of the programmatic API's `.before()`, `.after()` and `.analysis()`
+The following are slightly limited versions of the programmatic API's `.before()`, `.after()` and `.analysis()`
 
-    -t or --testcut <==> before(modul8.testcutter)
-    -m or --minify <==> after(modul8.minifier)
+    -t or --testcutter <==> before(modul8.testcutter)
+    -m or --minifier <==> after(modul8.minifier)
     -z or --analyze <==> analysis(console.log) && !compile()
 
 The `-z` flag will in other words not compile anything, just print the dependency tree.

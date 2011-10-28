@@ -8,7 +8,8 @@ modul8('app.js')
     .add('jQuery', ['$','jQuery'])
   .analysis()
     .output(console.log)
+  .set('domloader', 'jQuery')
   .compile('./output.js');
 
-// alternatively use the CLI as following:
-// modul8 app_code/app.js -a jQuery:$.jQuery -z
+// alternatively use the CLI:
+// $ modul8 app_code/app.js -a jQuery:$.jQuery -w jQuery > output.js

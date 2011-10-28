@@ -8,6 +8,7 @@ modul8('main.coffee')
   .libraries()
     .list(['monolith.js'])
     .path(dir+'/libraries/')
+    .target(dir+'/outputlibs.js')
   .arbiters()
     .add('monolith')
   .domains()
@@ -16,15 +17,16 @@ modul8('main.coffee')
   .analysis()
     .output(console.log)
     .prefix(true)
-  .data({'test': function(){
-    return fs.readFileSync(__dirname+'/data.json', 'utf8');
-  }})
+  .data()
+    .add('test', function(){
+      return fs.readFileSync(__dirname+'/data.json', 'utf8');
+    })
   .set('namespace', 'QQ')
-  .set('domloader', false) // dont make app wait for the DOM to load
+  .set('domloader', false)
   .compile('./output.js');
 
-// CLI code for this would be:
-// $ modul8 app_code/main.coffee -p shared:shared_code/ -a monolith  -tln QQ -d test:data.json
+// Alternatively use the CLI (for the app code):
+// $ modul8 app_code/main.coffee -p shared:shared_code/ -a monolith  -tln QQ -d test:data.json > output.js
 
-// same call with -z to get the analysis
+// same call with replacing '> output.js' with '-z' to get the analysis
 
