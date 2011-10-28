@@ -7,6 +7,7 @@
   <body class="subpage">
     <ul id="nav">
       <li><a href="api.html" title="API documentation">API</a></li>
+      <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
       <li><a href="commonjs.html" title="CommonJS parsing - our implementation">CommonJS</a></li>
       <li><a href="modularity.html" title="Modularity issues and advice">Modularity</a></li>
@@ -172,13 +173,18 @@ expect that everything from the line of reference to be removed.</p>
 <p>Below are the settings available:</p>
 
 <ul>
-<li><code>domloader</code>  A function that safety wraps code with a DOMContentLoaded barrier</li>
+<li><code>domloader</code>  A function or name of a global fn that safety wraps code with a DOMContentLoaded barrier</li>
 <li><code>namespace</code>  The namespace modul8 uses in your browser, to export console helpers to, defaulting to <code>M8</code></li>
 <li><code>logging</code>    Boolean to set whether to log <code>require()</code> calls in the console, defaults to <code>false</code></li>
 </ul>
 
-<p><strong>You have to</strong> set <code>domloader</code> if you do not use jQuery. If you are familiar with the DOM or any other library this should be fairly trivial.
-The default jQuery implementation is as follows:</p>
+<p><strong>You SHOULD</strong> set <code>domloader</code> to something. Without this option, it will NOT wait for the DOM and simply wrap all main application code
+in a anonymous self-executing function.</p>
+
+<p>If you are using jQuery simply set this option to <code>jQuery</code> (and it will also deal with the possibility of jQuery being arbitered).</p>
+
+<p>Alternatively, you could write your own implementation function and pass it as the parameter to <code>.set('domloader', param)</code>.
+The following is the equivalent function that is generated if <code>jQuery</code> is passed in:</p>
 
 <pre><code>domloader_fn = function(code){
  return "jQuery(function(){"+code+"});"
@@ -193,7 +199,7 @@ It is there if you want to write a simpler prefix than than capital M, 8 all the
 
 <pre><code>modul8('app.js')
   .set('namespace', 'QQ')
-  .set('domloader', domloader_fn)
+  .set('domloader', '$(document).ready')
   .set('logging', true)
   .domains({app : dir+'/app/client/'})
   .compile('./out.js');
