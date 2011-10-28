@@ -79,7 +79,15 @@ exports["test arbiters#priority"] = ->
     makeApp(libReq)
 
     arbs = if libReq then {'0':['0'], '1': ['1'], '2':['2']} else {}
-    ca = analysis('entry.js', doms, 'app', ((a) -> a), arbs, compile, exts, [])
+    ca = analysis
+      entryPoint : 'entry.js'
+      domains    : doms
+      mainDomain : 'app'
+      before     : (a) -> a
+      arbiters   : arbs
+      exts       : exts
+      ignoreDoms : []
+      compile
     order = ca.sorted()
     assert.includes(order[order.length-1], 'entry.js', "ordered list includes entry when libsRequired=#{libReq}")
     order.pop()

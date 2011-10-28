@@ -9,7 +9,7 @@
   },
   "main": "index.js",
   "bin": {
-    "modul8": "bin/cli.js"
+    "modul8": "./bin/cli.coffee"
   },
   "dependencies": {
     "commander": "0.1.0",
@@ -24,6 +24,6 @@
     "rimraf": ">= 1.0.8"
   },
   "engines": {
-    "node": ">= 0.4.8"
+    "node": ">= 0.4.10"
   }
 }

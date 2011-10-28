@@ -6,7 +6,7 @@ utils       = require './utils'
 
 
 # constructor - resolves dependency tree and stores in @tree
-CodeAnalysis = (@entryPoint, @domains, @mainDomain, @premw, arbiters, @compile, exts, @ignoreDomains) ->
+CodeAnalysis = ({@entryPoint, @domains, @mainDomain, @before, @ignoreDoms, exts, arbiters}, @compile) ->
   @resolver = new Resolver(@domains, arbiters, @mainDomain, exts)
   @buildTree()
   return
@@ -16,8 +16,8 @@ CodeAnalysis::resolveDependencies = (absReq, folders, dom) ->
   # get javascript
   code = @compile(@domains[dom]+absReq)
 
-  # apply pre-processing middleware here if any
-  code = @premw(code) if @premw
+  # apply pre-processing middleware here
+  code = @before(code)
 
   # absolutize and locate everything here so we have a unique representation of each file
   @resolver.locate(dep, folders, dom) for dep in detective(code) when isLegalRequire(dep)
@@ -65,7 +65,7 @@ formatName = (absReq, extSuffix, domPrefix, dom) ->
 # public method, returns an npm like dependency tree
 CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
   lines = [formatName(@entryPoint, extSuffix, domPrefix, @mainDomain)]
-  objCount = makeCounter(ignores=@ignoreDomains)
+  objCount = makeCounter(ignores=@ignoreDoms)
 
   ((branch, level, parentAry) ->
     idx = 0
@@ -105,18 +105,8 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
 
 
 # export a closure bound instance of CodeAnalysis and an object of public methods
-module.exports = (entryPoint, domains, mainDomain, premw, arbiters, compile, exts, ignoreDomains) ->
-  # sanity checks
-  if !entryPoint
-    throw new Error("modul8::analysis requires an entryPoint")
-
-  if !domains or !domains[mainDomain]
-    throw new Error("modul8::analysis requires a domains object and a matching mainDomain. Got #{domains}, main: #{mainDomain}")
-
-  if !premw instanceof Function
-    throw new Error("modul8::analysis requires a function of composed pre-processing middlewares to work. Got #{premw}")
-
-  o = new CodeAnalysis(entryPoint, domains, mainDomain, premw, arbiters, compile, exts, ignoreDomains)
+module.exports = (obj, compile) ->
+  o = new CodeAnalysis(obj, compile)
   {
     printed : -> o.printed.apply(o, arguments)   # -> dependency tree string
     sorted  : -> o.sorted.apply(o, arguments)    # -> array of [domain, name] pairs in the order they should be inserted

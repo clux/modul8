@@ -141,12 +141,17 @@ expect that everything from the line of reference to be removed.
 
 Below are the settings available:
 
-   - `domloader`  A function that safety wraps code with a DOMContentLoaded barrier
+   - `domloader`  A function or name of a global fn that safety wraps code with a DOMContentLoaded barrier
    - `namespace`  The namespace modul8 uses in your browser, to export console helpers to, defaulting to `M8`
    - `logging`    Boolean to set whether to log `require()` calls in the console, defaults to `false`
 
-**You have to** set `domloader` if you do not use jQuery. If you are familiar with the DOM or any other library this should be fairly trivial.
-The default jQuery implementation is as follows:
+**You SHOULD** set `domloader` to something. Without this option, it will NOT wait for the DOM and simply wrap all main application code
+in a anonymous self-executing function.
+
+If you are using jQuery simply set this option to `jQuery` (and it will also deal with the possibility of jQuery being arbitered).
+
+Alternatively, you could write your own implementation function and pass it as the parameter to `.set('domloader', param)`.
+The following is the equivalent function that is generated if `jQuery` is passed in:
 
     domloader_fn = function(code){
      return "jQuery(function(){"+code+"});"
@@ -160,7 +165,7 @@ Options can be set by chaining them on `modul8()` using the `set(option, value)`
 
     modul8('app.js')
       .set('namespace', 'QQ')
-      .set('domloader', domloader_fn)
+      .set('domloader', '$(document).ready')
       .set('logging', true)
       .domains({app : dir+'/app/client/'})
       .compile('./out.js');

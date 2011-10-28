@@ -1,5 +1,6 @@
-bundle = require('./bundle.coffee')
-
+bundle = require './bundle.coffee'
+_      = require 'underscore'
+{exists} = require './utils'
 
 #process.chdir(self.options['working directory']);
 environment = process.env.NODE_ENV or 'development'
@@ -32,13 +33,11 @@ Modul8::in = (env) ->
 Modul8::before = (fn) ->
   @removeSubClassMethods()
   obj.pre.push fn if @environmentMatches
-  throw new Error("modul8::middeware must consist of functions got: #{fn}") if !(fn instanceof Function)
   @
 
 Modul8::after = (fn) ->
   @removeSubClassMethods()
   obj.post.push fn if @environmentMatches
-  throw new Error("modul8::middeware must consist of functions got: #{fn}") if !(fn instanceof Function)
   @
 
 Modul8::register = (ext, compiler) ->
@@ -49,23 +48,28 @@ Modul8::register = (ext, compiler) ->
 
 Modul8::set = (key, val) ->
   @removeSubClassMethods()
-  return @ if !(key in ['namespace', 'logging', 'domloader'])
+  return @ if !(key of obj.options)
   obj.options[key] = val if @environmentMatches
   @
 
 
 start = (entry) ->
   obj =
-    namespace   : 'M8'
     data        : {}
     arbiters    : {}
     domains     : {}
+    mainDomain  : 'app'
     pre         : []
     post        : []
-    options     : {}
     ignoreDoms  : []
     compilers   : {}
-    entryPoint  : entry
+    entryPoint  : entry ? 'main.coffee'
+    options     :
+      namespace   : 'M8'
+      domloader   : false
+      logging     : false
+      force       : false
+
   new Modul8()
 
 
@@ -90,14 +94,7 @@ Data::add = (key, val) ->
 
 Modul8::domains = (input) ->
   return @ if !@environmentMatches
-  if input
-    for key,val of input
-      hasApp = true if key is 'app'
-      obj.domains[key] = val
-    obj.hasDomains = true
-    if hasApp and !obj.mainDomain # app was found in dict, and not set before
-      obj.mainDomain = 'app'
-
+  obj.domains[key] = val for key,val of input if input # cant simply call add as order unspecified for objects
   new Domains()
 
 Domains = ->
@@ -107,9 +104,9 @@ Domains::add = (key, val, primary) ->
   return @ if !@subclassMatches('Domains','add')
   if @environmentMatches
     obj.domains[key] = val
-    if !obj.hasDomains
-      obj.hasDomains = true
-      obj.mainDomain = key
+    if !obj.hasMainDomain
+      obj.hasMainDomain = true
+      obj.mainDomain = key # first domain called with add will become main
   @
 
 
@@ -167,10 +164,8 @@ Analysis::suffix = (suffix) ->
 Analysis::hide = (domain) ->
   return @ if !@subclassMatches('Analysis','suffix')
   if @environmentMatches
-    domains = if domain.length then [domain] else domain
-    for d in domains
-      throw new Error("modul8::analysis cannot ignore the main #{obj.mainDomain} domain") if obj.mainDomain and obj.mainDomain is d
-      obj.ignoreDoms.push d
+    domains = if _.isArray(domain) then domain else [domain]
+    obj.ignoreDoms.push d for d in domains
   @
 
 Modul8::arbiters = (arbObj) ->
@@ -198,9 +193,36 @@ Modul8::compile = (target) ->
   @removeSubClassMethods()
   return @ if !@environmentMatches
   obj.target = target
+  sanityCheck(obj)
   bundle(obj)
   @ # keep chaining in case there are subsequent calls chained on in different environments
 
+sanityCheck = (o) ->
+  if !o.domains
+    throw new Error("modul8 requires domains specified - got "+JSON.stringify(o.domains))
+
+  if !exists(o.domains[o.mainDomain] + o.entryPoint)
+    throw new Error("modul8 requires the entryPoint to be contained in the first domain - could not find: "+o.domains[o.mainDomain] + o.entryPoint)
+
+  if o.domains.data
+    throw new Error("modul8 reserves the 'data' domain for pulled in data")
+  if o.domains.external
+    throw new Error("modul8 reserves the 'external' domain for externally loaded code")
+  if o.domains.M8
+    throw new Error("modul8 reserves the 'M8' domain for its internal API")
+
+  for fna in o.pre
+    throw new Error("modul8 requires a function as pre-processing plugin") if !_.isFunction(fna)
+  for fnb in o.post
+    throw new Error("modul8 requires a function as post-processing plugin") if !_.isFunction(fnb)
+
+  for d in obj.ignoreDoms
+    throw new Error("modul8::analysis cannot ignore the main #{obj.mainDomain} domain") if obj.mainDomain is d
+
+  for key, data_fn of obj.data
+    throw new Error("modul8::data got a value supplied for #{name} which is not a function") if !_.isFunction(data_fn)
+
+  return
 
 module.exports = start
 

@@ -3,11 +3,6 @@ var modul8  = require('../../')
   , dir     = __dirname;
 
 
-var domLoader = function(code){
-  // we set this because the default assumes jQuery exists or is arbitered
-  return "(function(){"+code+"})();";
-};
-
 modul8('main.coffee')
   .before(modul8.testcutter)
   .libraries()
@@ -25,12 +20,11 @@ modul8('main.coffee')
     return fs.readFileSync(__dirname+'/data.json', 'utf8');
   }})
   .set('namespace', 'QQ')
-  .set('domloader', domLoader)
+  .set('domloader', false) // dont make app wait for the DOM to load
   .compile('./output.js');
 
 // CLI code for this would be:
 // $ modul8 app_code/main.coffee -p shared:shared_code/ -a monolith  -tln QQ -d test:data.json
 
 // same call with -z to get the analysis
-// NB: cannot set domloader with CLI => assumes jQuery
 

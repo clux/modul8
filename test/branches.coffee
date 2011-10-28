@@ -91,37 +91,6 @@ generateApp = -> # dont call this with size < 4 otherwise we wont get the mixins
     .compile(dir+'/output/output.js')
 
 
-exports["test analyzer#order"] = ->
-  generateApp()
-  exts = ['','.js','.coffee']
-  resolver = new Resolver(options.domains, {}, 'app', exts) # no arbiters, main=='app'
-  compile = utils.makeCompiler()
-  ca = analysis('entry.js', options.domains, 'app', ((a) -> a), {}, compile, exts, [])
-  order = ca.sorted()
-
-  assert.ok(order.length, "order is a non-empty array") # we are testing the giant app
-  testCount = 1
-
-  included = []
-  for [domain, name] in order
-    assert.ok(domain, "domain found for #{name}")
-    assert.ok(utils.exists(options.domains[domain]+name), "file #{domain}::#{name} resolves on #{options.domains[domain]}")
-    testCount+=2
-
-    # now detective directly and hook into resolver to see if requirements have been included previously!
-    subFolders = name.split('/')[0...-1]
-    code = compile(options.domains[domain]+name)
-    deps = (resolver.locate(dep, subFolders, domain) for dep in detective(code) when isLegalRequire(dep)) # should trivially resolve because we know full string and domain
-
-    for [n,d,fake] in deps when !fake
-      assert.includes(included, d+'::'+n, "#{domain}::#{name} requires #{d}::#{n}, which should have been included before")
-      testCount+=1
-
-    included.push domain+'::'+name
-
-  console.log "analyzer#order - completed:", testCount
-
-
 exports["test require#branches"] = ->
   generateApp()
   num = options.size
@@ -157,3 +126,41 @@ exports["test require#branches"] = ->
         testCount++
     console.log 'require#branches - completed:', testCount
   return
+
+exports["test analyzer#order"] = a = ->
+  generateApp()
+  exts = ['','.js','.coffee']
+  resolver = new Resolver(options.domains, {}, 'app', exts) # no arbiters, main=='app'
+  compile = utils.makeCompiler()
+  ca = analysis
+    entryPoint : 'entry.js'
+    domains    : options.domains
+    mainDomain : 'app'
+    before     : (a) -> a
+    arbiters   : {}
+    ignoreDoms : []
+    exts       : exts
+    compile # argument 2
+  order = ca.sorted()
+
+  assert.ok(order.length, "order is a non-empty array") # we are testing the giant app
+  testCount = 1
+
+  included = []
+  for [domain, name] in order
+    assert.ok(domain, "domain found for #{name}")
+    assert.ok(utils.exists(options.domains[domain]+name), "file #{domain}::#{name} resolves on #{options.domains[domain]}")
+    testCount+=2
+
+    # now detective directly and hook into resolver to see if requirements have been included previously!
+    subFolders = name.split('/')[0...-1]
+    code = compile(options.domains[domain]+name)
+    deps = (resolver.locate(dep, subFolders, domain) for dep in detective(code) when isLegalRequire(dep)) # should trivially resolve because we know full string and domain
+
+    for [n,d,fake] in deps when !fake
+      assert.includes(included, d+'::'+n, "#{domain}::#{name} requires #{d}::#{n}, which should have been included before")
+      testCount+=1
+
+    included.push domain+'::'+name
+
+  console.log "analyzer#order - completed:", testCount
