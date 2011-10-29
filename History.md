@@ -3,7 +3,7 @@ FUTURE / 2011-??-??
   TODO:
   * Provide more levels of logging on the client
 
-0.8.0 / 2011-10-28
+0.8.0 / 2011-10-29
 ==================
   * `.domains()` call no longer required - application domain inferred from entrypoint
   * entry point must be specified to modul8(entry) WITH a path (relative or absolute) -
