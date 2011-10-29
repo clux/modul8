@@ -2,7 +2,7 @@ zombie = require 'zombie'
 assert = require 'assert'
 fs = require 'fs'
 rimraf = require 'rimraf'
-utils = require './../src/utils' #hook in to this
+utils = require './../lib/utils' #hook in to this
 modul8 = require './../index.js' #public interface
 dir = __dirname
 

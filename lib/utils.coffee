@@ -7,16 +7,11 @@ dir         = fs.realpathSync()
 domainSplit = (relPath) ->
   if path.existsSync(relPath)
     epath = relPath
-  else #TODO: this doesnt actually seem necessary
-    epath = path.join(dir, relPath)
-    if !path.existsSync epath
-      throw new Error("modul8: cannot resolve #{relPath} (#{epath})")
+  else
+    throw new Error("modul8: cannot resolve #{relPath} (#{epath})")
 
   file = relPath.split('/')[-1...][0] # get last element of split
   dom = epath.split(file)[0]
-  #a = dom.split('/')
-  #a.pop() if a[a.length-1] is '' # appdom may end in a slash causing this to be empty
-  #name = a[a.length-1]
   [dom, file]
 
 # fs shortcut
