@@ -1,8 +1,7 @@
 # Extensible CommonJS in the browser
-## Introduction
-Extended `require()` browser side - with simple code compilation and analysis.
+## Intro
 
-Write a `main.js` as the entry point
+Write a `main.js` as the application entry point
 
 ````javascript
 var determine = require('./determine');
@@ -38,11 +37,20 @@ This will construct a single, browser compatible `out.js` in your execution path
     └──┬app::determine
        └───shared::cool
 
+The shared code is independent of the application and can be reused on the server.
 
-Alternatively, compilation can be done via the command line interface from `path`, typing
+Compilation can also be performed via the command line interface by typing
 
 ````bash
 $ modul8 client/main.js -p shared:shared/ > out.js
+````
+
+from the path containing fhe shared/ and client/ folders.
+
+To load the file from your site stick a script tag in your HTML:
+
+````html
+<script src="/out.js"></script>
 ````
 
 ## Quick Overview
