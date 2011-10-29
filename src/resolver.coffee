@@ -37,7 +37,7 @@ makeFinder = (exts) ->
     return false
 
 # resolver constructor
-Resolver = (@domains, @arbiters, @mainDomain, @exts) ->
+Resolver = (@domains, @arbiters, @exts) ->
   @finder = makeFinder(@exts)
   return
 
@@ -52,8 +52,8 @@ Resolver::locate = (reqStr, subFolders, domain) ->
     # do these tests if its not one of the normal domains
     if foundDomain? and !@domains[foundDomain]
       throw new Error("modul8::analysis could not resolve a require for an unconfigured domain: #{foundDomain}")
-    if foundDomain is @mainDomain and domain isnt @mainDomain
-      throw new Error("modul8 does not allow other domains to reference the app #{@mainDomain} domain. required from #{domain}")
+    if foundDomain is 'app' and domain isnt 'app'
+      throw new Error("modul8 does not allow other domains to reference the app domain. required from #{domain}")
 
   return [absReq, 'data', true] if foundDomain is 'data' # injected data
   return [absReq, 'external', true] if foundDomain is 'external' # externally loaded

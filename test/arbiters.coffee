@@ -43,7 +43,7 @@ setup = (sub, libPrefix = 'glob') ->
     arbs = {}
     arbs[k] = k for k in keys
 
-    modul8('entry.js')
+    modul8(options.paths.app+'entry.js')
       .analysis().output(if !libPrefix then console.log else false).suffix(true)
       .arbiters(if useLibs and useArbiters then arbs else {})
       #.set('logging', true)
@@ -53,7 +53,6 @@ setup = (sub, libPrefix = 'glob') ->
         .path(options.paths.libs)
         .target(if separateLibs then options.out.libs else false)
       .domains()
-        .add('app', options.paths.app)
         .add('shared', options.paths.shared)
       .compile(options.out.app)
 
@@ -82,7 +81,6 @@ exports["test arbiters#priority"] = ->
     ca = analysis
       entryPoint : 'entry.js'
       domains    : doms
-      mainDomain : 'app'
       before     : (a) -> a
       arbiters   : arbs
       exts       : exts

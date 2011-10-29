@@ -6,6 +6,7 @@ fs      = require('fs')
 program = require('commander')
 path    = require('path')
 modul8  = require('../')
+utils   = require('../src/utils')
 dir     = fs.realpathSync()
 {basename, dirname, resolve, join} = path
 
@@ -88,22 +89,7 @@ if !entry
   console.error("usage: see modul8 --help")
   process.exit()
 
-epath = join(dir, entry)
-efile = entry.split('/')[-1...][0] # get last element of split
-
-appdom = epath.split(efile)[0]
-as = appdom.split('/')
-as.pop() if as[as.length-1] is ''
-appname = as[as.length-1]
-
-if not path.existsSync epath
-  console.error("requires an entry point as first argument")
-  process.exit()
-
-
-modul8(efile)
-  .domains()
-    .add(appname, appdom)
+modul8(entry)
   .domains(domains)
   .data(data)
   .analysis()

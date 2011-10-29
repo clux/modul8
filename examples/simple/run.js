@@ -1,9 +1,7 @@
 var modul8 = require('./../../index.js');
 var dir = __dirname;
 
-modul8('app.js')
-  .domains()
-    .add('app', dir+'/app_code/')
+modul8('./app_code/app.js')
   .arbiters()
     .add('jQuery', ['$','jQuery'])
   .analysis()

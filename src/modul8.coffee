@@ -1,6 +1,6 @@
 bundle = require './bundle.coffee'
 _      = require 'underscore'
-{exists} = require './utils'
+{exists, domainSplit} = require './utils'
 
 #process.chdir(self.options['working directory']);
 environment = process.env.NODE_ENV or 'development'
@@ -54,16 +54,16 @@ Modul8::set = (key, val) ->
 
 
 start = (entry) ->
+  [dom, file] = domainSplit(entry) # will throw if unresolvable
   obj =
     data        : {}
     arbiters    : {}
-    domains     : {}
-    mainDomain  : 'app'
+    domains     : {'app' : dom}
     pre         : []
     post        : []
     ignoreDoms  : []
     compilers   : {}
-    entryPoint  : entry ? 'main.coffee'
+    entryPoint  : file
     options     :
       namespace   : 'M8'
       domloader   : false
@@ -94,26 +94,25 @@ Data::add = (key, val) ->
 
 Modul8::domains = (input) ->
   return @ if !@environmentMatches
-  obj.domains[key] = val for key,val of input if input # cant simply call add as order unspecified for objects
-  new Domains()
+  dom = new Domains()
+  dom.add(key, val) for key,val of input if input and _.isObject(input)
+  dom
 
 Domains = ->
 Domains:: = new Modul8('Domains')
 
-Domains::add = (key, val, primary) ->
+Domains::add = (key, val) ->
   return @ if !@subclassMatches('Domains','add')
-  if @environmentMatches
-    obj.domains[key] = val
-    if !obj.hasMainDomain
-      obj.hasMainDomain = true
-      obj.mainDomain = key # first domain called with add will become main
+  obj.domains[key] = val if @environmentMatches
+  if key is 'app'
+    throw new Error("modul8 reserves the 'app' domain for application code where the entry point resides")
   @
 
 
 
 Modul8::libraries = (list, dir, target) ->
   return @ if !@environmentMatches
-  obj.libFiles = list if list
+  obj.libFiles = list if list and _.isArray(list)
   obj.libDir = dir if dir
   obj.libsOnlyTarget = target if target
   new Libraries()
@@ -171,7 +170,7 @@ Analysis::hide = (domain) ->
 Modul8::arbiters = (arbObj) ->
   return @ if !@environmentMatches
   arb = new Arbiters()
-  arb.add(key, val) for key,val of arbObj if arbObj
+  arb.add(key, val) for key,val of arbObj if arbObj and _.isObject(arbObj)
   arb
 
 Arbiters = ->
@@ -180,7 +179,7 @@ Arbiters:: = new Modul8('Arbiters')
 Arbiters::add = (name, globs) ->
   return @ if !@subclassMatches('Arbiters','add')
   return @ if !@environmentMatches
-  if globs and globs instanceof Array
+  if globs and _.isArray(globs)
     obj.arbiters[name] = globs
   else if globs
     obj.arbiters[name] = [globs]
@@ -201,8 +200,8 @@ sanityCheck = (o) ->
   if !o.domains
     throw new Error("modul8 requires domains specified - got "+JSON.stringify(o.domains))
 
-  if !exists(o.domains[o.mainDomain] + o.entryPoint)
-    throw new Error("modul8 requires the entryPoint to be contained in the first domain - could not find: "+o.domains[o.mainDomain] + o.entryPoint)
+  if !exists(o.domains['app'] + o.entryPoint)
+    throw new Error("modul8 requires the entryPoint to be contained in the app domain - could not find: "+o.domains['app'] + o.entryPoint) # can remove this soon
 
   if o.domains.data
     throw new Error("modul8 reserves the 'data' domain for pulled in data")
@@ -217,7 +216,7 @@ sanityCheck = (o) ->
     throw new Error("modul8 requires a function as post-processing plugin") if !_.isFunction(fnb)
 
   for d in obj.ignoreDoms
-    throw new Error("modul8::analysis cannot ignore the main #{obj.mainDomain} domain") if obj.mainDomain is d
+    throw new Error("modul8::analysis cannot ignore the app domain") if 'app' is d
 
   for key, data_fn of obj.data
     throw new Error("modul8::data got a value supplied for #{name} which is not a function") if !_.isFunction(data_fn)
