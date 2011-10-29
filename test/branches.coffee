@@ -3,9 +3,9 @@ assert    = require 'assert'
 fs        = require 'fs'
 rimraf    = require 'rimraf'
 detective = require 'detective'
-utils     = require './../src/utils'    # hook in to this
-analysis  = require './../src/analysis' # hook in to this
-resolver  = require './../src/resolver' # hook in to this
+utils     = require './../lib/utils'    # hook in to this
+analysis  = require './../lib/analysis' # hook in to this
+resolver  = require './../lib/resolver' # hook in to this
 modul8    = require './../index.js' # public interface
 dir       = __dirname
 
