@@ -2,12 +2,12 @@
 window.M8 = {data:{}};
 (function(){
 /**
- * modul8 v0.8.0
+ * modul8 v0.9.0
  */
 
-var base      = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["$","jQuery"]},"logging":false}
-  , ns        = window[base.namespace]
-  , domains   = base.domains
+var config    = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["$","jQuery"]},"logging":0}
+  , ns        = window[config.namespace]
+  , domains   = config.domains
   , arbiters  = []
   , exports   = {}
   , DomReg    = /^(.*)::/;
@@ -26,12 +26,12 @@ delete ns.data;
 /**
  * Attach arbiters to the require system then delete them from the global scope
  */
-for (var name in base.arbiters) {
-  var ary = base.arbiters[name]
-    , a   = window[name];
+for (var name in config.arbiters) {
+  var arry  = config.arbiters[name]
+    , temp = window[name];
   arbiters.push(name);
-  for (var j = 0; j < ary.length; j++) delete window[ary[j]];
-  exports.M8[name] = a;
+  for (var j = 0; j < arry.length; j++) delete window[arry[j]];
+  exports.M8[name] = temp;
 }
 
 /**
@@ -54,7 +54,8 @@ function makeRequire(dom, pathName) {
   return function(reqStr) {
     var o, scannable, k;
 
-    if (base.logging) console.log(dom+":"+pathName+" <- "+reqStr);
+    if (config.logging >= 4)
+      console.debug(dom+":"+pathName+" <- "+reqStr);
 
     if (reqStr.slice(0, 2) === './') {
       scannable = [dom];
@@ -75,6 +76,10 @@ function makeRequire(dom, pathName) {
       reqStr += 'index';
       var skipFolder = true;
     }
+
+    if (config.logging >= 3)
+      console.log('modul8: '+dom+":"+pathName+" <- "+reqStr+' - looking in #{JSON.stringify(scannable)}');
+
     for (k = 0; k < scannable.length; k++) {
       o = scannable[k];
       if (exports[o][reqStr])
@@ -83,7 +88,9 @@ function makeRequire(dom, pathName) {
       if (!skipFolder && exports[o][reqStr + '/index'])
         return exports[o][reqStr + '/index'];
     }
-    if (base.logging) console.error("Unable to resolve require for: " + reqStr);
+
+    if (config.logging >= 1)
+      console.error("modul8: Unable to resolve require for: " + reqStr);
   };
 };
 
