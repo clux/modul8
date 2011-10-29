@@ -2,7 +2,8 @@
 
 # criteria for whether a require string is relative, rather than absolute
 # absolute require strings will scan on the defined require paths (@domains)
-isRelative = (reqStr) -> reqStr[0...2] is './'
+isRelative = (reqStr) ->
+  reqStr[0...2] is './' or reqStr[0...3] is '../'
 
 # ignorelist regex check and filter fn to be used on each detective result
 domainIgnoresReg = /^data(?=::)|^external(?=::)|^M8(?=::)/
@@ -20,7 +21,7 @@ stripDomain = (reqStr) -> reqStr.replace(domainReg,'')
 toAbsPath = (name, subFolders, domain) -> # subFolders is array of folders after domain base that we were requiring from
   return [stripDomain(name), name.match(domainReg)[1][0...-2]] if domainReg.test(name) # domain specific require includes domain in string
   return [name, undefined] if !isRelative(name) # absolute require, we do not know domain
-  name = name[2...]
+  name = name[2...] if name[0...2] is './' # cut the insignificant variant of relative strings
   while name[0...3] is '../'
     subFolders = subFolders[0...-1] # slice away the top folder every time we see a '../' string
     name = name[3...]
@@ -32,8 +33,7 @@ toAbsPath = (name, subFolders, domain) -> # subFolders is array of folders after
 # exists helper for locate
 makeFinder = (exts) ->
   (path, req) ->
-    for ext in exts
-      return req+ext if exists(path+req+ext)
+    return req+ext for ext in exts when exists(path+req+ext)
     return false
 
 # resolver constructor

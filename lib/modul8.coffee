@@ -232,7 +232,7 @@ if module is require.main
   start('app.cs')
     .set('domloader', (code) -> code)
     .set('namespace', 'QQ')
-    .set('logging', true)
+    .set('logging', 'INFO')
     .register('.cs', (code) -> coffee.compile(code))
     .before(modul8.testcutter)
     #.set('compiler', {extension:'.coca', fn: (fileName) -> (js)}) # not worth it yet.

@@ -6,7 +6,7 @@ fs      = require('fs')
 path    = require('path')
 program = require('../node_modules/commander')
 modul8  = require('../')
-utils   = require('../src/utils')
+utils   = require('../lib/utils')
 dir     = fs.realpathSync()
 {basename, dirname, resolve, join} = path
 
@@ -23,7 +23,7 @@ program
   .option('-w, --wrapper <str>', 'name of wrapping domloader function')
   .option('-t, --testcutter', 'enable pre-processing of files to cut out local tests and their dependencies')
   .option('-m, --minifier', 'enable uglifyjs post processing')
-  .option('-l, --logging', 'enable logging of requires')
+  .option('-l, --logging', 'enable logging failed requires on the client')
 
 program.on '--help', ->
   console.log('  Examples:')
@@ -96,7 +96,7 @@ modul8(entry)
     .output(if analyze then console.log else false)
   .arbiters(arbiters)
   .set('namespace', namespace)
-  .set('logging', logging)
+  .set('logging', if logging then 'ERROR' else false)
   .before(testcutter)
   .after(minifier)
   .set('domloader', wrapper or false)

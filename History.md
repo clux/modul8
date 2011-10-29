@@ -1,13 +1,10 @@
-FUTURE / 2011-??-??
+0.9.0 / 2011-10-29
 ==================
-  TODO:
-  * Provide more levels of logging on the client
-
-0.8.1 / 2011-10-29
-==================
+  * Logging now has levels - defaults to false, -l flag in CLI sets to ERROR level
   * Fixed a bug causing global install not to resolve all dependencies for CLI
   * Write the client side code manually in JavaScript for client side readibility
   * No longer passing data in to the require closure from outside - simply inject it with RegExps
+  * Relative requires a little more flexible (../ prefix allowed vs old ./../)
 
 0.8.0 / 2011-10-29
 ==================

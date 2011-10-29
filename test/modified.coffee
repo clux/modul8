@@ -46,7 +46,7 @@ compile = (useLibs, separateLibs) ->
   modul8(options.paths.app+'entry.js')
     #.analysis().output(console.log).suffix(true)
     #.arbiters().add('0').add('1').add('2') #TODO: fix priority here as well!
-    .set('logging', true)
+    .set('logging', 'WARN')
     .libraries()
       .list(if useLibs then (i+'.js' for i in [0...appSize]) else false)
       .path(options.paths.libs)

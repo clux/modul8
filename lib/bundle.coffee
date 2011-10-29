@@ -31,12 +31,19 @@ verifyCollisionFree = (codeList) ->
         throw new Error("modul8: does not support requiring of two files of the same name on the same path with different extensions: #{dom}::#{file} and #{d}::{#f} ")
   return
 
+logLevels =
+  error   : 1
+  warn    : 2
+  info    : 3
+  debug   : 4
+
 # checks whether serialized options object corresponds to the one we passed in
-isOptionsUnchanged = (guid, o) ->
+isOptionsChanged = (guid, o, log) ->
   cfgStorage = __dirname+'/../states/'+guid+'_cfg.json'
   cfg = if exists(cfgStorage) then JSON.parse(read(cfgStorage)) else {}
   return false if _.isEqual(cfg, JSON.parse(JSON.stringify(o))) #o must to mimic parse/stringify movement to pass
   fs.writeFileSync(cfgStorage, JSON.stringify(o))
+  console.log 'modul8: updated settings - recompiling' if !_.isEqual(cfg, {}) and log
   true
 
 # checks mTimes for a list of [dom, file] where dom is in domains
@@ -47,20 +54,23 @@ mTimeCheck = (guid, fileList, doms, type, log) ->
   mTimesOld = if exists(mStorage) then JSON.parse(read(mStorage)) else {}
 
   fs.writeFileSync(mStorage, JSON.stringify(mTimes)) # update state
+  if _.isEqual(mTimesOld, {})
+    console.warn 'modul8: first compile' if log
+    return true
   mTimesUpdated(mTimes, mTimesOld, type, log)
 
 # returns whether the serialized mTimes object is out of date
 mTimesUpdated = (mTimes, mTimesOld, type, log) ->
   for file,mtime of mTimes
     if !(file of mTimesOld)
-      console.log "compiling #{type}: file(s) added" if log
+      console.warn "modul8: file(s) added to #{type} - recompiling" if log
       return true
     if mTimesOld[file] isnt mtime
-      console.log "compiling #{type}: file(s) modified" if log
+      console.warn "modul8: file(s) modified in #{type} - recompiling" if log
       return true
   for file of mTimesOld
     if !(file of mTimes)
-      console.log "compiling #{type}: file(s) removed" if log
+      console.warn "modul8: file(s) removed in #{type} - recompiling" if log
       return true
   false
 
@@ -76,15 +86,14 @@ bundleApp = (codeList, ns, domload, compile, o) ->
   l.push "#{ns}.data.#{name} = #{pull_fn()};" for name, pull_fn of o.data
 
   # 3. attach require code
-  ver = JSON.parse(fs.readFileSync(__dirname+'/../package.json','utf8')).version
   config =
     namespace : ns
     domains   : name for name of o.domains
     arbiters  : o.arbiters
-    logging   : !!o.options.logging
+    logging   : logLevels[(o.options.logging+'').toLowerCase()] ? 0
 
-  l.push anonWrap( compile(__dirname + '/require.js')
-    .replace(/__VERSION__/, ver)
+  l.push anonWrap( read(__dirname+'/require.js')
+    .replace(/__VERSION__/, JSON.parse(read(__dirname+'/../package.json')).version)
     .replace(/__REQUIRECONFIG__/, JSON.stringify(config))
   )
 
@@ -112,7 +121,7 @@ bundleApp = (codeList, ns, domload, compile, o) ->
 
 module.exports = (o) ->
   guid = makeGuid([o.target, o.libsOnlyTarget])
-  forceUpdate = isOptionsUnchanged(guid, o) or o.options.force # force option (using CLI)
+  forceUpdate = isOptionsChanged(guid, o) or o.options.force # force option (using CLI)
 
   ns = o.options.namespace ? 'M8'
 
@@ -121,7 +130,6 @@ module.exports = (o) ->
 
   o.before = if o.pre.length > 0 then _.compose.apply({}, o.pre) else _.identity
   o.after = if o.post.length > 0 then _.compose.apply({}, o.post) else _.identity
-  useLog = o.options.logging and !_.isFunction(o.target) # dont log anything else if we output result to clog for instance TODO: ONLY do this for clog
 
   compile = makeCompiler(o.compilers) # will throw if reusing extensions or invalid compile functions
   o.exts = ['','.js','.coffee'].concat(ext for ext of o.compilers)
@@ -138,6 +146,9 @@ module.exports = (o) ->
   if o.target
     codelist = ca.sorted()
     verifyCollisionFree(codelist)
+
+    useLog = o.options.logging and !_.isFunction(o.target) # dont log anything from server if we output result to console
+    logLevel = useLog and logLevels[(o.options.logging+'').toLowerCase()] >= 2 # need to have at least WARN level set to get compile notifications
 
     appUpdated = mTimeCheck(guid, codelist, o.domains, 'app', useLog)
 
