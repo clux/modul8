@@ -6,6 +6,8 @@ FUTURE / 2011-??-??
 0.8.1 / 2011-10-29
 ==================
   * Fixed a bug causing global install not to resolve all dependencies for CLI
+  * Write the client side code manually in JavaScript for client side readibility
+  * No longer passing data in to the require closure from outside - simply inject it with RegExps
 
 0.8.0 / 2011-10-29
 ==================

@@ -76,13 +76,17 @@ bundleApp = (codeList, ns, domload, compile, o) ->
   l.push "#{ns}.data.#{name} = #{pull_fn()};" for name, pull_fn of o.data
 
   # 3. attach require code
+  ver = JSON.parse(fs.readFileSync(__dirname+'/../package.json','utf8')).version
   config =
     namespace : ns
     domains   : name for name of o.domains
     arbiters  : o.arbiters
     logging   : !!o.options.logging
-  l.push "var _modul8RequireConfig = #{JSON.stringify(config)};"
-  l.push anonWrap(compile(__dirname + '/require.coffee'))
+
+  l.push anonWrap( compile(__dirname + '/require.js')
+    .replace(/__VERSION__/, ver)
+    .replace(/__REQUIRECONFIG__/, JSON.stringify(config))
+  )
 
   # 4. include CommonJS compatible code in the order they have to be defined - defineWrap each module
   defineWrap = (exportName, domain, code) ->
