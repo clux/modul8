@@ -48,6 +48,7 @@ setup = (sub, libPrefix = 'glob') ->
       .arbiters(if useLibs and useArbiters then arbs else {})
       #.set('logging', true)
       .set('domloader', (a) -> a)
+      .set('force', true)
       .libraries()
         .list(if useLibs then (libPrefix+i+'.js' for i in [0...3]) else false)
         .path(options.paths.libs)
@@ -165,11 +166,11 @@ exports["test arbiters#handling"] = ->
                     assert.ok(browser.evaluate("M8.require('M8::glob#{i}') === 'ok'"), "glob#{i} arbiter exist")
                   else
                     assert.ok(browser.evaluate("window.glob#{i} === 'ok'"), "glob#{i} exists when !useArbiters")
-                    assert.isNull(browser.evaluate("M8.require('M8::glob#{i}')"), "glob#{i} arbiter does not exist")
+                    assert.isUndefined(browser.evaluate("M8.require('M8::glob#{i}')"), "glob#{i} arbiter does not exist")
                 else
                   # no use libs
                   assert.isUndefined(browser.evaluate("window.glob#{i}"), "window.glob#{i} does not exist when !useLibs, useArbiters==#{useArbiters}")
-                  assert.isNull(browser.evaluate("M8.require('M8::glob#{i}')"), "glob#{i} arbiter does not exist when !useLibs, useArbiters==#{useArbiters}")
+                  assert.isUndefined(browser.evaluate("M8.require('M8::glob#{i}')"), "glob#{i} arbiter does not exist when !useLibs, useArbiters==#{useArbiters}")
                 count += 2
 
               testsDone(count)

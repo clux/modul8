@@ -104,7 +104,7 @@ $ git clone git://github.com/clux/modul8
 Basic use only only the path to the entry point and an output.
 
 ````javascript
-modul8(path+'/client/app.js').compile('./out.js');
+modul8('./client/app.js').compile('./out.js');
 ````
 
 This compiles everything referenced explicitly through `app.js` to the single browser compatible `out.js`.
