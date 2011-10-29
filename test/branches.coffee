@@ -81,7 +81,7 @@ generateApp = -> # dont call this with size < 4 otherwise we wont get the mixins
   fs.writeFileSync(dir+'/input/app/entry.js', l.join('\n')) # write entry point
 
   modul8(dir+'/input/app/entry.js')
-    .set('domloader', (a) -> (a)) # dont test jQuery functionality here
+    .set('force', true)
     #.analysis().output(console.log)
     .domains()
       .add('internal', dir+'/input/internal/')
