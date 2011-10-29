@@ -55,7 +55,7 @@ mTimeCheck = (guid, fileList, doms, type, log) ->
 
   fs.writeFileSync(mStorage, JSON.stringify(mTimes)) # update state
   if _.isEqual(mTimesOld, {})
-    console.warn 'modul8: first compile' if log
+    console.log 'modul8: first compile of '+type if log
     return true
   mTimesUpdated(mTimes, mTimesOld, type, log)
 
@@ -63,14 +63,14 @@ mTimeCheck = (guid, fileList, doms, type, log) ->
 mTimesUpdated = (mTimes, mTimesOld, type, log) ->
   for file,mtime of mTimes
     if !(file of mTimesOld)
-      console.warn "modul8: file(s) added to #{type} - recompiling" if log
+      console.log 'modul8: files added to '+type if log
       return true
     if mTimesOld[file] isnt mtime
-      console.warn "modul8: file(s) modified in #{type} - recompiling" if log
+      console.log 'modul8: files updated in '+type if log
       return true
   for file of mTimesOld
     if !(file of mTimes)
-      console.warn "modul8: file(s) removed in #{type} - recompiling" if log
+      console.log 'modul8: files removed from '+type if log
       return true
   false
 
@@ -148,9 +148,9 @@ module.exports = (o) ->
     verifyCollisionFree(codelist)
 
     useLog = o.options.logging and !_.isFunction(o.target) # dont log anything from server if we output result to console
-    logLevel = useLog and logLevels[(o.options.logging+'').toLowerCase()] >= 2 # need to have at least WARN level set to get compile notifications
+    level = logLevels[(o.options.logging+'').toLowerCase()] ? 0
 
-    appUpdated = mTimeCheck(guid, codelist, o.domains, 'app', useLog)
+    appUpdated = mTimeCheck(guid, codelist, o.domains, 'app', useLog and level >= 4)
 
     c = bundleApp(codelist, ns, domloader, compile, o)
     c = o.after(c)
@@ -159,7 +159,7 @@ module.exports = (o) ->
 
     if o.libDir and o.libFiles
 
-      libsUpdated = mTimeCheck(guid, (['libs', f] for f in o.libFiles), {libs: o.libDir}, 'libs', useLog)
+      libsUpdated = mTimeCheck(guid, (['libs', f] for f in o.libFiles), {libs: o.libDir}, 'libs', useLog and level >= 4)
 
       if libsUpdated or (appUpdated and !o.libsOnlyTarget) or forceUpdate
         # necessary to do this work if libs changed
@@ -169,6 +169,7 @@ module.exports = (o) ->
 
       if o.libsOnlyTarget and libsUpdated
         fs.writeFileSync(o.libsOnlyTarget, libs)
+        console.warn 'modul8: compiling separate libs' if useLog and level >= 2
         libsUpdated = false # no need to take this state into account anymore since they are written separately
       else if !o.libsOnlyTarget
         c = libs + c
@@ -177,6 +178,7 @@ module.exports = (o) ->
 
     if appUpdated or (libsUpdated and !o.libsOnlyTarget) or forceUpdate
       # write target if there were any changes relevant to this file
+      console.warn 'modul8: compiling' if useLog and level >= 2
       fs.writeFileSync(o.target, c)
       #console.log 'writing app! bools: libsUp='+libsUpdated+', appUp='+appUpdated+', force='+forceUpdate
 

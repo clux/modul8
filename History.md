@@ -1,3 +1,7 @@
+0.9.1 / 2011-10-29
+==================
+  * Logging bug fixed
+
 0.9.0 / 2011-10-29
 ==================
   * Logging now has levels - defaults to false, -l flag in CLI sets to ERROR level
