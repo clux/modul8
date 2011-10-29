@@ -2,7 +2,7 @@
 window.QQ = {data:{}};
 QQ.data.test = {"hi": "there"}
 ;
-var _modul8RequireConfig = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"logging":false,"main":"app"};
+var _modul8RequireConfig = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"logging":false};
 (function(){var DomReg, a, arbiters, ary, base, domains, exports, glob, makeRequire, name, ns, toAbsPath, _i, _j, _len, _len2, _ref;
 base = _modul8RequireConfig;
 ns = window[base.namespace];
@@ -91,7 +91,7 @@ ns.inspect = function(domain) {
 ns.domains = function() {
   return domains.concat(['external']);
 };
-ns.require = makeRequire(base.main, 'CONSOLE');
+ns.require = makeRequire('app', 'CONSOLE');
 exports.M8.data = ns.data = function(name, exported) {
   if (exports.data[name]) {
     delete exports.data[name];

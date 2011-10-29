@@ -80,11 +80,10 @@ generateApp = -> # dont call this with size < 4 otherwise we wont get the mixins
 
   fs.writeFileSync(dir+'/input/app/entry.js', l.join('\n')) # write entry point
 
-  modul8('entry.js')
+  modul8(dir+'/input/app/entry.js')
     .set('domloader', (a) -> (a)) # dont test jQuery functionality here
     #.analysis().output(console.log)
     .domains()
-      .add('app', dir+'/input/app/')
       .add('internal', dir+'/input/internal/')
       .add('shared', dir+'/input/shared/')
       .add('crazy', dir+'/input/crazy/')
@@ -127,15 +126,14 @@ exports["test require#branches"] = ->
     console.log 'require#branches - completed:', testCount
   return
 
-exports["test analyzer#order"] = a = ->
+exports["test analyzer#order"] = ->
   generateApp()
   exts = ['','.js','.coffee']
-  resolver = new Resolver(options.domains, {}, 'app', exts) # no arbiters, main=='app'
+  resolver = new Resolver(options.domains, {}, exts) # no arbiters
   compile = utils.makeCompiler()
   ca = analysis
     entryPoint : 'entry.js'
     domains    : options.domains
-    mainDomain : 'app'
     before     : (a) -> a
     arbiters   : {}
     ignoreDoms : []

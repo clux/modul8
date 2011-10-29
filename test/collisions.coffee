@@ -80,10 +80,13 @@ generateApp = ->
 
   fs.writeFileSync(dir+'/collisions/app/entry.js', l.join('\n')) # write entry point
 
-  modul8('entry.js')
+  usedDoms = {}
+  usedDoms[key] = val for key, val of options.domains when key isnt 'app'
+
+  modul8(options.domains.app+'entry.js')
     .set('domloader', (a) -> (a)) # dont test jQuery functionality here
     #.analysis().output(console.log).suffix(true)
-    .domains(options.domains)
+    .domains(usedDoms)
     .register('.coco', (code) -> coffee.compile(code, {bare:true})) #alias coco as this compiler for simplicity
     .compile(dir+'/output/outc.js')
 

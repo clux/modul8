@@ -32,12 +32,10 @@ generateApp = (options)-> # dont call this with size < 4 otherwise we wont get t
 
   fs.writeFileSync(dir+'/input/main/temp.js', "") # write blank entry point
 
-  modul8('temp.js')
+  modul8(dir+'/input/main/temp.js')
     .set('domloader', (a) -> (a)) # dont test jQuery functionality here
     .set('namespace', 'QQ')
     #.analysis().output(console.log)
-    .domains()
-      .add('app', dir+'/input/main/')
     .data(data)
     .compile(dir+'/output/flat.js')
 

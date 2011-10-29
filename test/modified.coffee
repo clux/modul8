@@ -43,7 +43,7 @@ options =
     libs  : dir+'/output/outlibs.js'
 
 compile = (useLibs, separateLibs) ->
-  modul8('entry.js')
+  modul8(options.paths.app+'entry.js')
     #.analysis().output(console.log).suffix(true)
     #.arbiters().add('0').add('1').add('2') #TODO: fix priority here as well!
     .set('logging', true)
@@ -51,9 +51,7 @@ compile = (useLibs, separateLibs) ->
       .list(if useLibs then (i+'.js' for i in [0...appSize]) else false)
       .path(options.paths.libs)
       .target(if separateLibs then options.out.libs else false)
-    .domains()
-      .add('app', options.paths.app)
-      .add('shared', options.paths.shared)
+    .domains({'shared': options.paths.shared})
     .compile(options.out.app)
 
 modify = (pathName, num) ->
@@ -65,8 +63,7 @@ modify = (pathName, num) ->
 
 sleep = (ms) ->
   now = new Date().getTime()
-  while(new Date().getTime() < now + ms)
-    null
+  null while(new Date().getTime() < now + ms)
   return
 
 mTimesOld = {app : 0, libs : 0}
@@ -101,8 +98,9 @@ exports["test compile#modified"] = ->
     with libsOnlyTarget, without libsOnlyTarget
   ###
 
-  for separateLibs in [false, true]
-    for withLibs in [false, true]
+  for withLibs in [false, true]
+    optionAry = if withLibs then [false, true] else [false]
+    for separateLibs in optionAry
 
       for name, path of options.paths
         continue if !withLibs and name is 'libs'
@@ -111,7 +109,7 @@ exports["test compile#modified"] = ->
         compile(withLibs, separateLibs) # will log 'compiling libs' the first time we compile withLibs
         # store times
         wasUpdated('app')
-        wasUpdated('libs') if withLibs
+        wasUpdated('libs') if separateLibs
 
         for i in [0...appSize]
           compile(withLibs, separateLibs)
@@ -127,8 +125,8 @@ exports["test compile#modified"] = ->
           #TODO: use fs.(f)utimesSync when newer node versions are stable?
           modify(name, i)
           compile(withLibs, separateLibs)
-          libsChanged = if withLibs then wasUpdated('libs') else true
           appChanged = wasUpdated('app')
+          libsChanged = if separateLibs then wasUpdated('libs') else true
 
 
           if modifyingLibs and !separateLibs
@@ -138,7 +136,7 @@ exports["test compile#modified"] = ->
             assert.ok(!appChanged, "modified #{name}::#{i} - compiling with lib changes for separate libs does not change app mtime")
             testCount +=1
           else if !modifyingLibs
-            assert.ok(appChanged, "modified #{name}::#{i} - compiling app changes app mtime")
+            assert.ok(appChanged, "modified #{name}::#{i} - compiling with app changes changes app mtime")
 
           testCount += 2
 

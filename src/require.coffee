@@ -80,7 +80,7 @@ ns.inspect = (domain) ->
 ns.domains = ->
   domains.concat(['external']) # only hides the data and M8 domains
 
-ns.require = makeRequire(base.main,'CONSOLE')
+ns.require = makeRequire('app','CONSOLE')
 
 # Live Extensions (requirable and namespace reference available)
 exports.M8.data = ns.data = (name, exported) ->

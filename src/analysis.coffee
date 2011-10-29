@@ -6,8 +6,8 @@ utils       = require './utils'
 
 
 # constructor - resolves dependency tree and stores in @tree
-CodeAnalysis = ({@entryPoint, @domains, @mainDomain, @before, @ignoreDoms, exts, arbiters}, @compile) ->
-  @resolver = new Resolver(@domains, arbiters, @mainDomain, exts)
+CodeAnalysis = ({@entryPoint, @domains, @before, @ignoreDoms, exts, arbiters}, @compile) ->
+  @resolver = new Resolver(@domains, arbiters, exts)
   @buildTree()
   return
 
@@ -25,7 +25,7 @@ CodeAnalysis::resolveDependencies = (absReq, folders, dom) ->
 
 # private - loads each files depedencies and recursively calls itself on each new branch
 CodeAnalysis::buildTree = ->
-  @tree = {name: @entryPoint, domain: @mainDomain, folders: [], deps: {}, fake: 0, level: 0}
+  @tree = {name: @entryPoint, domain: 'app', folders: [], deps: {}, fake: 0, level: 0}
 
   circularCheck = (t, uid) -> # follows branch up to make sure it does not find itself
     chain = [uid]
@@ -64,7 +64,7 @@ formatName = (absReq, extSuffix, domPrefix, dom) ->
 
 # public method, returns an npm like dependency tree
 CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
-  lines = [formatName(@entryPoint, extSuffix, domPrefix, @mainDomain)]
+  lines = [formatName(@entryPoint, extSuffix, domPrefix, 'app')]
   objCount = makeCounter(ignores=@ignoreDoms)
 
   ((branch, level, parentAry) ->
@@ -91,7 +91,7 @@ CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
 # public method, get ordered array of code to be used by the compiler
 CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj = {}
-  obj[@mainDomain+'::'+@entryPoint] = 0
+  obj['app::'+@entryPoint] = 0
   ((t) ->
     for uid,dep of t.deps when !dep.fake # impossible to compile fake files
       obj[uid] = Math.max(dep.level, obj[uid] or 0)

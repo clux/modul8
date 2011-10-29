@@ -18,7 +18,7 @@ makeWrapper = (ns, fnstr, hasArbiter) ->
 # uniqueness based on execution path, target.js and targetlibs.js - should be sufficient
 makeGuid = (vals) ->
   vals.push fs.realpathSync()
-  str = ((v+'').split('/').join('_').split('.')[0] for v in vals).join('__')
+  str = (v+'' for v in vals).join('_')
   crypto.createHash('md5').update(str).digest("hex")
 
 # analyzer will find files of specified ext, but these may clash on client
@@ -81,7 +81,6 @@ bundleApp = (codeList, ns, domload, compile, o) ->
     domains   : name for name of o.domains
     arbiters  : o.arbiters
     logging   : !!o.options.logging
-    main      : o.mainDomain
   l.push "var _modul8RequireConfig = #{JSON.stringify(config)};"
   l.push anonWrap(compile(__dirname + '/require.coffee'))
 
@@ -91,7 +90,7 @@ bundleApp = (codeList, ns, domload, compile, o) ->
 
   # 5. filter function split code into app code and non-app code
   harvest = (onlyMain) ->
-    for [domain, name] in codeList when (domain is o.mainDomain) == onlyMain
+    for [domain, name] in codeList when (domain is 'app') == onlyMain
       code = o.before(compile(o.domains[domain] + name)) # middleware applied to code first
       basename = name.split('.')[0] # take out extension on the client (we throw if collisions requires have happened on the server)
       defineWrap(basename, domain, code)
@@ -136,7 +135,7 @@ module.exports = (o) ->
     codelist = ca.sorted()
     verifyCollisionFree(codelist)
 
-    appUpdated = mTimeCheck(guid, o.domains, codelist, 'app', useLog)
+    appUpdated = mTimeCheck(guid, codelist, o.domains, 'app', useLog)
 
     c = bundleApp(codelist, ns, domloader, compile, o)
     c = o.after(c)
