@@ -90,19 +90,19 @@ For more information consult the [api docs](http://clux.github.com/modul8/docs/a
 
 ## Installation
 
-via npm (recommended):
+Install the library:
 
 ````bash
 $ npm install modul8
 ````
 
-**Note:** to be able to use the command line tool install with the global flag
+Install the command line tool:
 
 ````bash
 $ npm install -g modul8
 ````
 
-Alternatively, get the development version
+Download the development version:
 
 ````bash
 $ git clone git://github.com/clux/modul8
