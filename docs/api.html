@@ -192,9 +192,27 @@ It is there if you want to write a simpler prefix than than capital M, 8 all the
 <pre><code>modul8('./client/app.js')
   .set('namespace', 'QQ')
   .set('domloader', '$(document).ready')
-  .set('logging', true)
+  .set('logging', 'WARN')
   .compile('./out.js');
 </code></pre>
+
+<p>Logging has 4 levels.</p>
+
+<ul>
+<li>ERROR</li>
+<li>WARN</li>
+<li>INFO</li>
+<li>DEBUG</li>
+</ul>
+
+<p>They have cumulative ordering:</p>
+
+<ul>
+<li>ERROR will only give failed to resolve require messages in the client console via <code>console.error</code>.</li>
+<li>WARN additionally gives recompile warnings from the server via <code>console.warn</code>.</li>
+<li>INFO adds log messages from require for each call to give an overview of all requires used on the client via <code>console.log</code>.</li>
+<li>DEBUG adds log messages from require before the require strings get absolutized via <code>console.debug</code> and additionally reasons why we are recompiling on the server.</li>
+</ul>
 
 <h2>Code Analysis</h2>
 
