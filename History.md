@@ -3,6 +3,10 @@ FUTURE / 2011-??-??
   TODO:
   * Provide more levels of logging on the client
 
+0.8.1 / 2011-10-29
+==================
+  * Fixed a bug causing global install not to resolve all dependencies for CLI
+
 0.8.0 / 2011-10-29
 ==================
   * `.domains()` call no longer required - application domain inferred from entrypoint
