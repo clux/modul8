@@ -14,7 +14,6 @@ dir     = fs.realpathSync()
 
 program
   .version(modul8.version)
-  .usage('entrypointpath [options]')
   .option('-z, --analyze', 'analyze dependencies instead of compiling')
   .option('-p, --domains <name:path>,..', 'specify require domains')
   .option('-d, --data <key:path>,..', 'attach json parsed data from path to data::key')
@@ -86,7 +85,8 @@ for d in (program.data?.split(',') or [])
 # first arg is entry
 entry = program.args[0]
 if !entry
-  console.error("usage: see modul8 --help")
+  console.error("usage: modul8 entry [options]")
+  console.log("or modul8 -h for help")
   process.exit()
 
 modul8(entry)
@@ -100,6 +100,6 @@ modul8(entry)
   .before(testcutter)
   .after(minifier)
   .set('domloader', wrapper or false)
-  .set('force', true)
+  .set('force', true) # always rebuild when using this
   .compile(if analyze then false else console.log)
 
