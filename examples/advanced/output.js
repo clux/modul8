@@ -57,7 +57,7 @@ function makeRequire(dom, pathName) {
     var o, scannable, k;
 
     if (config.logging >= 4)
-      console.debug(dom+":"+pathName+" <- "+reqStr);
+      console.debug('modul8: '+dom+':'+pathName+" <- "+reqStr);
 
     if (reqStr.slice(0, 2) === './') {
       scannable = [dom];
@@ -80,7 +80,9 @@ function makeRequire(dom, pathName) {
     }
 
     if (config.logging >= 3)
-      console.log('modul8: '+dom+":"+pathName+" <- "+reqStr+' - looking in #{JSON.stringify(scannable)}');
+      console.log('modul8: '+dom+':'+pathName+" <- "+reqStr);
+    if (config.logging >= 4)
+      console.debug('modul8: scanned '+JSON.stringify(scannable))
 
     for (k = 0; k < scannable.length; k++) {
       o = scannable[k];
