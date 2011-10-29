@@ -72,7 +72,7 @@ For more information consult the [api docs](http://clux.github.com/modul8/docs/a
  - simple code sharing between the server and the client
  - dynamic resolution and compilation of dependencies server-side
  - compiles CommonJS compatible JavaScript, CoffeeScript or hooked in AltJS
- - low footprint - only ~100 lines prepended to output source
+ - low footprint - ~1kB (minified/gzipped) output size inflation
  - enforces modularity best practices and logs an npm style dependency tree
  - injecd require data dynamically from the server or live from the client
  - no need to ever maintain include lists or order

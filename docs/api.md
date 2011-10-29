@@ -157,8 +157,22 @@ Options can be set by chaining them on `modul8()` using the `set(option, value)`
     modul8('./client/app.js')
       .set('namespace', 'QQ')
       .set('domloader', '$(document).ready')
-      .set('logging', true)
+      .set('logging', 'WARN')
       .compile('./out.js');
+
+Logging has 4 levels.
+
+- ERROR
+- WARN
+- INFO
+- DEBUG
+
+They have cumulative ordering:
+
+- ERROR will only give failed to resolve require messages in the client console via `console.error`.
+- WARN additionally gives recompile warnings from the server via `console.warn`.
+- INFO adds log messages from require for each call to give an overview of all requires used on the client via `console.log`.
+- DEBUG adds log messages from require before the require strings get absolutized via `console.debug`.
 
 ## Code Analysis
 

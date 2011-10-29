@@ -60,7 +60,7 @@ The following are equivalent methods for the programmatic API calls to `.set()`
 
     -w or --wrapper <str> <==> set('domloader', <str>)
     -n or --namespace <str> <==> set('namespace', <str>)
-    -l or --logging <==> set('logging', true)
+    -l or --logging <==> set('logging', 'ERROR')
 
 #### Booleans
 The following are slightly limited versions of the programmatic API's `.before()`, `.after()` and `.analysis()`

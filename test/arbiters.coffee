@@ -46,7 +46,7 @@ setup = (sub, libPrefix = 'glob') ->
     modul8(options.paths.app+'entry.js')
       .analysis().output(if !libPrefix then console.log else false).suffix(true)
       .arbiters(if useLibs and useArbiters then arbs else {})
-      #.set('logging', true)
+      #.set('logging', 'WARN')
       .set('domloader', (a) -> a)
       .set('force', true)
       .libraries()
