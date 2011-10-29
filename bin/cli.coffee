@@ -3,8 +3,8 @@
 # Module dependencies
 
 fs      = require('fs')
-program = require('commander')
 path    = require('path')
+program = require('../node_modules/commander')
 modul8  = require('../')
 utils   = require('../src/utils')
 dir     = fs.realpathSync()
