@@ -39,7 +39,7 @@ This will construct a single, browser compatible `out.js` in your execution path
        └───shared::cool
 
 
-Alternatively, compilation can be done via command line interface from `path`, typing
+Alternatively, compilation can be done via the command line interface from `path`, typing
 
 ````bash
 $ modul8 client/main.js -p shared:shared/ > out.js
