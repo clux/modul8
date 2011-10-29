@@ -15,21 +15,24 @@
     <div id="content">
 <h1>API</h1>
 
-<p>modul8's API is in its basic form extremely simple, all we need to do is <code>add()</code> domains to <code>domains()</code>,
-specify an entry point (for the first domain) to the constructor, and the target JavaScript file to output ot <code>compile()</code>.</p>
+<p>modul8's API is extremely simple, all we need to do pass a entry point and an output - in its basic form.
+To add extra require domains for the client pass a dictionary of form <code>{name : path}</code>.</p>
 
 <pre><code>var modul8 = require('modul8');
-var dir = __dirname;
-
-modul8('app.js')
-  .domains()
-    .add('app', dir+'/app/client/')
-    .add('shared', dir+'/app/shared/')
+modul8('./client/app.js')
+  .domains({'shared': './shared/'})
   .compile('./out.js');
 </code></pre>
 
-<p>Your domains can alternatively be supplied as an object directly to <code>.domains({app:path, ..})</code>. However, objects are not ordered, so modul8 cannot unambiguously determine what is
-the first element, so it will assume the main domain is <code>app</code> if this is passed in.  If this is not passed in, it will take a guess..</p>
+<p>Alternatively, you can <code>.add()</code> each domain separately.</p>
+
+<pre><code>var modul8 = require('modul8');
+modul8('./client/app.js')
+  .domains()
+    .add('shared', './shared/')
+    .add('framework', './libs/client/')
+  .compile('./out.js');
+</code></pre>
 
 <p>You can add any number of domains to be scanned. Files on these domains can be required specifically with <code>require('domain::name')</code>.
 Both the domain and file extension can be omitted if there are no conflicts (current domain gets scanned first, .js scanned before .coffee).</p>
@@ -42,16 +45,7 @@ require('./validation') //.js extension always gets searched before .coffee
 require('validation') // resolves this domain first (but moves on if this fails)
 </code></pre>
 
-<p>More information on <code>require()</code> is available in <a href="require.html">this section</a></p>
-
-<h3>API Chaining Note</h3>
-
-<p>As indicated by the first example, the modul8 API is controlled by chaining methods together. For style and semanticity
-we apply extra indentation when we break into a subclass method like in the <code>.data()</code> call above, or, if only one method is chained on a subclass,
-we sometimes write it on the same line.</p>
-
-<p>We recommend sticking to this notation as subroutines from different methods often have identical names.
-Regardless, the API will warn you if you try to apply methods from a subroutine after having broken out from them.</p>
+<p>More information on <code>require()</code> priority is available in <a href="require.html">this section</a></p>
 
 <h2>Adding Data</h2>
 
@@ -68,8 +62,7 @@ To export these to the server, you will have to obtain the data somehow - your j
 
 <p>The data API simply consists of <code>add()</code>ing data keys and functions to <code>data()</code></p>
 
-<pre><code>modul8('app.js')
-  .domains({app : dir+'/app/client/'})
+<pre><code>modul8(dir+'/app/client/app.js')
   .data()
     .add('versions', myVersionParser)
     .add('models', myModelParser)
@@ -80,14 +73,14 @@ To export these to the server, you will have to obtain the data somehow - your j
 <p>Alternatively, as with <code>.domains()</code>, you can do a single <code>.data()</code> call with an object instead of chaining <code>.add()</code> if you prefer.</p>
 
 <p>Under the covers, modul8 attaches the output of the myX functions to the reserved <code>data</code> domain.
-Data exported to this domain is <code>require()</code>able as if it were exported from a file (named versions|templates|models) on a domain named data:</p>
+Data exported to this domain is requirable as if it were exported from a file (named versions|templates|models) on a domain named data:</p>
 
 <ul>
-<li><code>require('data::models')  //output of myModelParser</code></li>
+<li><code>require('data::models')  //== myModelParser()</code></li>
 </ul>
 
 <p>In other words the function output is attached verbatim to modul8's exports container; if you provide bad data, you are solely responsible for breaking your build.
-This should be easy to detect in a console though.</p>
+This is easy to detect in a console though.</p>
 
 <p>As a small example our personal version parser operates something like the following:</p>
 
@@ -107,12 +100,11 @@ console.log(versions['users/view']) // -&gt; [0,2,4]
 
 <p>Appending standard (window exporting) JavaScript and CoffeeScript files is easy. Call <code>.libraries()</code> and chain on your options as below.</p>
 
-<pre><code>modul8('app.js')
-  .domains({app : dir+'/app/client/'})
+<pre><code>modul8('./app/client/app.js')
   .libraries()
     .list(['jQuery.js','history.js'])
-    .path(dir+'/app/client/libs/')
-    .target('out-libs.js')
+    .path('./app/client/libs/')
+    .target('./out-libs.js')
   .compile('./out.js');
 </code></pre>
 
@@ -121,14 +113,13 @@ console.log(versions['users/view']) // -&gt; [0,2,4]
 <p>Alternatively, this <code>.list()</code> call can be avoided by more succinctly placing this array in the first parameter of <code>.libraries()</code> instead.
 Similarly, we can also avoid <code>.path()</code> and <code>.target()</code> by specifying second and third parameters to <code>.libraries()</code>.</p>
 
-<pre><code>modul8('app.js')
-  .domains({app : dir+'/app/client/'}
-  .libraries(['jQuery.js','history.js'], dir+'/app/client/libs/', 'out-libs.js')
+<pre><code>modul8(dir+'/app/client/app.js')
+  .libraries(['jQuery.js','history.js'], './app/client/libs/', './out-libs.js')
   .compile('./out.js');
 </code></pre>
 
 <p>Libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
-And nmodified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response. Thus, using <code>.target()</code> and
+Note that modified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response. Thus, using <code>.target()</code> and
 splitting these into a different file could be advantageous.</p>
 
 <p>If you would like to integrate libraries into the require system check out the documentation on <code>arbiters()</code> below.</p>
@@ -142,7 +133,7 @@ Don't overdo this, however. HTTP requests are still expensive. Two or three Java
 
 <h2>Middleware</h2>
 
-<p>Middleware come in two forms: pre-processing and post-processing: in short terms before and after middleware.</p>
+<p>Middleware come in two forms: pre-processing and post-processing:</p>
 
 <ul>
 <li><code>.before()</code> middleware is applied before analysing dependencies as well as before compiling.</li>
@@ -159,14 +150,15 @@ Don't overdo this, however. HTTP requests are still expensive. Two or three Java
 <p>To use these they must be chained on <code>modul8()</code> via <code>before()</code> or <code>after()</code> depending on what type of middleware it is.</p>
 
 <pre><code>modul8('app.js')
-  .domains({app : dir+'/app/client/'})
   .before(modul8.testcutter)
   .after(modul8.minifier)
   .compile('./out.js');
 </code></pre>
 
 <p><strong>WARNING:</strong> testcutter is not very intelligent at the moment, if you reference <code>require.main</code> in your module,
-expect that everything from the line of reference to be removed.</p>
+expect that everything from the line of reference to be removed.
+If you do use it, always place tests at the bottom of each file, and never use wrapper functions inside your scripts (as the <code>});</code> bit will get chopped off).
+This should be easy as modul8 wraps everything for you anyway - it even wraps to hold off execution until the DOM is ready.</p>
 
 <h2>Settings</h2>
 
@@ -197,11 +189,10 @@ It is there if you want to write a simpler prefix than than capital M, 8 all the
 
 <p>Options can be set by chaining them on <code>modul8()</code> using the <code>set(option, value)</code> method. For example:</p>
 
-<pre><code>modul8('app.js')
+<pre><code>modul8('./client/app.js')
   .set('namespace', 'QQ')
   .set('domloader', '$(document).ready')
   .set('logging', true)
-  .domains({app : dir+'/app/client/'})
   .compile('./out.js');
 </code></pre>
 
@@ -254,8 +245,7 @@ Defaults for thes are : <code>{prefix: true, suffix: false}</code>.</p>
 
 <p>We can conditionally perform the following action, if <strong>NODE_ENV</strong> matches specified environment.</p>
 
-<pre><code>modul8('app.js')
-  .domains().add('app', dir+'/app/client/')
+<pre><code>modul8(dir+'/app/client/app.js')
   .in('development').after(modul8.minifier)
   .in('development').compile('./out.js')
   .in('production').compile('./out.js');
@@ -263,8 +253,7 @@ Defaults for thes are : <code>{prefix: true, suffix: false}</code>.</p>
 
 <p>The environment conditionals may be applied to several calls:</p>
 
-<pre><code>modul8('app.js')
-  .domains().add('app', dir+'/app/client/')
+<pre><code>modul8(dir+'/app/client/app.js')
   .in('development')
     .after(modul8.minifier)
     .analysis()
@@ -342,13 +331,12 @@ Also note that changing the namespace does not change the domain these two funct
 
 <p>These help reveal invisible dependencies by reduce the amounts global variables in your code.</p>
 
-<pre><code>modul8('app.js')
-  .domains().add('app', dir+'/app/client/')
+<pre><code>modul8(dir+'/app/client/app.js')
   .libraries(['jQuery.js','Spile.coffee'], dir+'/app/client/libs/')
   .arbiters()
     .add('jQuery', ['$', 'jQuery'])
     .add('Spine')
-  .compile('./out.js');
+  .compile(dir+'/out.js');
 </code></pre>
 
 <p>This code would delete objects <code>$</code>, <code>jQuery</code> and <code>Spine</code> from <code>window</code> and under the covers add closure bound alternatives you can <code>require()</code>
@@ -372,8 +360,7 @@ jQuery.js file on your current domain. Normally this specificity should not be r
 For instance, registering Coffee-Script (if it wasn't already done automatically) would be done like this</p>
 
 <pre><code>var coffee = require('coffee-script');
-modul8('app.js')
-  .domains({app:dir+'/app/client/'})
+modul8('./client/app.js')
   .register('.coffee', function(code, bare){
     coffee.compile(code, {bare:bare})
   })
