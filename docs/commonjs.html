@@ -9,24 +9,26 @@
       <li><a href="api.html" title="API documentation">API</a></li>
       <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
-      <li><a href="commonjs.html" title="CommonJS parsing - our implementation">CommonJS</a></li>
+      <li><a href="commonjs.html" title="Extended CommonJS - basic + the extensions">X-CommonJS</a></li>
       <li><a href="modularity.html" title="Modularity issues and advice">Modularity</a></li>
     </ul>
     <div id="content">
 <h1>Extended CommonJS</h1>
 
-<p>This is going to contain more advanced background about what general module systems do, and what
-distinguishes modul8.</p>
+<p>This is going to contain more advanced background about what a general module systems do, and, finally, what
+distinguishes modul8 from plain CommonJS.</p>
 
 <h2>CommonJS Parsing</h2>
+
+<p>Or, how a module system works.</p>
 
 <h3>JavaScript Modules</h3>
 
 <p>JavaScript has no module system.</p>
 
-<p><em>great start.</em></p>
+<p><em>we're off to a great start..</em></p>
 
-<p>We have, on the other hand, got functions. Functions with closures.</p>
+<p>On the other hand, got functions. Functions with closures.</p>
 
 <pre><code>(function(){
   var private = 5;
@@ -44,7 +46,7 @@ us not much wiser. True modularity is clearly impossible when things are just ly
 it is error prone as conflicting exports will actually just favour the last script to execute - as JavaScript simply runs top to bottom, attaching its
 exports to window as we go along. Clearly we need something better than this.</p>
 
-<h3>CommonJS Standard</h3>
+<h3>CommonJS Idea</h3>
 
 <p>There is a way to fix this, but first of all it assumes all modules need to support a stadardised format for exporting of modules.
 CommonJS is a such a standardization. It has very large traction at the moment, particularly driven by server side environments such as NodeJS.</p>
@@ -56,9 +58,7 @@ Alternatively, it can replace the <code>module.exports</code> object to define a
 <p>By making sure each module is written this way, CommonJS parsers can implement clever trickery on top of it to make this behaviour work.
 I.e. having each module's exports objects stored somewhere for <code>require()</code> and allocating a singleton for each module.</p>
 
-<h3>CommonJS Parsing</h3>
-
-<h4>Basics</h4>
+<h3>CommonJS Basics</h3>
 
 <p>From the above rationale, it is clear that a CommonJS parser must turn this:</p>
 
@@ -139,7 +139,7 @@ and simply sort this by their level numbers descending.</p>
 
 <h2>modul8's CommonJS Extensions</h2>
 
-<h3>Domains</h3>
+<h3>Require Path Problem</h3>
 
 <p>Whilst maintaining compatibility with the CommonJS spec, we have extended <code>require()</code> to ameliorate one common problem.</p>
 
@@ -151,9 +151,11 @@ and simply sort this by their level numbers descending.</p>
 But require paths force you to scan all of them, with no way of specifying what path to do your look-up on. It also would
 make it very difficult to whitelist injected data from the server resolver - as it could simply find files with the same names as your data somewhere..</p>
 
-<p>The relation between the paths are also lost on the browser, so there is no sense in maintining any illusions about this by using traditional require paths.
-In the end, namespacing each path became the accepted solution. To distinguish them from typical require paths, we refer to them as <em>domains</em> or <em>require domains</em>
-in modul8.</p>
+<p>The relation between the paths are also lost on the browser, so there is no sense in maintining any illusions about this by using traditional require paths.</p>
+
+<h3>Domains</h3>
+
+<p>In the end, namespacing each path became the accepted solution. To distinguish them from typical require paths, we refer to them as <em>domains</em> or <em>require domains</em>.</p>
 
 <p>This also simplifies implementation as well, as we can create one object container directly on <code>stash</code> for each domain with key equal to its name.</p>
 
@@ -171,7 +173,7 @@ I.e. it should not reference something from outside its base directory to work o
 
 <h4>Arbiters</h4>
 
-<p>modul8 hates globals. They ruin an otherwise solid module system. Thus, it desperately tries to integrate globally exported libraries into its require system.
+<p>modul8 hates globals. They ruin otherwise solid modularity. Thus, it desperately tries to integrate globally exported libraries into its require system.
 It removes the global shortcut(s) from your application code and inserts them onto the reserved <code>M8</code> domain.
 Why we (can and sometimes) want to do this is explained in the <a href="modularity.html">modularity doc</a>, whilst
 the feature is fully documented in the <a href="api.html">API</a>.</p>

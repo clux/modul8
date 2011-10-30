@@ -9,7 +9,7 @@
       <li><a href="api.html" title="API documentation">API</a></li>
       <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
-      <li><a href="commonjs.html" title="CommonJS parsing - our implementation">CommonJS</a></li>
+      <li><a href="commonjs.html" title="Extended CommonJS - basic + the extensions">X-CommonJS</a></li>
       <li><a href="modularity.html" title="Modularity issues and advice">Modularity</a></li>
     </ul>
     <div id="content">
@@ -22,13 +22,13 @@ This ensures that each module has the necessary context for the <code>require()<
 
 <p>There are four different ways to use require:</p>
 
-<h3>Absolutely</h3>
+<h4>Absolutely</h4>
 
 <ul>
 <li><code>require('subfolder/module.js')</code> - Can resolve subfolder/module.js on any domain - regardless of what subfolder or domain you are in - but will scan the current domain first.</li>
 </ul>
 
-<h3>Relatively</h3>
+<h4>Relatively</h4>
 
 <ul>
 <li><code>require('./module.js')</code> - Can resolve a module.js file on the current domain in the current folder.</li>
@@ -42,26 +42,26 @@ This ensures that each module has the necessary context for the <code>require()<
 <li><code>require('./../subfolder/../basemodule.js')</code> <strong>is not legal</strong> while <code>require('./../basemodule.js')</code> <strong>is</strong>.</li>
 </ul>
 
-<h3>Domain Specific</h3>
+<h4>Domain Specific</h4>
 
 <ul>
 <li><code>require('shared::val.js')</code> - Like absolute requires, but specifies the only domain which will be searched. If you want to do relative domain specific requires,
 just use a pure relative require where the current domain is implicitly assumed.</li>
 </ul>
 
-<h4>Data Domain</h4>
+<h5>Data Domain</h5>
 
 <ul>
 <li><code>require('data::datakey')</code> - Data on this domain does not represent actual files, but data injected into the require system on the server. It will not show up in the dependency tree.</li>
 </ul>
 
-<h4>External Domain</h4>
+<h5>External Domain</h5>
 
 <ul>
 <li><code>require('external::extkey')</code> - Same as data domain, but only extensible from the client.</li>
 </ul>
 
-<h4>Arbiter Domain</h4>
+<h5>Arbiter Domain</h5>
 
 <ul>
 <li><code>require('jQuery')</code> - Shortcut domain for old globals that were deleted to help identify hidden dependencies - must be defined on the server.
@@ -71,7 +71,7 @@ This does not require a domain prefix because it is assumed this domain gets suf
 <p>Note that if a jQuery.js file is found on the current domain, however, it will gain priority over the arbiter domain.
 If this coexistence is necessary, any arbiters must be  required by specifying the internal domain name: <code>$ = require('M8::jQuery')</code>.</p>
 
-<h3>File extensions</h3>
+<h2>File extensions</h2>
 
 <p>File extensions are never necessary, but you can (and sometimes should) include them for specificity (except for on the data domain).</p>
 
@@ -79,7 +79,7 @@ If this coexistence is necessary, any arbiters must be  required by specifying t
 but is only as forgiving with such mixing as you deserve. If you only use one language and never put files of another language in your directories,
 the following warning does not apply to you.</p>
 
-<h4>Extension Priority</h4>
+<h3>Extension Priority</h3>
 
 <p>To see why, consider a simplified resolver algorithm from the server</p>
 
@@ -97,7 +97,7 @@ return false
 and if there is even a chance of a file of the same name with a <code>.js</code> extension popping up in the same folder,
 then it will gain priority over your normal files if you do not specify the extension.</p>
 
-<h5>Extension Truncation</h5>
+<h4>Extension Truncation</h4>
 
 <p>The corollary to this extension priority is that we can't accurately distinguish between two extensions on the client when we omit the extension.
 Thus, since omitting the extension is generally advantageous for brevity, we have decided to simply truncate the extension on the client.</p>
@@ -107,7 +107,7 @@ Thus, since omitting the extension is generally advantageous for brevity, we hav
 <p>You can still have a <code>.js</code> duplicate of your <code>.coffee</code> file in a directory, but you then have to explicitly define <code>.coffee</code> so that the server
 can pre-pick the right one to include for you.</p>
 
-<h5>Server Error</h5>
+<h4>Server Error</h4>
 
 <p>To help you remember this, modul8 will actually throw an error if you simultaneously try to require both</p>
 
@@ -127,7 +127,7 @@ can pre-pick the right one to include for you.</p>
 
 <p>Note that the error will only be thrown after the <code>.analysis()</code> dependency tree was logged, allowing you to pinpoint the careless <code>require()</code>.</p>
 
-<h3>Folders Priority</h3>
+<h2>Folders Priority</h2>
 
 <p>Require strings that contain a trailing slash or does not point to a file directly, will try to resolve the name as a folder and look for a file named <code>index</code> following the above logic.
 The following will all resolve a folder, but the last has the possiblility of a collision with a file of the same name as the folder:</p>
@@ -137,7 +137,7 @@ require('controllers/'); //looks for controllers/index+extension
 require('controllers'); //looks for controllers+extension then controllers/index+extension
 </code></pre>
 
-<h3>General Priority</h3>
+<h2>General Priority</h2>
 
 <p>Requires are attempted resolved with the following priority:</p>
 

@@ -9,7 +9,7 @@
       <li><a href="api.html" title="API documentation">API</a></li>
       <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
-      <li><a href="commonjs.html" title="CommonJS parsing - our implementation">CommonJS</a></li>
+      <li><a href="commonjs.html" title="Extended CommonJS - basic + the extensions">X-CommonJS</a></li>
       <li><a href="modularity.html" title="Modularity issues and advice">Modularity</a></li>
     </ul>
     <div id="content">
@@ -260,7 +260,10 @@ Defaults for thes are : <code>{prefix: true, suffix: false}</code>.</p>
 <p>The <code>.hide()</code> call specifies what domains to suppress in the dependency tree. Takes a domain name string or an array of such strings.</p>
 
 <p>The analysis call can be shortcutted with a direct (up to) four parameter call to <code>.analysis()</code> with parameters output, prefix, suffix, hide.
-So the above could be done with <code>.analysis(console.log, false, true 'external')</code>.</p>
+So the above could be done with</p>
+
+<pre><code>.analysis(console.log, false, true 'external')
+</code></pre>
 
 <h2>Environment Conditionals</h2>
 
