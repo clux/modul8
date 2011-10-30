@@ -7,12 +7,12 @@ codeAnalyis = require './analysis'
 
 # helpers
 anonWrap = (code) ->
-  '(function(){'+code+'})();'
+  "(function(){\n#{code}\n})();"
 
 makeWrapper = (ns, fnstr, hasArbiter) ->
   location = if hasArbiter then ns+".require('M8::#{fnstr}')" else fnstr
   selfexec = if !fnstr then '()' else '' # if fnstr is '' or was false'd -> we use a self executing anon fn
-  (code) -> location+'(function(){'+code+'})'+selfexec+';'
+  (code) -> location+"(function(){\n"+code+"\n})"+selfexec+";"
 
 # creates a unique filename to use for the serializers
 # uniqueness based on execution path, target.js and targetlibs.js - should be sufficient

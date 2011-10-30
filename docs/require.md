@@ -1,6 +1,6 @@
 # require()
 
-Modul8's `require()` works hand in hand with a private `define()` call that will wrap each module in the compiled source.
+modul8's `require()` works hand in hand with a private `define()` call that will wrap each module in the compiled source.
 This ensures that each module has the necessary context for the `require()` calls it will make. All this context is stored via closures and will be hidden from you.
 
 ## Ways to require
