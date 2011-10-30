@@ -1,9 +1,10 @@
-## How a Module System Works
+# Extended CommonJS
 
 This is going to contain more advanced background about what general module systems do, and what
 distinguishes modul8.
 
-### Relation to JavaScript
+## CommonJS Parsing
+### JavaScript Modules
 
 JavaScript has no module system.
 
@@ -26,7 +27,7 @@ us not much wiser. True modularity is clearly impossible when things are just ly
 it is error prone as conflicting exports will actually just favour the last script to execute - as JavaScript simply runs top to bottom, attaching its
 exports to window as we go along. Clearly we need something better than this.
 
-### CommonJS
+### CommonJS Standard
 
 There is a way to fix this, but first of all it assumes all modules need to support a stadardised format for exporting of modules.
 CommonJS is a such a standardization. It has very large traction at the moment, particularly driven by server side environments such as NodeJS.
@@ -38,7 +39,7 @@ Alternatively, it can replace the `module.exports` object to define all your exp
 By making sure each module is written this way, CommonJS parsers can implement clever trickery on top of it to make this behaviour work.
 I.e. having each module's exports objects stored somewhere for `require()` and allocating a singleton for each module.
 
-### CommonJS parsing
+### CommonJS Parsing
 #### Basics
 From the above rationale, it is clear that a CommonJS parser must turn this:
 
