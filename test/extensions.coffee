@@ -60,7 +60,7 @@ exports["test require#extensions"] = ->
       #creating data
       assert.ok(browser.evaluate("QQ.require('data::#{key}')"), "require('data::#{key}') exists")
       assert.eql(browser.evaluate("QQ.require('data::#{key}')"), dataObj[key], "require('data::#{key}') is dataObj[#{key}]")
-      browser.evaluate("var dataMod = QQ.require('M8::data')")
+      browser.evaluate("var dataMod = QQ.data;")
 
       #editing data
       assert.type(browser.evaluate("dataMod"), 'function', "M8::data is a requirable function")
