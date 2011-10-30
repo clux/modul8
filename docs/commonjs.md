@@ -112,8 +112,8 @@ the previous level should be safe having included the outmost level. Note here t
 Thus, to order our modules correctly, we must reduce the tree into an unique array of modules and their (maximum) level numbers,
 and simply sort this by their level numbers descending.
 
-#### modul8 Extensions
-##### Domains
+## modul8's CommonJS Extensions
+### Domains
 Whilst maintaining compatibility with the CommonJS spec, we have extended `require()` to ameliorate one common problem.
 
  - `require()` calls is a simple (clash prone) object property look-up on `stash[reqStr]`
@@ -140,17 +140,17 @@ I.e. it should not reference something from outside its base directory to work o
 
 Domains also provide 3 more areas of use that each get their own reserved domain.
 
-##### Arbiters
+#### Arbiters
 modul8 hates globals. They ruin an otherwise solid module system. Thus, it desperately tries to integrate globally exported libraries into its require system.
 It removes the global shortcut(s) from your application code and inserts them onto the reserved `M8` domain.
 Why we (can and sometimes) want to do this is explained in the [modularity doc](modularity.html), whilst
 the feature is fully documented in the [API](api.html).
 
-##### Live Extensions
+#### Live Extensions
 Because we have a `require()` function available in all the application code, and because this is synchronous (in the sense that it has been resolved on the server already),
 we migth want to extend our requiable data with results from third-party asynchronous script loaders.
 There's an `external` domain for that, and a client API for it. It's documented in the [API doc](api.html).
 
-##### Direct Extension
+#### Direct Extension
 Finally, modul8 allows exporting of data that exists on the server, without having to add separate script tags for them.
 The `data` domain contains all such data, and like all the above, it can be gotten with `require()`. The [API doc](api.html) contains how to use it.

@@ -7,7 +7,7 @@ then it goes into more advanced ideas as you scroll. At the bottom lie some info
 
 It here is one thing you learn quickly in programming, it is this:
 
-   - Spaghetti code is awful
+- Spaghetti code is awful
 
 It is awful to read, but it is even worse to modify or maintain.
 
@@ -15,9 +15,9 @@ It is awful to read, but it is even worse to modify or maintain.
 
 Without rehashing the entire internet: **tightly coupled code is bad code**. Because
 
-   - The more tightly coupled your modules become, the more side-effects alterations will have and the harder it will be to reuse that module (violating DRY)
-   - The more different behaviour per module, the harder it is to to maintain that module.
-   - The more one type of behaviour is spread out into different modules, the harder it is to find the source of that behaviour.
+- The more tightly coupled your modules become, the more side-effects alterations will have and the harder it will be to reuse that module (violating DRY)
+- The more different behaviour per module, the harder it is to to maintain that module.
+- The more one type of behaviour is spread out into different modules, the harder it is to find the source of that behaviour.
 
 ## What is Good Code
 
@@ -41,52 +41,61 @@ In my opinion, the biggest mistake you can make as a learning programmer is to n
 modul8 provides the means to separate your code into different files effectively, but how do you as a developer split up your behaviour?
 
 One of the hardest areas to modularize web applications is the client application domain. If you are using jQuery,
-you should be particularly familiar with this. `$` selector calls are spread around, DOM insertion & manipulation code
-exists all over the place, identical behaviour modifying functions written for every URL.
+you should be particularly familiar with this. `$` selector calls all around, DOM insertion & manipulation code
+in random places, identical behaviour existing for each URL.
 
 If this is problem to you, the first thing you should consider is a MVC/MVVM framework such as Spine/Backbone/Knockout.
-
-Spine is a strongly recommended personal favorite as it is the simplest and the most modular one discovered.
+Spine is a strongly recommended personal favorite as it is the simplest and the most modular one discovered. But the important thing is to learn one well
+and then stick to it.
 
 ### Decouping MVC code
 How to properly do this depends on the layout of your framework, but here's the gist.
 
+**Independent entry controller**
+
 - A base point should be some sort of _controller_ which requires all outside controllers
-- This centralized point should control major events on your site (like going to a new site), delegating to the other main controllers
+- This centralized point should control major events on your site (like going to a new page), delegating to the other main controllers
 - Nothing should require the main app controller (otherwise you get circulars, keep it simple)
+
+**Controllers**
 
 - All other contollers should control events specific to the data type they control
 - Each controller should have a corresponding model - which the app might not need to know about
 
+**Models**
+
 - This contents of a model may not depend on jQuery (wheras the actual abstract Model class might)
 - The model should contain logic to get information about this data type (i.e. maybe from one database table via ajax - which should be built in to the base class)
 
+**Extras**
+
 - Templates should have their own model and controller. The model can store them in LocalStorage or fetch them from server, but they can come bundled with modul8's output as well
 - Validation logic should exist in the model and should be based on validation rules used on the server - so some data should be passed down to ensure this logic is in sync at all times
+- Extra HTML helper logic should have its own module (possibly even DOM independent)
 
 ### Decoupling jQuery code
 For jQuery based applications, some things transcends the framework you use to manage your events.
 
 It is always important to think about the behaviour you are defining. If it is for
 
- - non-request based DOM interactivity - it is almost always better to write a plugin
- - request based DOM interactivity - you should use controllers/eventmanagers to handle your events and call above plugins.
- - calculations needed before DOM manipulation - you should make a standalone calulation module (on a shared domain perhaps) that should work on its own,
+- non-request based DOM interactivity - it is almost always better to write a plugin
+- request based DOM interactivity - you should use controllers/eventmanagers to handle your events and call above plugins.
+- calculations needed before DOM manipulation - you should make a standalone calulation module (on a shared domain perhaps) that should work on its own,
  and call it at appropriate stages above.
 
 This way if something breaks, you should be easily able to narrow down the problem to a UI error, a signaling error, or a calculation error.
-=> Debugging becomes up to 3 times easier.
+⇒ Debugging becomes up to 3 times easier.
 
 ### General
 
 modul8 just tries to facilitate the building of maintainable code. To actually do so, you need to always stay vigilant and remember to:
 
- - Not blend multiple types of behaviour together in one file.
- - Limit the areas from which you reference global variables.
- - Look for opportunities to move independent code onto different domains.
- - Look for opportunities to refactor code to make bits of it independent.
- - Enforce basic rules of JavaScript modularity: don't try to make circular dependencies work, analyse your require tree.
- If you are requiring the same library from every file, chances are you are doing something wrong.
+- Not blend multiple types of behaviour together in one file.
+- Limit the areas from which you reference global variables.
+- Look for opportunities to move independent code onto different domains.
+- Look for opportunities to refactor code to make bits of it independent.
+- Enforce basic rules of JavaScript modularity: don't try to make circular dependencies work, analyse your require tree.
+ If you are requiring the same libraries from every file, chances are you are doing something wrong.
 
 Decouple your code this way and you will save yourself the trouble of later having to learn from your mistakes the hard way.
 

@@ -1,6 +1,6 @@
 # Command Line Interface
 
-modul8 defines an optional command line interface if installed globally with npm, i.e.
+modul8 defines a command line interface when installed globally with npm, i.e.
 
     $ npm install -g modul8
 
@@ -58,15 +58,15 @@ Multiple data files can be imported by comma separating the above -d input
 ### Extra Options
 The following are equivalent methods for the programmatic API calls to `.set()`
 
-    -w or --wrapper <str> <==> set('domloader', <str>)
-    -n or --namespace <str> <==> set('namespace', <str>)
-    -l or --logging <==> set('logging', 'ERROR')
+    -w or --wrapper <str> ⇔ set('domloader', <str>)
+    -n or --namespace <str> ⇔ set('namespace', <str>)
+    -l or --logging ⇔ set('logging', 'ERROR')
 
 #### Booleans
 The following are slightly limited versions of the programmatic API's `.before()`, `.after()` and `.analysis()`
 
-    -t or --testcutter <==> before(modul8.testcutter)
-    -m or --minifier <==> after(modul8.minifier)
-    -z or --analyze <==> analysis(console.log) && !compile()
+    -t or --testcutter ⇔ before(modul8.testcutter)
+    -m or --minifier ⇔ after(modul8.minifier)
+    -z or --analyze ⇔ analysis(console.log) && !compile()
 
 The `-z` flag will in other words not compile anything, just print the dependency tree.

@@ -328,8 +328,10 @@ Or even simpler:
 
     .arbiters(['$','jQuery', 'Spine'])
 
-But note that this has a slightly different meaning - it adds them all without a second parameter. In other words:
-`require('$')` and `require('jQuery')` would both resolve in this case whereas in the object case above only `require('jQuery')` would.
+But note that this version has a slightly different meaning - it adds them all without a second parameter, i.e.
+
+- `require('$')` and `require('jQuery')` would both resolve whereas above only `require('jQuery')` would.
+
 
 ## Registering a Compile-to-JS Language
 
