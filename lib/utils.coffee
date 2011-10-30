@@ -1,7 +1,8 @@
-path        = require 'path'
-fs          = require 'fs'
-coffee      = require 'coffee-script'
-dir         = fs.realpathSync()
+path      = require 'path'
+fs        = require 'fs'
+coffee    = require 'coffee-script'
+_         = require 'underscore'
+dir       = fs.realpathSync()
 
 # infer abs domain path and file name from path relative to dir
 domainSplit = (relPath) ->
@@ -23,7 +24,7 @@ makeCompiler = (external={}) ->
   for key,fn of external
     if key in ['','.js','.coffee']
       throw new Error("modul8: cannot re-register #{key} extension")
-    if !(fn instanceof Function) or !(fn("").constructor is String)
+    if !_.isFunction(fn)
       throw new Error("modul8: registered compiler must be a fn returning a string")
 
   (file, bare=true) ->

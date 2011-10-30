@@ -82,7 +82,7 @@ bundleApp = (codeList, ns, domload, compile, o) ->
   # 1. construct the global namespace object
   l.push "window.#{ns} = {data:{}};"
 
-  # 2. pull in data from parsers
+  # 2. pull in data from parsers (force result to string if it isnt already)
   l.push "#{ns}.data.#{name} = #{pull_fn()};" for name, pull_fn of o.data
 
   # 3. attach require code

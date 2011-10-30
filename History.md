@@ -1,3 +1,7 @@
+0.9.2 / 2011-10-??
+==================
+  * Logging level defaults to ERROR (CLI still has to do -l for this)
+
 0.9.1 / 2011-10-29
 ==================
   * Logging bug fixed
@@ -37,7 +41,7 @@
 0.6.0 / 2011-10-17
 ==================
   * `require('folder')` will look for a `folder` file then an `index` file under `folder/`
-  * `require('folder/') will look for an `index` file under `folder/`
+  * `require('folder/')` will look for an `index` file under `folder/`
   * `require()` collision priority updated
   *  collision test suite included
   * `.compile()` will throw error if multiple files with same unique identifier (extensionless dom::filename) are attempted included - but helpfully after `.analysis()`

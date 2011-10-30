@@ -67,7 +67,7 @@ start = (entry) ->
     options     :
       namespace   : 'M8'
       domloader   : false
-      logging     : false
+      logging     : 'ERROR'
       force       : false
 
   new Modul8()
