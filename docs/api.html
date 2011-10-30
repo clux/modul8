@@ -378,8 +378,11 @@ jQuery.js file on your current domain. Normally this specificity should not be r
 <pre><code>.arbiters(['$','jQuery', 'Spine'])
 </code></pre>
 
-<p>But note that this has a slightly different meaning - it adds them all without a second parameter. In other words:
-<code>require('$')</code> and <code>require('jQuery')</code> would both resolve in this case whereas in the object case above only <code>require('jQuery')</code> would.</p>
+<p>But note that this version has a slightly different meaning - it adds them all without a second parameter, i.e.</p>
+
+<ul>
+<li><code>require('$')</code> and <code>require('jQuery')</code> would both resolve whereas above only <code>require('jQuery')</code> would.</li>
+</ul>
 
 <h2>Registering a Compile-to-JS Language</h2>
 

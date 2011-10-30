@@ -15,7 +15,7 @@
     <div id="content">
 <h1>Command Line Interface</h1>
 
-<p>modul8 defines an optional command line interface if installed globally with npm, i.e.</p>
+<p>modul8 defines a command line interface when installed globally with npm, i.e.</p>
 
 <pre><code>$ npm install -g modul8
 </code></pre>
@@ -85,18 +85,18 @@ then it suffices to:</p>
 
 <p>The following are equivalent methods for the programmatic API calls to <code>.set()</code></p>
 
-<pre><code>-w or --wrapper &lt;str&gt; &lt;==&gt; set('domloader', &lt;str&gt;)
--n or --namespace &lt;str&gt; &lt;==&gt; set('namespace', &lt;str&gt;)
--l or --logging &lt;==&gt; set('logging', 'ERROR')
+<pre><code>-w or --wrapper &lt;str&gt; ⇔ set('domloader', &lt;str&gt;)
+-n or --namespace &lt;str&gt; ⇔ set('namespace', &lt;str&gt;)
+-l or --logging ⇔ set('logging', 'ERROR')
 </code></pre>
 
 <h4>Booleans</h4>
 
 <p>The following are slightly limited versions of the programmatic API's <code>.before()</code>, <code>.after()</code> and <code>.analysis()</code></p>
 
-<pre><code>-t or --testcutter &lt;==&gt; before(modul8.testcutter)
--m or --minifier &lt;==&gt; after(modul8.minifier)
--z or --analyze &lt;==&gt; analysis(console.log) &amp;&amp; !compile()
+<pre><code>-t or --testcutter ⇔ before(modul8.testcutter)
+-m or --minifier ⇔ after(modul8.minifier)
+-z or --analyze ⇔ analysis(console.log) &amp;&amp; !compile()
 </code></pre>
 
 <p>The <code>-z</code> flag will in other words not compile anything, just print the dependency tree.</p>    </div>
