@@ -1,6 +1,7 @@
 (function(){
 window.M8 = {data:{}};
 (function(){
+
 /**
  * modul8 v0.9.2
  */
@@ -123,23 +124,34 @@ ns.require = makeRequire('app', 'CONSOLE');
  * Live Extension API
  */
 
-exports.M8.data = ns.data = function(name, exported) {
+ns.data = function(name, exported) {
   if (exports.data[name]) delete exports.data[name];
   if (exported) exports.data[name] = exported;
 };
 
-exports.M8.external = ns.external = function(name, exported) {
+ns.external = function(name, exported) {
   if (exports.external[name]) delete exports.external[name];
   if (exported) exports.external[name] = exported;
 };
 
 })();
 
-M8.require('M8::jQuery')(function(){M8.define('utils/validation','app',function(require, module, exports){exports.nameOk = function(name){
+// shared code
+
+
+
+// app code - safety wrap
+
+
+M8.require('M8::jQuery')(function(){
+M8.define('utils/validation','app',function(require, module, exports){
+exports.nameOk = function(name){
   return (name != 'jill');
 };
+
 });
-M8.define('models/user','app',function(require, module, exports){var validation = require('utils/validation.js');
+M8.define('models/user','app',function(require, module, exports){
+var validation = require('utils/validation.js');
 
 var User = {
   records : ['jack', 'jill'],
@@ -154,8 +166,10 @@ var User = {
 };
 
 module.exports = User;
+
 });
-M8.define('controllers/users','app',function(require, module, exports){var User = require('models/user');
+M8.define('controllers/users','app',function(require, module, exports){
+var User = require('models/user');
 
 var Users = {
   init : function(){
@@ -164,8 +178,10 @@ var Users = {
 };
 
 module.exports = Users;
+
 });
-M8.define('app','app',function(require, module, exports){var Users = require('controllers/users');
+M8.define('app','app',function(require, module, exports){
+var Users = require('controllers/users');
 var $ = require('jQuery');
 
 var App = {
@@ -173,5 +189,7 @@ var App = {
     $('#output').text( JSON.stringify(Users.init()) );
   }
 }.init();
-});});
+
+});
+});
 })();

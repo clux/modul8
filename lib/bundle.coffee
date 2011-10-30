@@ -99,7 +99,7 @@ bundleApp = (codeList, ns, domload, compile, o) ->
 
   # 4. include CommonJS compatible code in the order they have to be defined - defineWrap each module
   defineWrap = (exportName, domain, code) ->
-    "#{ns}.define('#{exportName}','#{domain}',function(require, module, exports){#{code}});"
+    "#{ns}.define('#{exportName}','#{domain}',function(require, module, exports){\n#{code}\n});"
 
   # 5. filter function split code into app code and non-app code
   harvest = (onlyMain) ->
@@ -110,13 +110,15 @@ bundleApp = (codeList, ns, domload, compile, o) ->
 
 
   # 6.a) include modules not on the app domain
+  l.push "\n// shared code\n"
   l.push harvest(false).join('\n')
 
   # 6.b) include modules on the app domain, and hold off execution till DOMContentLoaded fires
+  l.push "\n// app code - safety wrap\n\n"
   l.push domload(harvest(true).join('\n'))
 
   # 7. Use a closure to encapsulate the public and private require/define API as well as all export data
-  anonWrap('\n'+l.join('\n')+'\n')
+  anonWrap(l.join('\n'))
 
 
 module.exports = (o) ->
