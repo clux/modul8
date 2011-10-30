@@ -1,3 +1,8 @@
+0.9.3 / 2011-10-30
+==================
+  * Big documentation improvements
+  * Intelligent whitespace added to output code when not minified to make it more readible
+
 0.9.2 / 2011-10-30
 ==================
   * Logging level defaults to ERROR (CLI still has to do -l for this)
