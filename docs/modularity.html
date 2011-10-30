@@ -60,12 +60,12 @@ It does, however, take certain disipline to constantly police your files for mul
 <p>modul8 provides the means to separate your code into different files effectively, but how do you as a developer split up your behaviour?</p>
 
 <p>One of the hardest areas to modularize web applications is the client application domain. If you are using jQuery,
-you should be particularly familiar with this. <code>$</code> selector calls are spread around, DOM insertion &amp; manipulation code
-exists all over the place, identical behaviour modifying functions written for every URL.</p>
+you should be particularly familiar with this. <code>$</code> selector calls all around, DOM insertion &amp; manipulation code
+in random places, identical behaviour existing for each URL.</p>
 
-<p>If this is problem to you, the first thing you should consider is a MVC/MVVM framework such as Spine/Backbone/Knockout.</p>
-
-<p>Spine is a strongly recommended personal favorite as it is the simplest and the most modular one discovered.</p>
+<p>If this is problem to you, the first thing you should consider is a MVC/MVVM framework such as Spine/Backbone/Knockout.
+Spine is a strongly recommended personal favorite as it is the simplest and the most modular one discovered. But the important thing is to learn one well
+and then stick to it.</p>
 
 <h3>Decouping MVC code</h3>
 
@@ -75,7 +75,7 @@ exists all over the place, identical behaviour modifying functions written for e
 
 <ul>
 <li>A base point should be some sort of <em>controller</em> which requires all outside controllers</li>
-<li>This centralized point should control major events on your site (like going to a new site), delegating to the other main controllers</li>
+<li>This centralized point should control major events on your site (like going to a new page), delegating to the other main controllers</li>
 <li>Nothing should require the main app controller (otherwise you get circulars, keep it simple)</li>
 </ul>
 
@@ -127,7 +127,7 @@ and call it at appropriate stages above.</li>
 <li>Look for opportunities to move independent code onto different domains.</li>
 <li>Look for opportunities to refactor code to make bits of it independent.</li>
 <li>Enforce basic rules of JavaScript modularity: don't try to make circular dependencies work, analyse your require tree.
-If you are requiring the same library from every file, chances are you are doing something wrong.</li>
+If you are requiring the same libraries from every file, chances are you are doing something wrong.</li>
 </ul>
 
 <p>Decouple your code this way and you will save yourself the trouble of later having to learn from your mistakes the hard way.</p>
