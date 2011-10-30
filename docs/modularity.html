@@ -71,16 +71,34 @@ exists all over the place, identical behaviour modifying functions written for e
 
 <p>How to properly do this depends on the layout of your framework, but here's the gist.</p>
 
+<p><strong>Independent entry controller</strong></p>
+
 <ul>
 <li>A base point should be some sort of <em>controller</em> which requires all outside controllers</li>
 <li>This centralized point should control major events on your site (like going to a new site), delegating to the other main controllers</li>
-<li><p>Nothing should require the main app controller (otherwise you get circulars, keep it simple)</p></li>
-<li><p>All other contollers should control events specific to the data type they control</p></li>
-<li><p>Each controller should have a corresponding model - which the app might not need to know about</p></li>
-<li><p>This contents of a model may not depend on jQuery (wheras the actual abstract Model class might)</p></li>
-<li><p>The model should contain logic to get information about this data type (i.e. maybe from one database table via ajax - which should be built in to the base class)</p></li>
-<li><p>Templates should have their own model and controller. The model can store them in LocalStorage or fetch them from server, but they can come bundled with modul8's output as well</p></li>
+<li>Nothing should require the main app controller (otherwise you get circulars, keep it simple)</li>
+</ul>
+
+<p><strong>Controllers</strong></p>
+
+<ul>
+<li>All other contollers should control events specific to the data type they control</li>
+<li>Each controller should have a corresponding model - which the app might not need to know about</li>
+</ul>
+
+<p><strong>Models</strong></p>
+
+<ul>
+<li>This contents of a model may not depend on jQuery (wheras the actual abstract Model class might)</li>
+<li>The model should contain logic to get information about this data type (i.e. maybe from one database table via ajax - which should be built in to the base class)</li>
+</ul>
+
+<p><strong>Extras</strong></p>
+
+<ul>
+<li>Templates should have their own model and controller. The model can store them in LocalStorage or fetch them from server, but they can come bundled with modul8's output as well</li>
 <li>Validation logic should exist in the model and should be based on validation rules used on the server - so some data should be passed down to ensure this logic is in sync at all times</li>
+<li>Extra HTML helper logic should have its own module (possibly even DOM independent)</li>
 </ul>
 
 <h3>Decoupling jQuery code</h3>
@@ -97,7 +115,7 @@ and call it at appropriate stages above.</li>
 </ul>
 
 <p>This way if something breaks, you should be easily able to narrow down the problem to a UI error, a signaling error, or a calculation error.
-=> Debugging becomes up to 3 times easier.</p>
+⇒ Debugging becomes up to 3 times easier.</p>
 
 <h3>General</h3>
 
