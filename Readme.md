@@ -72,7 +72,7 @@ Lastly, modul8 aims to eliminate most global variables from your code. It does s
  - Encapsulate all exported data in the closure inhabited by `require()`
  - Incorporate globally available libraries into the module system via automatic arbiters
 
-To consult the [api docs](http://clux.github.com/modul8/docs/api.html).
+To dive in properly; consult the [api docs](http://clux.github.com/modul8/docs/api.html).
 
 ## Features
 
