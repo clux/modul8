@@ -218,7 +218,9 @@ Defaults for thes are : `{prefix: true, suffix: false}`.
 The `.hide()` call specifies what domains to suppress in the dependency tree. Takes a domain name string or an array of such strings.
 
 The analysis call can be shortcutted with a direct (up to) four parameter call to `.analysis()` with parameters output, prefix, suffix, hide.
-So the above could be done with `.analysis(console.log, false, true 'external')`.
+So the above could be done with
+
+    .analysis(console.log, false, true 'external')
 
 ## Environment Conditionals
 

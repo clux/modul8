@@ -1,16 +1,18 @@
 # Extended CommonJS
 
-This is going to contain more advanced background about what general module systems do, and what
-distinguishes modul8.
+This is going to contain more advanced background about what a general module systems do, and, finally, what
+distinguishes modul8 from plain CommonJS.
 
 ## CommonJS Parsing
+Or, how a module system works.
+
 ### JavaScript Modules
 
 JavaScript has no module system.
 
-_great start._
+_we're off to a great start.._
 
-We have, on the other hand, got functions. Functions with closures.
+On the other hand, got functions. Functions with closures.
 
     (function(){
       var private = 5;
@@ -27,7 +29,7 @@ us not much wiser. True modularity is clearly impossible when things are just ly
 it is error prone as conflicting exports will actually just favour the last script to execute - as JavaScript simply runs top to bottom, attaching its
 exports to window as we go along. Clearly we need something better than this.
 
-### CommonJS Standard
+### CommonJS Idea
 
 There is a way to fix this, but first of all it assumes all modules need to support a stadardised format for exporting of modules.
 CommonJS is a such a standardization. It has very large traction at the moment, particularly driven by server side environments such as NodeJS.
@@ -39,8 +41,8 @@ Alternatively, it can replace the `module.exports` object to define all your exp
 By making sure each module is written this way, CommonJS parsers can implement clever trickery on top of it to make this behaviour work.
 I.e. having each module's exports objects stored somewhere for `require()` and allocating a singleton for each module.
 
-### CommonJS Parsing
-#### Basics
+### CommonJS Basics
+
 From the above rationale, it is clear that a CommonJS parser must turn this:
 
     var private = 5;
@@ -114,7 +116,7 @@ Thus, to order our modules correctly, we must reduce the tree into an unique arr
 and simply sort this by their level numbers descending.
 
 ## modul8's CommonJS Extensions
-### Domains
+### Require Path Problem
 Whilst maintaining compatibility with the CommonJS spec, we have extended `require()` to ameliorate one common problem.
 
  - `require()` calls is a simple (clash prone) object property look-up on `stash[reqStr]`
@@ -124,8 +126,9 @@ But require paths force you to scan all of them, with no way of specifying what 
 make it very difficult to whitelist injected data from the server resolver - as it could simply find files with the same names as your data somewhere..
 
 The relation between the paths are also lost on the browser, so there is no sense in maintining any illusions about this by using traditional require paths.
-In the end, namespacing each path became the accepted solution. To distinguish them from typical require paths, we refer to them as _domains_ or _require domains_
-in modul8.
+
+### Domains
+In the end, namespacing each path became the accepted solution. To distinguish them from typical require paths, we refer to them as _domains_ or _require domains_.
 
 This also simplifies implementation as well, as we can create one object container directly on `stash` for each domain with key equal to its name.
 
@@ -142,7 +145,7 @@ I.e. it should not reference something from outside its base directory to work o
 Domains also provide 3 more areas of use that each get their own reserved domain.
 
 #### Arbiters
-modul8 hates globals. They ruin an otherwise solid module system. Thus, it desperately tries to integrate globally exported libraries into its require system.
+modul8 hates globals. They ruin otherwise solid modularity. Thus, it desperately tries to integrate globally exported libraries into its require system.
 It removes the global shortcut(s) from your application code and inserts them onto the reserved `M8` domain.
 Why we (can and sometimes) want to do this is explained in the [modularity doc](modularity.html), whilst
 the feature is fully documented in the [API](api.html).

@@ -7,11 +7,11 @@ This ensures that each module has the necessary context for the `require()` call
 
 There are four different ways to use require:
 
-**Absolutely**
+#### Absolutely
 
 - `require('subfolder/module.js')` - Can resolve subfolder/module.js on any domain - regardless of what subfolder or domain you are in - but will scan the current domain first.
 
-**Relatively**
+#### Relatively
 
 - `require('./module.js')` - Can resolve a module.js file on the current domain in the current folder.
 
@@ -21,28 +21,28 @@ You can indicate a relative require by using either the `./` prefix, or the fold
 
 - `require('./../subfolder/../basemodule.js')` **is not legal** while `require('./../basemodule.js')` **is**.
 
-**Domain Specific**
+#### Domain Specific
 
 - `require('shared::val.js')` - Like absolute requires, but specifies the only domain which will be searched. If you want to do relative domain specific requires,
 just use a pure relative require where the current domain is implicitly assumed.
 
-**Data Domain**
+##### Data Domain
 
 - `require('data::datakey')` - Data on this domain does not represent actual files, but data injected into the require system on the server. It will not show up in the dependency tree.
 
-**External Domain**
+##### External Domain
 
 - `require('external::extkey')` - Same as data domain, but only extensible from the client.
 
-**Arbiter Domain**
+##### Arbiter Domain
 
 - `require('jQuery')` - Shortcut domain for old globals that were deleted to help identify hidden dependencies - must be defined on the server.
 This does not require a domain prefix because it is assumed this domain gets sufficiently frequent use to have it bumped up on the priority list.
 
-Note that iff a jQuery.js file is found on the current domain, however, it will gain priority over the arbiter domain.
+Note that if a jQuery.js file is found on the current domain, however, it will gain priority over the arbiter domain.
 If this coexistence is necessary, any arbiters must be  required by specifying the internal domain name: `$ = require('M8::jQuery')`.
 
-### File extensions
+## File extensions
 
 File extensions are never necessary, but you can (and sometimes should) include them for specificity (except for on the data domain).
 
@@ -50,7 +50,7 @@ The reason you perhaps should is that modul8 allows mixing and matching JavaScri
 but is only as forgiving with such mixing as you deserve. If you only use one language and never put files of another language in your directories,
 the following warning does not apply to you.
 
-#### Extension Priority
+### Extension Priority
 To see why, consider a simplified resolver algorithm from the server
 
     name = require input, domain = domain of requiree
@@ -66,7 +66,7 @@ If you use _CoffeeScript_ or other registered compilers for AltJS languages,
 and if there is even a chance of a file of the same name with a `.js` extension popping up in the same folder,
 then it will gain priority over your normal files if you do not specify the extension.
 
-##### Extension Truncation
+#### Extension Truncation
 The corollary to this extension priority is that we can't accurately distinguish between two extensions on the client when we omit the extension.
 Thus, since omitting the extension is generally advantageous for brevity, we have decided to simply truncate the extension on the client.
 
@@ -75,7 +75,7 @@ This is advantageous also because it makes the require code leaner, more perfoma
 You can still have a `.js` duplicate of your `.coffee` file in a directory, but you then have to explicitly define `.coffee` so that the server
 can pre-pick the right one to include for you.
 
-##### Server Error
+#### Server Error
 To help you remember this, modul8 will actually throw an error if you simultaneously try to require both
 
 - app::subpath/module.js
@@ -90,7 +90,7 @@ In short: try not to have different extension versions of your files in the same
 
 Note that the error will only be thrown after the `.analysis()` dependency tree was logged, allowing you to pinpoint the careless `require()`.
 
-### Folders Priority
+## Folders Priority
 
 Require strings that contain a trailing slash or does not point to a file directly, will try to resolve the name as a folder and look for a file named `index` following the above logic.
 The following will all resolve a folder, but the last has the possiblility of a collision with a file of the same name as the folder:
@@ -99,7 +99,7 @@ The following will all resolve a folder, but the last has the possiblility of a 
     require('controllers/'); //looks for controllers/index+extension
     require('controllers'); //looks for controllers+extension then controllers/index+extension
 
-### General Priority
+## General Priority
 
 Requires are attempted resolved with the following priority:
 
