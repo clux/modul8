@@ -2,10 +2,10 @@
 window.M8 = {data:{}};
 (function(){
 /**
- * modul8 v0.9.0
+ * modul8 v0.9.2
  */
 
-var config    = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["$","jQuery"]},"logging":0}
+var config    = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["$","jQuery"]},"logging":1}
   , ns        = window[config.namespace]
   , domains   = config.domains
   , arbiters  = []
@@ -114,7 +114,7 @@ ns.inspect = function(domain) {
 };
 
 ns.domains = function() {
-  return domains.concat(['external']);
+  return domains.concat(['external','data']);
 };
 
 ns.require = makeRequire('app', 'CONSOLE');
@@ -129,9 +129,10 @@ exports.M8.data = ns.data = function(name, exported) {
 };
 
 exports.M8.external = ns.external = function(name, exported) {
-  if (exports.external[name]) delete exports.exernal[name];
-  if (exported) exports.extenal[name] = exported;
+  if (exports.external[name]) delete exports.external[name];
+  if (exported) exports.external[name] = exported;
 };
+
 })();
 
 M8.require('M8::jQuery')(function(){M8.define('utils/validation','app',function(require, module, exports){exports.nameOk = function(name){
