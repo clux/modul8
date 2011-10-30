@@ -6,16 +6,18 @@
   </head>
   <body class="subpage">
     <ul id="nav">
+      <li><a href="https://github.com/clux/modul8#readme" title="Source and introduction">Intro</a></li>
+      <li><a href="https://github.com/clux/modul8/tree/master/examples" title="Examples from github source">Examples</a></li>
       <li><a href="api.html" title="API documentation">API</a></li>
       <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
-      <li><a href="commonjs.html" title="Extended CommonJS - basic + the extensions">X-CommonJS</a></li>
-      <li><a href="modularity.html" title="Modularity issues and advice">Modularity</a></li>
+      <li><a href="xcjs.html" title="Extended CommonJS: basic and extensions">X-CommonJS</a></li>
+      <li><a href="modularity.html" title="Modularity: issues and advice">Modularity</a></li>
     </ul>
     <div id="content">
 <h1>require()</h1>
 
-<p>Modul8's <code>require()</code> works hand in hand with a private <code>define()</code> call that will wrap each module in the compiled source.
+<p>modul8's <code>require()</code> works hand in hand with a private <code>define()</code> call that will wrap each module in the compiled source.
 This ensures that each module has the necessary context for the <code>require()</code> calls it will make. All this context is stored via closures and will be hidden from you.</p>
 
 <h2>Ways to require</h2>

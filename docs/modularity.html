@@ -6,11 +6,13 @@
   </head>
   <body class="subpage">
     <ul id="nav">
+      <li><a href="https://github.com/clux/modul8#readme" title="Source and introduction">Intro</a></li>
+      <li><a href="https://github.com/clux/modul8/tree/master/examples" title="Examples from github source">Examples</a></li>
       <li><a href="api.html" title="API documentation">API</a></li>
       <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
-      <li><a href="commonjs.html" title="Extended CommonJS - basic + the extensions">X-CommonJS</a></li>
-      <li><a href="modularity.html" title="Modularity issues and advice">Modularity</a></li>
+      <li><a href="xcjs.html" title="Extended CommonJS: basic and extensions">X-CommonJS</a></li>
+      <li><a href="modularity.html" title="Modularity: issues and advice">Modularity</a></li>
     </ul>
     <div id="content">
 <h1>Modularity</h1>
@@ -64,8 +66,8 @@ you should be particularly familiar with this. <code>$</code> selector calls all
 in random places, identical behaviour existing for each URL.</p>
 
 <p>If this is problem to you, the first thing you should consider is a MVC/MVVM framework such as Spine/Backbone/Knockout.
-Spine is a strongly recommended personal favorite as it is the simplest and the most modular one discovered. But the important thing is to learn one well
-and then stick to it.</p>
+Spine is a strongly recommended personal favorite as it is arguably the most lightweight and most modular one discovered.
+But ultimately, there are a lot of good frameworks out there, don't take my word for it. The important thing is to learn one well and then stick to it.</p>
 
 <h3>Decouping MVC code</h3>
 
@@ -151,9 +153,9 @@ delete window.jQuery;
 delete window.$
 </code></pre>
 
-<p>This means you can use <code>$ = require('jQuery')</code> so everything will be explicitly defined on the application domain,
-you've deleted the global shortcuts so that you will know when you forgot to require, and jQuery (but none of its dependencies)
-show up in the dependency tree. I.e. you will quickly identify what code is actually DOM dependent, and what isn't or shouldn't be.
+<p>With this you can put <code>var $ = require('jQuery')</code> so everything will be explicitly defined on the application domain.
+You've also deleted the global shortcuts so that you will know when you forgot to require. Finally, jQuery (but none of its dependencies)
+show up in the dependency tree - so you will quickly identify what code is actually DOM dependent, and what isn't or shouldn't be.
 Clearly this is advantageous.</p>
 
 <p>Having found this pattern very useful, but also noticing how repeating this pattern on several libraries pollutes our application
@@ -171,6 +173,8 @@ environment agnostic domain, then it has clearly improved your code enough for m
 always aim to factor out behavior into small loosely coupled modules - then you are already
 well on your way to resolving spaghetti hell. The rest is getting the correct signaling model for your events to your controllers/controller style entities.</p>
 
-<p>Good luck. Hopefully this is useful on some level.</p>    </div>
+<p>Good luck.</p>
+
+<p>Hopefully this has been useful on some level : )</p>    </div>
   </body>
 </html>
