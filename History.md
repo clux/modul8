@@ -1,4 +1,4 @@
-0.9.2 / 2011-10-??
+0.9.2 / 2011-10-30
 ==================
   * Logging level defaults to ERROR (CLI still has to do -l for this)
   * External extensions bug in 0.9.<2
