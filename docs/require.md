@@ -83,7 +83,7 @@ To help you remember this, modul8 will actually throw an error if you simultaneo
 
 It is not a complete failsafe, we are aware, but it helps force usage so that the problem above does not occur.
 
-In short: try not to have different extension versions of your files in the same directory or you can run into the following two problems:
+**In short**: try not to have different extension versions of your files in the same directory or you can run into the following two problems:
 
 - **A)** your Coffee changes wont do anything because you are unknowingly requiring a JS version that got in the directory
 - **B)** you will have a conflict error thrown at you to help you not challenging fate with techniques that can result in problem A
