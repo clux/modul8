@@ -37,30 +37,30 @@ modul8('./client/app.js')
 <p>You can add any number of domains to be scanned. Files on these domains can be required specifically with <code>require('domain::name')</code>.
 Both the domain and file extension can be omitted if there are no conflicts (current domain gets scanned first, .js scanned before .coffee).</p>
 
-<p>The following are equivalent from a file in the root of the <code>app</code> domain, having the file <code>validation.js</code> in the same folder</p>
+<p>The following are equivalent from a file in the root of the application domain, having the file <code>validation.js</code> in the same folder</p>
 
-<pre><code>require('app::validation.js') //domain specific searches only specified domain
-require('./validation.js') //relative require searches only this domain
+<pre><code>require('./validation.js') //relative require searches only this domain
 require('./validation') //.js extension always gets searched before .coffee
 require('validation') // resolves this domain first (but moves on if this fails)
 </code></pre>
 
 <p>More information on <code>require()</code> priority is available in <a href="require.html">this section</a></p>
 
-<h2>Adding Data</h2>
+<h2>Injecting Data</h2>
 
-<p>At some point during development it is natural to feel that this data should be available on the client as well. modul8 supports two ways of doing this:</p>
+<p>One of the eternal problems with web development is how to export data from the server to the client reliably.
+modul8 provides two simple ways of doing this.</p>
 
 <ul>
 <li>Have an explicit file on a shared domain, exporting the objects you need</li>
-<li>Export the object directly onto the <code>data</code> domain</li>
+<li>Add the object directly onto the <code>data</code> domain</li>
 </ul>
 
 <p>The first is good if you have static data like definitions, because they are perhaps useful to the server as well,
-but suppose you want to export more ephemeral data that the server has no need for, like templates or template versions.
+but suppose you want to export more ephemeral data that the server has no need for, like perhaps templates or template versions.
 To export these to the server, you will have to obtain the data somehow - your job - and allow modul8 to pull it into the script.</p>
 
-<p>The data API simply consists of <code>add()</code>ing data keys and functions to <code>data()</code></p>
+<p>The data API is simply chaining <code>add()</code> onto <code>data()</code> with data key and function as arguments to add</p>
 
 <pre><code>modul8(dir+'/app/client/app.js')
   .data()
@@ -79,7 +79,7 @@ Data exported to this domain is requirable as if it were exported from a file (n
 <li><code>require('data::models')  //== myModelParser()</code></li>
 </ul>
 
-<p>In other words the function output is attached verbatim to modul8's exports container; if you provide bad data, you are solely responsible for breaking your build.
+<p>In other words the function output is attached verbatim to modul8's exports.data container; if you provide bad data, you are solely responsible for breaking your build.
 This is easy to detect in a console though.</p>
 
 <p>As a small example our personal version parser operates something like the following:</p>
@@ -98,7 +98,8 @@ console.log(versions['users/view']) // -&gt; [0,2,4]
 
 <h2>Adding Libraries</h2>
 
-<p>Appending standard (window exporting) JavaScript and CoffeeScript files is easy. Call <code>.libraries()</code> and chain on your options as below.</p>
+<p>Appending standard (window exporting) JavaScript and CoffeeScript files is easy. Call <code>.libraries()</code> and chain on your options as below.
+CoffeeScript libs / AltJS libs are compiled with the safety wrapper, whereas plain JavaScript is simply concatenated on bare.</p>
 
 <pre><code>modul8('./app/client/app.js')
   .libraries()
@@ -110,17 +111,16 @@ console.log(versions['users/view']) // -&gt; [0,2,4]
 
 <p>Note that without the <code>.target()</code> option added, the libraries would be inserted in the same file before you application code.</p>
 
-<p>Alternatively, this <code>.list()</code> call can be avoided by more succinctly placing this array in the first parameter of <code>.libraries()</code> instead.
-Similarly, we can also avoid <code>.path()</code> and <code>.target()</code> by specifying second and third parameters to <code>.libraries()</code>.</p>
+<p>Alternatively, there is a succinct syntax to provide all libraries options in one call. Where the third parameter is not required.</p>
 
 <pre><code>modul8(dir+'/app/client/app.js')
   .libraries(['jQuery.js','history.js'], './app/client/libs/', './out-libs.js')
   .compile('./out.js');
 </code></pre>
 
-<p>Libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
-Note that modified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response. Thus, using <code>.target()</code> and
-splitting these into a different file could be advantageous.</p>
+<p>Note that libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
+Modified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response when requested again. Thus, using <code>.target()</code> and
+splitting these into a different file could be advantageous from a bandwidth perspective.</p>
 
 <p>If you would like to integrate libraries into the require system check out the documentation on <code>arbiters()</code> below.</p>
 
@@ -259,6 +259,9 @@ Defaults for thes are : <code>{prefix: true, suffix: false}</code>.</p>
 
 <p>The <code>.hide()</code> call specifies what domains to suppress in the dependency tree. Takes a domain name string or an array of such strings.</p>
 
+<p>The analysis call can be shortcutted with a direct (up to) four parameter call to <code>.analysis()</code> with parameters output, prefix, suffix, hide.
+So the above could be done with <code>.analysis(console.log, false, true 'external')</code>.</p>
+
 <h2>Environment Conditionals</h2>
 
 <p>We can conditionally perform the following action, if <strong>NODE_ENV</strong> matches specified environment.</p>
@@ -291,59 +294,57 @@ Defaults for thes are : <code>{prefix: true, suffix: false}</code>.</p>
 <p>If we perform the same action for environments, set them before
 the first <code>in()</code> call, or use <code>in('all')</code>.</p>
 
-<h2>Debugging</h2>
-
-<p>If you have wrongly entered data to <code>require()</code>, you will not get any information other than an undefined reference back.
-Since all the exported data is encapsulated in a closure, you will not be able to find it directly from the console.</p>
-
-<p>To see where the object you are looking for should live or lives, you may find it useful to log the specified domain object
-with the globally available <code>M8.inspect(domainName)</code> method. Additionally, you may retrieve the list of domains modul8 tracks using the
-<code>M8.domains()</code> command.</p>
-
-<p>If you want every <code>require()</code> call to be logged to the console, you can set the <code>logging</code> setting.</p>
-
-<p>There is additionally a console friendly require version globally available at <code>M8.require()</code>.
-This acts as if you were a file called 'CONSOLE' on the root directory of your main application domains, so you can use relative requires there.</p>
-
 <h2>Live Extensions</h2>
 
-<p>It is plausible you may want to store <code>require()</code>able data or code inside modul8's module containers.
+<p>It is plausible you may want to store requirable data or code inside modul8's module containers.
 Perhaps you have a third-party asynchronous script loader, and you want to attach the resulting object onto some appropriate domain.</p>
 
 <p>This is an issue, because <code>require()</code> calls are analysed on the server before compilation, and if you reference something that will be loaded in
 separately, it will not be found on the server. The solution to this is the same solution modul8 uses to allow data domain references; whitelisting.</p>
 
-<p>The domains <code>M8</code>, <code>data</code> and <code>external</code> have been whitelisted for this purpose, and a <code>require()</code>able API exists on the client.</p>
+<p>The domains <code>M8</code>, <code>data</code> and <code>external</code> have been whitelisted for this purpose, and an API exists on the client.
+The <code>M8</code> domain is reserved for arbiters and can only be extended from the server, but the other two have a public API from the client.
+But note that no other domains can be manipulated on the client.</p>
+
+<p>You can access the API from your application code by referencing modul8's single global object. The name of this object can be changed through the <code>namespace</code> setting,
+and by default it is set to <code>M8</code>, but we refer to it here simply as <code>ns</code> to avoid confusion with the <code>M8</code> domain.</p>
+
+<p>Note that the <code>ns</code> object stores simply the API to interact with the data, not the actual data. You have to <code>require()</code> if you want to actually get it.</p>
 
 <ul>
-<li><code>require('M8::external')</code> - returns a function(name, object), which, when called will attach object to external::name</li>
-<li><code>require('M8::external')</code> - returns a function(name, object), which, when called will attach object to data::name</li>
+<li><code>ns.data</code> - is a function(name, object) - manipulating data::name</li>
+<li><code>ns.external</code> -  function(name, object) - manipulating external::name</li>
 </ul>
 
 <p>Both these functions will overwrite on repeat calls. For example:</p>
 
-<pre><code>var dataModify = require('M8::data');
-
-dataModify('libX', libXobj);
+<pre><code>ns.data('libX', libXobj);
 require('data::libX'); // -&gt; libXobj
 
-dataModify('libX', {});
+ns.data('libX', {});
 require('data::libX'); // -&gt; {}
 
-dataModify('libX'); //unsets
-require('data::libX'); // -&gt; null
+ns.data('libX'); //unsets
+require('data::libX'); // -&gt; undefined
 </code></pre>
 
-<p>Although inteded for the console, if you don't like using <code>require()</code> to get these functions, they are aliased on the namespaced object.
-Just remember that if you change the name of your namespace, you will have to change these references everywhere.
-Also note that changing the namespace does not change the domain these two functions lie on. The aliases are as follows:</p>
+<p>And similarly for <code>ns.external</code>.
+See the debug section for how to log the <code>external</code> and <code>data</code> domains.</p>
 
-<ul>
-<li><code>M8.data === require('M8::data')</code></li>
-<li><code>M8.external === require('M8::external')</code></li>
-</ul>
+<h2>Debugging</h2>
 
-<p>Or, more generally; <code>#{namespace}.data === require('M8::data')</code>.</p>
+<p>If you have wrongly entered data to <code>require()</code>, you will not get any information other than an undefined reference back.
+Since all the exported data is encapsulated in a closure, you will also not be able to locate it from the console.</p>
+
+<p>To see where the object you are looking for should live or lives, you may find it useful to log the specified domain object
+with the globally available <code>ns.inspect(domainName)</code> method. Additionally, you may retrieve the list of domains modul8 tracks using the
+<code>ns.domains()</code> command.</p>
+
+<p>If you want every <code>require()</code> call to be logged to the console, you can set the <code>logging</code> setting appropriately.
+The <code>ERROR</code> level is recommended as it will tell you when a <code>require()</code> call failed.</p>
+
+<p>There is additionally a console friendly require version globally available at <code>ns.require()</code>.
+This acts as if you were a file called 'CONSOLE' in the same folder as your entrypoint, so you can use relative requires to get application code there..</p>
 
 <h2>Arbiters</h2>
 
@@ -357,20 +358,28 @@ Also note that changing the namespace does not change the domain these two funct
   .compile(dir+'/out.js');
 </code></pre>
 
-<p>This code would delete objects <code>$</code>, <code>jQuery</code> and <code>Spine</code> from <code>window</code> and under the covers add closure bound alternatives you can <code>require()</code>
+<p>This code would delete objects <code>$</code>, <code>jQuery</code> and <code>Spine</code> from <code>window</code> and under the covers add closure bound alternatives you can <code>require()</code>.
 The second parameter to <code>arbiters().add()</code> is the variable name/names to be deleted. If only a single variable should be deleted,
 it can be entered as a string, but if this is the same as as the arbiter's name, then it can be omitted completely - as with Spine above.</p>
 
 <p>Arbitered libraries can be should be referenced simply with <code>require('jQuery')</code>, or <code>require('M8::jQuery')</code> it there is a conflicting
 jQuery.js file on your current domain. Normally this specificity should not be required.</p>
 
-<p>Alternative adding syntax is to add an object directly to <code>arbiters()</code>, but this means that the second parameters must always be specified</p>
+<p>Alternative adding syntax is to add an object directly to <code>arbiters()</code></p>
 
 <pre><code>.arbiters({
   jQuery : ['$', 'jQuery']
   Spine  : Spine
 })
 </code></pre>
+
+<p>Or even simpler:</p>
+
+<pre><code>.arbiters(['$','jQuery', 'Spine'])
+</code></pre>
+
+<p>But note that this has a slightly different meaning - it adds them all without a second parameter. In other words:
+<code>require('$')</code> and <code>require('jQuery')</code> would both resolve in this case whereas in the object case above only <code>require('jQuery')</code> would.</p>
 
 <h2>Registering a Compile-to-JS Language</h2>
 
