@@ -35,6 +35,7 @@ generateApp = (options)-> # dont call this with size < 4 otherwise we wont get t
   modul8(dir+'/input/main/temp.js')
     .set('force', true)
     .set('namespace', 'QQ')
+    .set('logging', false)
     #.analysis().output(console.log)
     .data(data)
     .compile(dir+'/output/flat.js')

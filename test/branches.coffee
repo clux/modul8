@@ -82,7 +82,7 @@ generateApp = -> # dont call this with size < 4 otherwise we wont get the mixins
 
   modul8(dir+'/input/app/entry.js')
     .set('force', true)
-    #.analysis().output(console.log)
+    #.analysis(console.log)
     .domains()
       .add('internal', dir+'/input/internal/')
       .add('shared', dir+'/input/shared/')

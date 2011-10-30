@@ -30,6 +30,7 @@ Modul8::in = (env) ->
   envCurrent = env
   @
 
+# before and after calls will allow anything in, but we throw if any not fn at compile
 Modul8::before = (fn) ->
   @removeSubClassMethods()
   obj.pre.push fn if @environmentMatches
@@ -78,8 +79,9 @@ start = (entry) ->
 
 Modul8::data = (input) ->
   return @ if !@environmentMatches
-  obj.data[key] = val for key,val of input if input
-  new Data()
+  dt = new Data()
+  dt.add(key, val) for key,val of input if input and _.isObject(input)
+  dt
 
 Data = ->
 Data:: = new Modul8('Data')
@@ -112,22 +114,24 @@ Domains::add = (key, val) ->
 
 Modul8::libraries = (list, dir, target) ->
   return @ if !@environmentMatches
-  obj.libFiles = list if list and _.isArray(list)
-  obj.libDir = dir if dir
-  obj.libsOnlyTarget = target if target
-  new Libraries()
+  libs = new Libraries()
+  libs.list(list) if list
+  libs.path(dir) if dir
+  libs.target(target) if target
+  libs
+
 
 Libraries = ->
 Libraries:: = new Modul8('Libraries')
 
 Libraries::list = (list) ->
   return @ if !@subclassMatches('Libraries','list')
-  obj.libFiles = list if @environmentMatches
+  obj.libFiles = list if @environmentMatches and _.isArray(list)
   @
 
 Libraries::path = (dir) ->
   return @ if !@subclassMatches('Libraries','path')
-  obj.libDir = dir if @environmentMatches
+  obj.libDir = dir+'' if @environmentMatches
   @
 
 Libraries::target = (target) ->
@@ -138,9 +142,14 @@ Libraries::target = (target) ->
 
 
 
-Modul8::analysis = ->
+Modul8::analysis = (target, prefix, suffix, hide) ->
   return @ if !@environmentMatches
-  new Analysis()
+  ana = new Analysis()
+  ana.output(target) if target
+  ana.prefix(prefix) if prefix
+  ana.suffix(suffix) if suffix
+  ana.hide(hide) if hide
+  ana
 
 Analysis = ->
 Analysis:: = new Modul8('Analysis')
@@ -152,12 +161,12 @@ Analysis::output = (target) ->
 
 Analysis::prefix = (prefix) ->
   return @ if !@subclassMatches('Analysis','prefix')
-  obj.domPrefix = prefix if @environmentMatches
+  obj.domPrefix = !!prefix if @environmentMatches
   @
 
 Analysis::suffix = (suffix) ->
   return @ if !@subclassMatches('Analysis','suffix')
-  obj.extSuffix = suffix if @environmentMatches
+  obj.extSuffix = !!suffix if @environmentMatches
   @
 
 Analysis::hide = (domain) ->
@@ -170,7 +179,9 @@ Analysis::hide = (domain) ->
 Modul8::arbiters = (arbObj) ->
   return @ if !@environmentMatches
   arb = new Arbiters()
-  arb.add(key, val) for key,val of arbObj if arbObj and _.isObject(arbObj)
+  if arbObj
+    arb.add(key, val) for key,val of arbObj if _.isObject(arbObj)
+    arb.add(v) for v in arbObj if _.isArray(arbObj)
   arb
 
 Arbiters = ->
@@ -182,7 +193,7 @@ Arbiters::add = (name, globs) ->
   if globs and _.isArray(globs)
     obj.arbiters[name] = globs
   else if globs
-    obj.arbiters[name] = [globs]
+    obj.arbiters[name] = [globs+'']
   else
     obj.arbiters[name] = [name]
   @
