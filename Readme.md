@@ -11,11 +11,11 @@ console.log(determine.isCool(['clux', 'lava']));
 the required module `determine.coffee` (or .js if you prefer)
 
 ````coffeescript
-cool = require('shared::cool') # <- cross-domain require
+cool = require('shared::cool') # cross-domain require
 exports.isCool = (input) -> input.filter(cool)
 ````
 
-and finally its required `cool.js` on the `shared` domain
+and finally its required `cool.js` on the `shared` domain [?](http://clux.github.com/modul8/docs/commonjs.html)
 
 ````javascript
 module.exports = function(name){
@@ -37,7 +37,7 @@ This will construct a single, browser compatible `out.js` in your execution path
     └──┬app::determine
        └───shared::cool
 
-The shared code is independent of the application and can be reused on the server.
+The shared code is independent of the application and **can be reused on the server**.
 
 Compilation can also be performed via the command line interface by typing
 
@@ -47,7 +47,7 @@ $ modul8 client/main.js -p shared:shared/ > out.js
 
 from the path containing fhe shared/ and client/ folders.
 
-To load the file from your site stick a script tag in your HTML:
+To load the CommonJS compatible output file from your site stick a script tag in your HTML:
 
 ````html
 <script src="/out.js"></script>

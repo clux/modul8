@@ -45,8 +45,8 @@ you should be particularly familiar with this. `$` selector calls all around, DO
 in random places, identical behaviour existing for each URL.
 
 If this is problem to you, the first thing you should consider is a MVC/MVVM framework such as Spine/Backbone/Knockout.
-Spine is a strongly recommended personal favorite as it is the simplest and the most modular one discovered. But the important thing is to learn one well
-and then stick to it.
+Spine is a strongly recommended personal favorite as it is arguably the most lightweight and most modular one discovered.
+But ultimately, there are a lot of good frameworks out there, don't take my word for it. The important thing is to learn one well and then stick to it.
 
 ### Decouping MVC code
 How to properly do this depends on the layout of your framework, but here's the gist.
@@ -117,9 +117,9 @@ We will demonstrate such a solution. Begin by constructing a `jQuery.js` file on
     delete window.jQuery;
     delete window.$
 
-This means you can use `$ = require('jQuery')` so everything will be explicitly defined on the application domain,
-you've deleted the global shortcuts so that you will know when you forgot to require, and jQuery (but none of its dependencies)
-show up in the dependency tree. I.e. you will quickly identify what code is actually DOM dependent, and what isn't or shouldn't be.
+With this you can put `var $ = require('jQuery')` so everything will be explicitly defined on the application domain.
+You've also deleted the global shortcuts so that you will know when you forgot to require. Finally, jQuery (but none of its dependencies)
+show up in the dependency tree - so you will quickly identify what code is actually DOM dependent, and what isn't or shouldn't be.
 Clearly this is advantageous.
 
 Having found this pattern very useful, but also noticing how repeating this pattern on several libraries pollutes our application
@@ -136,4 +136,6 @@ If you can efficiently separate code on the domain level, try to keep above advi
 always aim to factor out behavior into small loosely coupled modules - then you are already
 well on your way to resolving spaghetti hell. The rest is getting the correct signaling model for your events to your controllers/controller style entities.
 
-Good luck. Hopefully this is useful on some level.
+Good luck.
+
+Hopefully this has been useful on some level : )
