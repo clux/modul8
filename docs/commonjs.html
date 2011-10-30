@@ -13,12 +13,14 @@
       <li><a href="modularity.html" title="Modularity issues and advice">Modularity</a></li>
     </ul>
     <div id="content">
-<h2>How a Module System Works</h2>
+<h1>Extended CommonJS</h1>
 
 <p>This is going to contain more advanced background about what general module systems do, and what
 distinguishes modul8.</p>
 
-<h3>Relation to JavaScript</h3>
+<h2>CommonJS Parsing</h2>
+
+<h3>JavaScript Modules</h3>
 
 <p>JavaScript has no module system.</p>
 
@@ -42,7 +44,7 @@ us not much wiser. True modularity is clearly impossible when things are just ly
 it is error prone as conflicting exports will actually just favour the last script to execute - as JavaScript simply runs top to bottom, attaching its
 exports to window as we go along. Clearly we need something better than this.</p>
 
-<h3>CommonJS</h3>
+<h3>CommonJS Standard</h3>
 
 <p>There is a way to fix this, but first of all it assumes all modules need to support a stadardised format for exporting of modules.
 CommonJS is a such a standardization. It has very large traction at the moment, particularly driven by server side environments such as NodeJS.</p>
@@ -54,7 +56,7 @@ Alternatively, it can replace the <code>module.exports</code> object to define a
 <p>By making sure each module is written this way, CommonJS parsers can implement clever trickery on top of it to make this behaviour work.
 I.e. having each module's exports objects stored somewhere for <code>require()</code> and allocating a singleton for each module.</p>
 
-<h3>CommonJS parsing</h3>
+<h3>CommonJS Parsing</h3>
 
 <h4>Basics</h4>
 

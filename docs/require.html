@@ -15,41 +15,71 @@
     <div id="content">
 <h1>require()</h1>
 
-<p>Modul8's <code>require()</code> works hand in hand with a private <code>define()</code> call that gets pre-pended to the compiled source.
-On compilation each module is wrapped in a define call (ensuring encapsulation of private variables between modules) that give each of these modules
-the necessary context for the <code>require()</code> calls it may make. All context is stored via closures and will be hidden from you.</p>
+<p>Modul8's <code>require()</code> works hand in hand with a private <code>define()</code> call that will wrap each module in the compiled source.
+This ensures that each module has the necessary context for the <code>require()</code> calls it will make. All this context is stored via closures and will be hidden from you.</p>
 
 <h2>Ways to require</h2>
 
 <p>There are four different ways to use require:</p>
 
+<p><strong>Absolutely</strong></p>
+
 <ul>
-<li><p><strong>Globally</strong>:        <code>require('subfolder/module.js')</code>. This will scan all the domains (except data) for a matching structure, starting the search at your current location.
-A gloabl require does not care about your current location.</p></li>
-<li><p><strong>Relatively</strong>:      <code>require('./module.js')</code>. This will scan only the current domain and the current folder
-You can keep chaining on '../' to go up directories, but this has to happen in the beginning of the require string:</p>
-
-<p><code>require('./../subfolder/../basemodule.js')</code> <strong>is not legal</strong> while <code>require('./../basemodule.js')</code> <strong>is</strong>.</p></li>
-<li><p><strong>Domain Specific</strong>  <code>require('shared::val.js')</code>. Scans the specified domain (only) as if it were a global require from within that domain.
-You cannot do relative requires combined with domain prefixes as this is either non-sensical (cross domain case: folder structure between domains lost on the browser),
-or unnecessary (same origin case: you should simply be using relative requires).</p></li>
-<li><p><strong>Data Domain</strong>:     <code>require('data::datakey')</code>. The data domain is special. It is there to allow requiring of data that was <code>add()</code>-chained on the <code>data()</code> method.
-It does not arise from physical files, and will not show up in the dependency tree. It is simply data you have attached deliberately.</p></li>
-<li><p><strong>Through Arbiters</strong> <code>require('jQuery')</code> - given that <code>arbiters().add('jQuery',['$','jQuery'])</code> was passed in on the server.
-This will have deleted the global shortcuts included. Since these are probably commonly dependend upon they can be used without specifying their default domain: <code>M8::</code>.</p>
-
-<p>Note that this domain name is not related to the namespace setting. If a jQuery.js file is found on the current domain, however, it will gain priority over the
-arbiters domain. If this coexistence is necessary, any arbiters must be  required by specifying the internal domain: <code>$ = require('M8::jQuery')</code>.</p></li>
+<li><code>require('subfolder/module.js')</code> - Can resolve subfolder/module.js on any domain - regardless of what subfolder or domain you are in - but will scan the current domain first.</li>
 </ul>
+
+<p><strong>Relatively</strong></p>
+
+<ul>
+<li><code>require('./module.js')</code> - Can resolve a module.js file on the current domain in the current folder.</li>
+</ul>
+
+<p>You can indicate a relative require by using either the <code>./</code> prefix, or the folder traversing <code>../</code> prefix. Going up folders is done by chaining on <code>../</code> strings.</p>
+
+<p><strong>Note</strong> that all the <code>../</code> chaining has to happen in the beginning of the require string (easy convention on the client). In other words:</p>
+
+<ul>
+<li><code>require('./../subfolder/../basemodule.js')</code> <strong>is not legal</strong> while <code>require('./../basemodule.js')</code> <strong>is</strong>.</li>
+</ul>
+
+<p><strong>Domain Specific</strong></p>
+
+<ul>
+<li><code>require('shared::val.js')</code> - Like absolute requires, but specifies the only domain which will be searched. If you want to do relative domain specific requires,
+just use a pure relative require where the current domain is implicitly assumed.</li>
+</ul>
+
+<p><strong>Data Domain</strong></p>
+
+<ul>
+<li><code>require('data::datakey')</code> - Data on this domain does not represent actual files, but data injected into the require system on the server. It will not show up in the dependency tree.</li>
+</ul>
+
+<p><strong>External Domain</strong></p>
+
+<ul>
+<li><code>require('external::extkey')</code> - Same as data domain, but only extensible from the client.</li>
+</ul>
+
+<p><strong>Arbiter Domain</strong></p>
+
+<ul>
+<li><code>require('jQuery')</code> - Shortcut domain for old globals that were deleted to help identify hidden dependencies - must be defined on the server.
+This does not require a domain prefix because it is assumed this domain gets sufficiently frequent use to have it bumped up on the priority list.</li>
+</ul>
+
+<p>Note that iff a jQuery.js file is found on the current domain, however, it will gain priority over the arbiter domain.
+If this coexistence is necessary, any arbiters must be  required by specifying the internal domain name: <code>$ = require('M8::jQuery')</code>.</p>
 
 <h3>File extensions</h3>
 
 <p>File extensions are never necessary, but you can (and sometimes should) include them for specificity (except for on the data domain).</p>
 
-<p>The reason you perhaps should is that  modul8 allows mixing and matching JavaScript, CoffeeScript, and other altJs languages,
-but is only as forgiving with such mixing as you deserve.</p>
+<p>The reason you perhaps should is that modul8 allows mixing and matching JavaScript, CoffeeScript, and other AltJS languages,
+but is only as forgiving with such mixing as you deserve. If you only use one language and never put files of another language in your directories,
+the following warning does not apply to you.</p>
 
-<h4>Server Behaviour</h4>
+<h4>Extension Priority</h4>
 
 <p>To see why, consider a simplified resolver algorithm from the server</p>
 
@@ -63,36 +93,43 @@ while(domain)
 return false
 </code></pre>
 
-<p>If you use <em>CoffeeScript</em> or other registered compilers for altJs languages,
+<p>If you use <em>CoffeeScript</em> or other registered compilers for AltJS languages,
 and if there is even a chance of a file of the same name with a <code>.js</code> extension popping up in the same folder,
-then you <em>should only</em> use <code>require()</code> with an explicitly specified file extension.</p>
+then it will gain priority over your normal files if you do not specify the extension.</p>
 
-<p>In short: <strong>DO NOT omit extensions and keep .js and .coffee versions in the same folder</strong>
-or you will quickly become very frustrated as to why your coffee changes arent doing anything.</p>
+<h5>Extension Truncation</h5>
 
-<h4>Client Behaviour</h4>
+<p>The corollary to this extension priority is that we can't accurately distinguish between two extensions on the client when we omit the extension.
+Thus, since omitting the extension is generally advantageous for brevity, we have decided to simply truncate the extension on the client.</p>
 
-<p>modul8 will truncate the extension from the name passed to the internal <code>define()</code> wrapper.
-This has two advantages:</p>
+<p>This is advantageous also because it makes the require code leaner, more perfomant, and each <strong>dom::name pair is unique</strong> as they should be.</p>
+
+<p>You can still have a <code>.js</code> duplicate of your <code>.coffee</code> file in a directory, but you then have to explicitly define <code>.coffee</code> so that the server
+can pre-pick the right one to include for you.</p>
+
+<h5>Server Error</h5>
+
+<p>To help you remember this, modul8 will actually throw an error if you simultaneously try to require both</p>
 
 <ul>
-<li><code>require()</code> lookups on the client will be performant and slim (no need to do multiple lookups against multiple possible extensions - as it will simply chuck the extension part)</li>
-<li>It discourages the unsafe practice having files of the same name in the same directory</li>
+<li>app::subpath/module.js</li>
+<li>app::subpath/module.otherExt</li>
 </ul>
 
-<p>However, the server side collision problem applies. modul8 will only be able to <code>define()</code> one of</p>
+<p>It is not a complete failsafe, we are aware, but it helps force usage so that the problem above does not occur.</p>
+
+<p>In short: try not to have different extension versions of your files in the same directory or you can run into the following two problems:</p>
 
 <ul>
-<li>domain::filename.coffee</li>
-<li>domain::fiename.js</li>
+<li><strong>A)</strong> your Coffee changes wont do anything because you are unknowingly requiring a JS version that got in the directory</li>
+<li><strong>B)</strong> you will have a conflict error thrown at you to help you not challenging fate with techniques that can result in problem A</li>
 </ul>
 
-<p>If you do use extensions (even partially), then modul8 will throw an error if multiple versions of domain::filename was attempted to be included.
-This error will be usefully be thrown after the <code>.analysis()</code> dependency tree was logged, allowing you to pinpoint the careless <code>require()</code>.</p>
+<p>Note that the error will only be thrown after the <code>.analysis()</code> dependency tree was logged, allowing you to pinpoint the careless <code>require()</code>.</p>
 
-<h3>Require Folders</h3>
+<h3>Folders Priority</h3>
 
-<p>Require strings not resolving as a file, or ending in a slash will try to resolve the name as a folder and look for a file named <code>index</code> following the above logic.
+<p>Require strings that contain a trailing slash or does not point to a file directly, will try to resolve the name as a folder and look for a file named <code>index</code> following the above logic.
 The following will all resolve a folder, but the last has the possiblility of a collision with a file of the same name as the folder:</p>
 
 <pre><code>require('controllers/index');
@@ -100,7 +137,7 @@ require('controllers/'); //looks for controllers/index+extension
 require('controllers'); //looks for controllers+extension then controllers/index+extension
 </code></pre>
 
-<h3>Require Priority</h3>
+<h3>General Priority</h3>
 
 <p>Requires are attempted resolved with the following priority:</p>
 
@@ -108,20 +145,21 @@ require('controllers'); //looks for controllers+extension then controllers/index
   resolve absolutized require string on current domain
 else if require string includes domain prefix
   resolve require string on specified domain
-else //arbiter search
+else //try arbiter search
   resolve require string on the M8 domain
 
 if none of the above true
-  resolve on all domains, starting with current domain
+  resolve on all real domains, starting with current domain
 
 //error
 </code></pre>
 
-<p>In other words, collisions should not occur unless you have duplicate files in different domains, and you are very relaxed about your domain specifiers or arbiter prefixes.</p>
+<p>In other words, collisions should not occur unless you have duplicate files in different domains and
+you are overly relaxed about your domain specifiers, or you have actual files with arbiter names lying around.</p>
 
-<h3>Hooking into define</h3>
+<h2>Hooking into define</h2>
 
-<p>modul8 defines way to help you attach objects/fn to certain domains both live on the client and from the server via <code>data()</code>.
-The <a href="api.html">API docs</a> have full information on this.</p>    </div>
+<p>modul8 defines way to help you attach objects/fn to certain domains both live on the client and from the server.
+The <a href="api.html">API docs</a> have full information on these features.</p>    </div>
   </body>
 </html>
