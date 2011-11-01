@@ -135,6 +135,7 @@ Below are the settings available:
    - `domloader`  A function or name of a global fn that safety wraps code with a DOMContentLoaded barrier
    - `namespace`  The namespace modul8 uses in your browser, to export console helpers to, defaulting to `M8`
    - `logging`    Boolean to set whether to log `require()` calls in the console, defaults to `false`
+   - `force`      Boolean to set whether to force recompilation or not - should only be useful when working on modul8 itself.
 
 **You SHOULD** set `domloader` to something. Without this option, it will NOT wait for the DOM and simply wrap all main application code
 in a anonymous self-executing function.
@@ -157,22 +158,23 @@ Options can be set by chaining them on `modul8()` using the `set(option, value)`
     modul8('./client/app.js')
       .set('namespace', 'QQ')
       .set('domloader', '$(document).ready')
-      .set('logging', 'WARN')
+      .set('logging', 'ERROR')
       .compile('./out.js');
 
-Logging has 4 levels.
+Logging has 3 levels at the moment
 
 - ERROR
-- WARN
 - INFO
 - DEBUG
 
 They have cumulative ordering:
 
 - ERROR will only give failed to resolve require messages in the client console via `console.error`.
-- WARN additionally gives recompile warnings from the server via `console.warn`.
-- INFO adds log messages from require for each call to give an overview of all requires used on the client via `console.log`.
-- DEBUG adds log messages from require before the require strings get absolutized via `console.debug` and additionally reasons why we are recompiling on the server.
+- INFO additionally gives recompile information on the server (via internal logger class).
+- DEBUG adds log messages from require on the client to show what is attempted resolved via `console.log`.
+
+ERROR level will not give any messages on the server, but if you don't even want the fail messages from require, you may disable logging altogether by pasing in false.
+Note that ERROR is the default.
 
 ## Code Analysis
 

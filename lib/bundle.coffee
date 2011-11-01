@@ -3,7 +3,9 @@ fs          = require 'fs'
 crypto      = require 'crypto'
 path        = require 'path'
 codeAnalyis = require './analysis'
+Logger      = require './logger'
 {makeCompiler, exists, read} = require './utils'
+log = new Logger()
 
 # helpers
 anonWrap = (code) ->
@@ -31,6 +33,7 @@ verifyCollisionFree = (codeList) ->
         throw new Error("modul8: does not support requiring of two files of the same name on the same path with different extensions: #{dom}::#{file} and #{d}::{#f} ")
   return
 
+#TODO: this should sit in modul8.coffee
 logLevels =
   error   : 1
   warn    : 2
@@ -171,7 +174,7 @@ module.exports = (o) ->
 
       if o.libsOnlyTarget and libsUpdated
         fs.writeFileSync(o.libsOnlyTarget, libs)
-        console.warn 'modul8: compiling separate libs' if useLog and level >= 2
+        log.info 'modul8 - compiling separate libs' if useLog and level >= 2
         libsUpdated = false # no need to take this state into account anymore since they are written separately
       else if !o.libsOnlyTarget
         c = libs + c
@@ -180,7 +183,7 @@ module.exports = (o) ->
 
     if appUpdated or (libsUpdated and !o.libsOnlyTarget) or forceUpdate
       # write target if there were any changes relevant to this file
-      console.warn 'modul8: compiling' if useLog and level >= 2
+      log.info 'modul8 - compiling' if useLog and level >= 2
       fs.writeFileSync(o.target, c)
       #console.log 'writing app! bools: libsUp='+libsUpdated+', appUp='+appUpdated+', force='+forceUpdate
 

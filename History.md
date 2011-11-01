@@ -1,3 +1,8 @@
+0.9.4 / 2011-11-??
+==================
+  * Server side logging now includes a socket.io style logger class
+  * Better documentation of logging
+
 0.9.3 / 2011-10-30
 ==================
   * Big documentation improvements

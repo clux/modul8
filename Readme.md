@@ -161,20 +161,20 @@ The data API is particularly useful for web applications:
  - Or, want a versioning system for your templates so that the newest can be stored in LocalStorage? Send the versions down.
  - Want simplified mongoose schemas on the client? Parse your models and send them down.
 
-The data domain can also be safely extended live on the client using the extender function available in `require('M8::data')`.
+The `data` domain is initialized from the server, but can be extended live on the client.
 
-Code loaded in via third party asynchronous script loaders can be attached to the `external` domain live via the
-extender function available in `require('M8::external')`.
+Additionally, modul8 defines an `external` domain for asynchronous script loaders to dump their results. This domain can only be used from the client.
 
-These functions can be used, and any code on these domains can be referenced without messing up the code analysis at compile time.
-They can, however, show up in the dependency tree if desirable.
+Both these domains are modified using safe proxies for the `data` and `external` domains. Objects residing on these domains can be referenced
+with `require()` without messing up the compile time code analysis, but they can still show up in the dependency tree if desirable.
 
 ## Learn more
+
 The [full documentation site](http://clux.github.com/modul8) should contain everything you could ever want to know about modul8 and probably more.
 Read it, try it out, and give feedback if you like or hate it / parts of it, or if you want to contribute.
 
-modul8 is a relatively fresh project of mine. It was crafted out of necessity, but it has grown into something larger.
-I hope it will be useful.
+modul8 is my first proper open source project. It was crafted out of necessity, but it has grown into something larger.
+Version 1.0 should be ready relatively soon - so the current code can be considered mostly stable.
 
 ## Running Tests
 

@@ -23,7 +23,7 @@ program
   .option('-w, --wrapper <str>', 'name of wrapping domloader function')
   .option('-t, --testcutter', 'enable pre-processing of files to cut out local tests and their dependencies')
   .option('-m, --minifier', 'enable uglifyjs post processing')
-  .option('-l, --logging', 'enable logging failed requires on the client')
+  .option('-l, --logging', 'enable logging failed requires on the client') # cli does not use ERROR as default
 
 program.on '--help', ->
   console.log('  Examples:')
