@@ -2,6 +2,9 @@
 ==================
   * Server side logging now includes a socket.io style logger class
   * Better documentation of logging
+  * Data functions are executed in the interface rather than in the last step
+  * Plugin interface via `.use()`
+  * `.data()` by default now does not take functions (only for use by plugins)
 
 0.9.3 / 2011-10-30
 ==================

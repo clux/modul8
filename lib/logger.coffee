@@ -1,5 +1,5 @@
 # Logger
-# Adopted from socket.io-node's logger
+# Adapted from socket.io-node's logger
 
 # arguments helper
 toArray = (enu) ->
@@ -22,7 +22,7 @@ colors = [
 ]
 
 # Count from levels
-max = Math.max.apply(Math, levels.map((l) -> l.length))
+max = Math.max.apply({}, levels.map((l) -> l.length))
 num = levels.length
 
 # Pads the nice output to the longest log level

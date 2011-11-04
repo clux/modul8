@@ -45,7 +45,7 @@ program.on '--help', ->
   console.log('')
 
 
-program.parse(process.argv);
+program.parse(process.argv)
 
 # simple options
 wrapper = program.wrapper

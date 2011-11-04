@@ -41,6 +41,22 @@ Modul8::after = (fn) ->
   obj.post.push fn if @environmentMatches
   @
 
+Modul8::use = (inst) ->
+  @removeSubClassMethods()
+  if inst.data and _.isFunction(inst.data)
+    [key, val] = inst.data()
+    if !key or !val
+      throw new Error("plugin to modul8 retuned bad data from its data method: #{key+''}, #{val+''}")
+    @data().add(key,val)
+
+  if inst.domains and _.isFunction(inst.domains)
+    [key2, val2] = inst.domains()
+    if !key2 or !val2
+      throw new Error("plugin to modul8 retuned bad data from its domains method: #{key2+''}, #{val2+''}")
+    @domains().add(key2,val2)
+
+  @
+
 Modul8::register = (ext, compiler) ->
   @removeSubClassMethods()
   obj.compilers[ext] = compiler if @environmentMatches
@@ -80,7 +96,8 @@ start = (entry) ->
 Modul8::data = (input) ->
   return @ if !@environmentMatches
   dt = new Data()
-  dt.add(key, val) for key,val of input if input and _.isObject(input)
+  return dt if !input
+  dt.add(key, val) for key,val of input if _.isObject(input)
   dt
 
 Data = ->
@@ -89,7 +106,8 @@ Data:: = new Modul8('Data')
 
 Data::add = (key, val) ->
   return @ if !@subclassMatches('Data','add')
-  obj.data[key] = val if @environmentMatches
+  return @ if !@environmentMatches
+  obj.data[key+''] = val+'' if key and val
   @
 
 
@@ -128,6 +146,13 @@ Libraries::list = (list) ->
   return @ if !@subclassMatches('Libraries','list')
   obj.libFiles = list if @environmentMatches and _.isArray(list)
   @
+
+#Probably bad idea, libPath linked up to lib list, can change this though
+#but if we use add, then it has to add after the list call has taken place..
+#Libraries::add = (lib) -> #TODO: good idea? for data plugins - if useful, then should also add arbiters for plugins
+#  return @ if !@subclassMatches('Libraries','add')
+#  obj.libFiles.push(lib+'')
+#  @
 
 Libraries::path = (dir) ->
   return @ if !@subclassMatches('Libraries','path')
@@ -228,9 +253,6 @@ sanityCheck = (o) ->
 
   for d in obj.ignoreDoms
     throw new Error("modul8::analysis cannot ignore the app domain") if 'app' is d
-
-  for key, data_fn of obj.data
-    throw new Error("modul8::data got a value supplied for #{name} which is not a function") if !_.isFunction(data_fn)
 
   return
 
