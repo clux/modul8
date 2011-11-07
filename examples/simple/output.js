@@ -3,7 +3,7 @@ window.M8 = {data:{}};
 (function(){
 
 /**
- * modul8 v0.9.3
+ * modul8 v0.10.0
  */
 
 var config    = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["$","jQuery"]},"logging":1}
