@@ -31,162 +31,69 @@ More information on `require()` priority is available in [this section](require.
 ## Injecting Data
 
 One of the eternal problems with web development is how to export data from the server to the client reliably.
-modul8 provides two simple ways of doing this.
+State-dependent data are best transported via your normal request handlers, so this section is useful for
+state-independent data, i.e. app level data like templates and models.
+modul8 provides two simple ways of making such data available on the client without having to duplicate files.
 
- - Have an explicit file on a shared domain, exporting the objects you need
  - Add the object directly onto the `data` domain
+ - Put the CommonJS data exporting file on the shared domain
 
 The first is good if you have static data like definitions, because they are perhaps useful to the server as well,
 but suppose you want to export more ephemeral data that the server has no need for, like perhaps templates or template versions.
-To export these to the server, you will have to obtain the data somehow - your job - and allow modul8 to pull it into the script.
+To export these to the server, you will have to obtain the data somehow, and dump the result to modul8.
 
-The data API is simply chaining `add()` onto `data()` with data key and function as arguments to add
+The data API is simply chaining `add()` onto `data()` with data key and data or data string to add.
 
     modul8(dir+'/app/client/app.js')
       .data()
-        .add('versions', myVersionParser)
-        .add('models', myModelParser)
-        .add('templates', myTemplateCompiler)
+        .add('versions', {'user/edit':[0,3,1], 'user/profile':[1,0,0]} )
+        .add('models', {user: {name:String}} ))
+        .add('started', 'new Date()')
       .compile('./out.js');
 
-Alternatively, as with `.domains()`, you can do a single `.data()` call with an object instead of chaining `.add()` if you prefer.
+You can send almost anything to `data()`. The domain of what is legal is the set of `x` where `JSON.parse(JSON.stringify(x))` is the identity.
+Objects, Arrays, and Numbers satisfy this because they serialize and unserialize with ease.
+On the other hand Date objects do not parse, and functions do not properly serialize because they expect closured state at creation place.
+If you wish to send such objects (or Objects containing such objects), you should pre-serialize it to a JavaScript string that will `eval` to what you want.
 
-Under the covers, modul8 attaches the output of the myX functions to the reserved `data` domain.
-Data exported to this domain is requirable as if it were exported from a file (named versions|templates|models) on a domain named data:
+The `data::started` example above would execute on the client on load, meaning it is actually a reliable piece of data on the client, generated from an evaluated code string.
 
- - `require('data::models')  //== myModelParser()`
+Care should be employed when sending raw JavaScript as a string to `data()`, if it can not evaluate, it will break your build.
+Granted, this is easy to detect in a the console, but the practice of possibly writing functions here strikes us as an absurdly bad practice.
 
-In other words the function output is attached verbatim to modul8's exports.data container; if you provide bad data, you are solely responsible for breaking your build.
-This is easy to detect in a console though.
+A `.data()` call alternatively be made with an object of key=>string/serializableObj instead of chaining the key,vals on `.add()` individually.
 
-As a small example our personal version parser operates something like the following:
+The data attached above can be obtained on the client via `require()`
 
-    function versionParser(){
-      //code to scan template directory for version numbers stored on the first line
-      return "{'user/view':[0,2,4], 'user/register':[0,3,1]}";
-    }
+ - `require('data::models')  // {user: {name:String}}
+ - `require('data::versions')['user/edit']  // [0,3,1]
+ - `require('data::started').getTime() // 1320697746356
 
-Chaining on `.add('versions', versionParser)` will allow:
+## Using Plugins
 
-    var versions = require('data::versions');
-    console.log(versions['users/view']) // -> [0,2,4]
+Plugins are perhaps the most awesome feature of modul8. They are essentially shortcuts for exporting both data and code to a domain.
+This means the code can come with the data it depends on can be joined on the server so that you get a very modular programming structure.
+Note that all code that is exported by plugins have to be explicitly required to actually get pulled into the bundle.
 
-## Adding Libraries
-
-Appending standard (window exporting) JavaScript and CoffeeScript files is easy. Call `.libraries()` and chain on your options as below.
-CoffeeScript libs / AltJS libs are compiled with the safety wrapper, whereas plain JavaScript is simply concatenated on bare.
-
-    modul8('./app/client/app.js')
-      .libraries()
-        .list(['jQuery.js','history.js'])
-        .path('./app/client/libs/')
-        .target('./out-libs.js')
-      .compile('./out.js');
-
-Note that without the `.target()` option added, the libraries would be inserted in the same file before you application code.
-
-Alternatively, there is a succinct syntax to provide all libraries options in one call. Where the third parameter is not required.
-
-    modul8(dir+'/app/client/app.js')
-      .libraries(['jQuery.js','history.js'], './app/client/libs/', './out-libs.js')
-      .compile('./out.js');
-
-
-Note that libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
-Modified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response when requested again. Thus, using `.target()` and
-splitting these into a different file could be advantageous from a bandwidth perspective.
-
-If you would like to integrate libraries into the require system check out the documentation on `arbiters()` below.
-
-#### Libraries CDN Note
-Note that for huge libraries like jQuery, you may benefit (bandwidth wise) by using the [Google CDN](http://code.google.com/apis/libraries/devguide.html#jquery).
-In general, offsourcing static components to load from a CDN is a good first step to scale your website.
-There is also evidence to suggest that splitting up your files into a few big chunks may help the browser load your page faster, by downloading the scripts in parallel.
-Don't overdo this, however. HTTP requests are still expensive. Two or three JavaScript files for your site should be plenty using HTTP.
-
-## Middleware
-
-Middleware come in two forms: pre-processing and post-processing:
-
- - `.before()` middleware is applied before analysing dependencies as well as before compiling.
- - `.after()` middleware is only applied to the output right before it gets written.
-
-modul8 comes bundled with one of each of these:
-
- - `modul8.minifier` - post-processing middleware that minifies using `UglifyJS`
- - `modul8.testcutter` - pre-processing middleware that cuts out the end of a file (after require.main is referenced) to avoid pulling in test dependencies.
-
-To use these they must be chained on `modul8()` via `before()` or `after()` depending on what type of middleware it is.
-
-    modul8('app.js')
-      .before(modul8.testcutter)
-      .after(modul8.minifier)
-      .compile('./out.js');
-
-**WARNING:** testcutter is not very intelligent at the moment, if you reference `require.main` in your module,
-expect that everything from the line of reference to be removed.
-If you do use it, always place tests at the bottom of each file, and never use wrapper functions inside your scripts (as the `});` bit will get chopped off).
-This should be easy as modul8 wraps everything for you anyway - it even wraps to hold off execution until the DOM is ready.
-
-## Settings
-
-Below are the settings available:
-
-   - `domloader`  A function or name of a global fn that safety wraps code with a DOMContentLoaded barrier
-   - `namespace`  The namespace modul8 uses in your browser, to export console helpers to, defaulting to `M8`
-   - `logging`    Boolean to set whether to log `require()` calls in the console, defaults to `false`
-   - `force`      Boolean to set whether to force recompilation or not - should only be useful when working on modul8 itself.
-
-**You SHOULD** set `domloader` to something. Without this option, it will NOT wait for the DOM and simply wrap all main application code
-in a anonymous self-executing function.
-
-If you are using jQuery simply set this option to `jQuery` (and it will also deal with the possibility of jQuery being arbitered).
-
-Alternatively, you could write your own implementation function and pass it as the parameter to `.set('domloader', param)`.
-The following is the equivalent function that is generated if `jQuery` is passed in:
-
-    domloader_fn = function(code){
-     return "jQuery(function(){"+code+"});"
-    };
-
-Note that the namespace does not actually contain the exported objects from each module, or the data attachments.
-This information is encapsulated in a closure. The namespace'd object simply contains the public debug API.
-It is there if you want to write a simpler prefix than than capital M, 8 all the time, maybe you would like 'QQ' or 'TT'.
-
-Options can be set by chaining them on `modul8()` using the `set(option, value)` method. For example:
+Plugins can typically be used by calling `.use()` with a `new Plugin(opts)` instance.
 
     modul8('./client/app.js')
-      .set('namespace', 'QQ')
-      .set('domloader', '$(document).ready')
-      .set('logging', 'ERROR')
+      .use(new Plugin({}))
       .compile('./out.js');
 
-Logging has 3 levels at the moment
-
-- ERROR
-- INFO
-- DEBUG
-
-They have cumulative ordering:
-
-- ERROR will only give failed to resolve require messages in the client console via `console.error`.
-- INFO additionally gives recompile information on the server (via internal logger class).
-- DEBUG adds log messages from require on the client to show what is attempted resolved via `console.log`.
-
-ERROR level will not give any messages on the server, but if you don't even want the fail messages from require, you may disable logging altogether by pasing in false.
-Note that ERROR is the default.
+An intro to available plugins, and how to write them is available in the [plugin section](plugins.html).
 
 ## Code Analysis
 
-To dynamically resolve dependencies from a single entry point, modul8 does a recursive analysis of the `require()`d code.
+To dynamically resolve dependencies from a single entry point, modul8 does a recursive analysis of `require()`d code.
 Note that modul8 enforces a **no circular dependencies rule**. Granted, this is possible with sufficient fiddling,
 but it brings one major disadvantages to the table:
 
-A circularly dependent set of modules are tightly coupled; they are really no longer a set of moudles, but more of a library.
-There are numerous sources talking about [why is tight coupling is bad](http://www.google.com/search?q=tight+coupling+bad) so this
-will not be covered here. Regardless of whether or not you end up using modul8: ignore this warnig at your own risk.
+A circularly dependent set of modules are inherently tightly coupled; they are less a no longer a set of moudles, but more like a library.
+There are plenty of reasons why tight coupling is bad. Some of these reasons,
+including a bunch of general advice to achieve good modularity can be found [here](modularity.html).
 
-Additionally, the dependency diagram cannot be easily visualized as it has gone from being a tree, to a tree with cycles.
+Additionally, circular dependencies cannot be easily visualized anymore as the tree structure of requires is lost.
 With the no circulars rule enforced, we can print a pretty `npm list`-like dependency tree for your client code.
 
     app::main
@@ -223,6 +130,121 @@ The analysis call can be shortcutted with a direct (up to) four parameter call t
 So the above could be done with
 
     .analysis(console.log, false, true 'external')
+
+Of course, you can also mix and match.
+
+    .analysis(console.log)
+      .hide('external')
+
+
+## Adding Libraries
+
+Appending standard (window exporting) JavaScript and CoffeeScript files is easy. Call `.libraries()` and chain on your options as below.
+CoffeeScript libs / AltJS libs are compiled with the safety wrapper, whereas plain JavaScript is simply concatenated on bare.
+
+    modul8('./app/client/app.js')
+      .libraries()
+        .list(['jQuery.js','history.js'])
+        .path('./app/client/libs/')
+        .target('./out-libs.js')
+      .compile('./out.js');
+
+Note that without the `.target()` option added, the libraries would be inserted in the same file before you application code.
+
+Alternatively, there is a succinct syntax to provide all libraries options in one call. Where the third parameter is not required.
+
+    modul8(dir+'/app/client/app.js')
+      .libraries(['jQuery.js','history.js'], './app/client/libs/', './out-libs.js')
+      .compile('./out.js');
+
+
+Note that libraries tend to update with a different frequency to the main client code. Thus, it can be useful to separate these from your main application code.
+Modified files that have already been downloaded from the server simply will illicit an empty 304 Not Modified response when requested again. Thus, using `.target()` and
+splitting these into a different file could be advantageous from a bandwidth perspective.
+
+If you would like to integrate libraries into the require system check out the documentation on `arbiters()` below.
+
+#### Libraries CDN Note
+Note that for huge libraries like jQuery, you may benefit (bandwidth wise) by using the [Google CDN](http://code.google.com/apis/libraries/devguide.html#jquery).
+In general, offsourcing static components to load from a CDN is a good first step to scale your website.
+There is also evidence to suggest that splitting up your files into a few big chunks may help the browser load your page faster, by downloading the scripts in parallel.
+Don't overdo this, however. HTTP requests are still expensive. Two or three JavaScript files for your site should be plenty using HTTP.
+
+#### Libraries + require()
+Libraries do not show up in the dependency tree by default as they are not required, but rather implicitly available through globals.
+This can be changed by configuring arbiters for the globals in the require system. See the arbiters section below.
+
+## Middleware
+
+Middleware come in two forms: pre-processing and post-processing:
+
+ - `.before()` middleware is applied before analysing dependencies as well as before compiling.
+ - `.after()` middleware is only applied to the output right before it gets written.
+
+modul8 comes bundled with one of each of these:
+
+ - `modul8.minifier` - post-processing middleware that minifies using `UglifyJS`
+ - `modul8.testcutter` - pre-processing middleware that cuts out the end of a file (after require.main is referenced) to avoid pulling in test dependencies.
+
+To use these they must be chained on `modul8()` via `before()` or `after()` depending on what type of middleware it is.
+
+    modul8('app.js')
+      .before(modul8.testcutter)
+      .after(modul8.minifier)
+      .compile('./out.js');
+
+**WARNING:** testcutter is not very intelligent at the moment, if you reference `require.main` in your module,
+expect that everything from the line of reference to be removed.
+If you do use it, always place tests at the bottom of each file, and never use wrapper functions inside your scripts (as the `});` bit will get chopped off).
+This should be easy as modul8 wraps everything for you anyway - it even wraps to hold off execution until the DOM is ready.
+It could, however, pose problems in more specialized situations.
+
+## Settings
+
+Below are the settings available:
+
+   - `domloader`  A function or name of a global fn that safety wraps code with a DOMContentLoaded barrier
+   - `namespace`  The namespace modul8 uses in your browser, to export console helpers to, defaulting to `M8`
+   - `logging`    Boolean to set whether to log `require()` calls in the console, defaults to `false`
+   - `force`      Boolean to set whether to force recompilation or not - should only be useful when working on modul8 itself.
+
+**You SHOULD** set `domloader` to something. Without this option, it will NOT wait for the DOM and simply wrap all main application code
+in a anonymous self-executing function.
+
+If you are using jQuery simply set this option to `jQuery` (and it will also deal with the possibility of jQuery being arbitered).
+
+Alternatively, you could write your own implementation function and pass it as the parameter to `.set('domloader', param)`.
+The following is the equivalent function that is generated if `jQuery` is passed in:
+
+    domloader_fn = function(code){
+     return "jQuery(function(){"+code+"});"
+    };
+
+Note that the namespace does not actually contain the exported objects from each module, or the data attachments.
+This information is encapsulated in a closure. The namespace'd object simply contains the public debug API.
+
+Options can be set by chaining them on `modul8()` using the `set(option, value)` method. For example:
+
+    modul8('./client/app.js')
+      .set('namespace', 'QQ')
+      .set('domloader', '$(document).ready')
+      .set('logging', 'ERROR')
+      .compile('./out.js');
+
+Logging has 3 levels at the moment
+
+- ERROR
+- INFO
+- DEBUG
+
+They have cumulative ordering:
+
+- ERROR will only give failed to resolve require messages in the client console via `console.error`.
+- INFO additionally gives recompile information on the server (via internal logger class).
+- DEBUG adds log messages from require on the client to show what is attempted resolved via `console.log`.
+
+ERROR level will not give any messages on the server, but if you don't even want the fail messages from require, you may disable logging altogether by pasing in false.
+Note that ERROR is the default.
 
 ## Environment Conditionals
 
@@ -351,7 +373,7 @@ For instance, registering Coffee-Script (if it wasn't already done automatically
 
 Note the boolean `bare` option is to let modul8 fine tune when it is necessary to include the safety wrapper - if the compile to language includes one by default.
 
-CoffeeScript uses a safety wrapper by default, but it is irrelevant for application code as we define wrap each file in a function anyway.
+CoffeeScript uses a safety wrapper by default, but it is irrelevant for application code as we define-wrap each file in a function anyway.
 However, if you included library code written in CoffeeScript, then modul8 will call the compile function with bare:false.
 
 You should implement the bare compilation option if your language supports it, as an optimization (less function wrapping for app code). If your code already contains wrapper,

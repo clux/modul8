@@ -16,9 +16,7 @@ modul8('./app_code/main.coffee')
     .output(console.log)
     .prefix(true)
   .data()
-    .add('test', function(){
-      return fs.readFileSync('./data.json', 'utf8');
-    })
+    .add('test', fs.readFileSync('./data.json', 'utf8'))
   .set('namespace', 'QQ')
   .set('domloader', false)
   .compile('./output.js');

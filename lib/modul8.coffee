@@ -43,16 +43,21 @@ Modul8::after = (fn) ->
 
 Modul8::use = (inst) ->
   @removeSubClassMethods()
+
   if inst.data and _.isFunction(inst.data)
     [key, val] = inst.data()
-    if !key or !val
-      throw new Error("plugin to modul8 retuned bad data from its data method: #{key+''}, #{val+''}")
+    if !key
+      throw new Error("plugin to modul8 retuned missing key from its data method")
+    if !val
+      throw new Error("plugin to modul8 retuned bad/missing value from its data method for #{key}")
     @data().add(key,val)
 
-  if inst.domains and _.isFunction(inst.domains)
-    [key2, val2] = inst.domains()
-    if !key2 or !val2
-      throw new Error("plugin to modul8 retuned bad data from its domains method: #{key2+''}, #{val2+''}")
+  if inst.domain and _.isFunction(inst.domain)
+    [key2, val2] = inst.domain()
+    if !key2
+      throw new Error("plugin to modul8 retuned missing key from its domain method")
+    if !val2
+      throw new Error("plugin to modul8 retuned bad/missing value from its domain method for #{key2}")
     @domains().add(key2,val2)
 
   @
@@ -107,7 +112,16 @@ Data:: = new Modul8('Data')
 Data::add = (key, val) ->
   return @ if !@subclassMatches('Data','add')
   return @ if !@environmentMatches
-  obj.data[key+''] = val+'' if key and val
+  if key and val
+    key += '' # force string
+    if _.isObject(val) or _.isArray(val) or _.isNumber(val)
+      # we can serialize {}, [], Number, as these are easily invertible from and to string
+      obj.data[key] = JSON.stringify(val)
+    else # string or raw js
+      # we can NOT serialize function objects, because they expect closured state from the server
+      # we can NOT serialize Date objects
+      # we can however, use raw JS as a string input to get anything not covered by the above
+      obj.data[key] = val+''
   @
 
 

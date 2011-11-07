@@ -2,8 +2,8 @@ zombie = require 'zombie'
 assert = require 'assert'
 fs = require 'fs'
 rimraf = require 'rimraf'
-utils = require './../lib/utils' #hook in to this
-modul8 = require './../index.js' #public interface
+utils = require '../lib/utils' #hook in to this
+modul8 = require '../' #public interface
 dir = __dirname
 
 
@@ -15,11 +15,8 @@ dataObj =
   e : 9+'abc'
 
 data = {}
-for key of dataObj
-  ((k) ->
-    data[k] = -> JSON.stringify(dataObj[k])
-  )(key)
-
+for k of dataObj
+  data[k] = JSON.stringify(dataObj[k])
 
 
 generateApp = (options)-> # dont call this with size < 4 otherwise we wont get the mixins

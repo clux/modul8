@@ -69,9 +69,6 @@ for m in (program.arbiters?.split(',') or [])
   [key, vals] = m.split(':')
   arbiters[key] = vals?.split('.') or [key]
 
-# load data
-loader = (pathSafe) ->
-  -> fs.readFileSync(pathSafe, 'utf8')
 
 data = {}
 for d in (program.data?.split(',') or [])
@@ -79,7 +76,7 @@ for d in (program.data?.split(',') or [])
   if not p or not path.existsSync p
     console.error("invalid data usage: key:pathtofile")
     process.exit()
-  data[key] = loader(p)
+  data[key] = fs.readFileSync(p, 'utf8')
 
 
 # first arg is entry

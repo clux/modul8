@@ -1,10 +1,12 @@
-0.9.4 / 2011-11-??
+0.10.0 / 2011-11-08
 ==================
-  * Server side logging now includes a socket.io style logger class
-  * Better documentation of logging
   * Data functions are executed in the interface rather than in the last step
   * Plugin interface via `.use()`
-  * `.data()` by default now does not take functions (only for use by plugins)
+  * Documentation of Plugins + two quick plugins introduced
+  * `.data()` by default now does not take functions (only for use by plugins), can take objects,arrays,numbers or serialized JavaScript
+  * Server side logging now includes a socket.io style logger class
+  * Better documentation of logging
+  * node v0.6.0 shown to work (although some tests segfaults)
 
 0.9.3 / 2011-10-30
 ==================

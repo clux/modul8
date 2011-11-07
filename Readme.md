@@ -147,25 +147,47 @@ The dependency analyzer will typically output something like this if configured
 
 ## Injecting Data
 
-Data can by injected at compile time from the server by specifying keys and pull functions.
+Data can by injected at compile time from the server by specifying keys and evaluable strings.
 
 ````javascript
 modul8('./client/app.js')
-  .data({'models': myParser}) //myParser is a function returning a string
+  .data({'models': {'user':'clux'}})
   .compile('./out.js');
 ````
 
-The data API is particularly useful for web applications:
+The `data` domain is initialized from the server with every key specified to `.data()`, but can be extended live on the client.
+The data API is particularly useful for web applications that needs particular application data to always be bundled.
+Anything that can be serialized (including pre-serialized string input) can be sent to the data domain.
 
- - Want your templates compiled and passed down to the client in the JavaScript? Just write a parser plugin and hook it up.
- - Or, want a versioning system for your templates so that the newest can be stored in LocalStorage? Send the versions down.
- - Want simplified mongoose schemas on the client? Parse your models and send them down.
+## Using Plugins
+Extending the data domain in conjunction with creating specialized domains to handle that data,
+is a popular method that can be employed by node modules to break browser code down into more managable chunks - while linking them to the server.
 
-The `data` domain is initialized from the server, but can be extended live on the client.
+This is so useful that it has become the defacto plugin API.
 
-Additionally, modul8 defines an `external` domain for asynchronous script loaders to dump their results. This domain can only be used from the client.
+````javascript
+modul8('./client/app.js')
+  .use(new Plugin(opts))
+  .compile('./out.js');
+````
 
-Both these domains are modified using safe proxies for the `data` and `external` domains. Objects residing on these domains can be referenced
+This will allow the Plugin to extend 'out.js' with data created in Plugin, as well as add a namespaced require domain on the browser.
+Using a Plugin will inflate 'out.js' by the size of the data it creates plus **only the size of the modules you explicitly `require()`**.
+
+Thus, adding plugins is a remarkably safe, monitorable, and robust way, to get discrete units of code - that shares logic with the server - to the client.
+
+Writing your own plugins is also really easy. Please share yours.
+
+### Available Plugins
+
+- [https://www.github.com/clux/m8-mongoose](m8-mongoose)
+- [https://www.github.com/clux/m8-templation](m8-templation)
+
+## External Injection
+
+Finally, modul8 defines an `external` domain for asynchronous script loaders to dump their results. This domain can only be used from the client.
+
+Both the `data` and `external` domains are only allowed to be modified through safe proxies. Objects residing on these domains can be referenced
 with `require()` without messing up the compile time code analysis, but they can still show up in the dependency tree if desirable.
 
 ## Learn more
@@ -175,6 +197,8 @@ Read it, try it out, and give feedback if you like or hate it / parts of it, or 
 
 modul8 is my first proper open source project. It was crafted out of necessity, but it has grown into something larger.
 Version 1.0 should be ready relatively soon - so the current code can be considered mostly stable.
+
+Version 0.10.0 (and probably most before) support node v0.6 - although npm does not seem to work there yet.
 
 ## Running Tests
 
