@@ -52,12 +52,15 @@ The skeleton of such a plugin class should look something like this in CoffeeScr
       domain : ->
         [@o.domain, __dirname+'/dom/']
 
-The `data` method must return a pair [key, s] where `key` is the key to attach `s` to on the data domain.
+### data method
+The `data` method must return a pair [key, s] or a triple [key, s, serialized], where `key` is the key to attach `s` to on the data domain.
+If a triple is exported, the thirt element, `serialized` must be a bool indicating whether `s` is already serialized. If it is a raw object, pass false or just exclude the variable.
+If it is a pre-serialized object that requires no further serialization, and evaluates to an object via `eval`, you must return a triple, with `serialized` equal to true.
 
-The value of `s` can be whatever the value sent to modul8's `.data().add(key,s)`. The same [warnings apply](api.html#data) for data injection - do not put behaviour on `s`.
-Anything that does not serialize well (or contains something that does not),
-should be pre-serialized to something that will `eval` to what you want.
+The value of `s` can be whatever the value sent to modul8's `.data().add(key,s)`. The same [warnings apply](api.html#data) for data injection - avoid putting behaviour on `s`.
+Anything that does not serialize well (or contains something that does not), should be pre-serialized to something that will `eval` to what you want.
 
+### domain method
 The `domain` method must return a pair [name, path] where name is the domain name to export, and path is the path corresponding to the root of this domain.
 If a domain is exported, it should be clear on the server what files are available to the client by looking at the directory structure of the plugin.
 It is recommended to put all these files within a `dom` subdirectory of your node module `lib` root.

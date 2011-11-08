@@ -50,28 +50,33 @@ The data API is simply chaining `add()` onto `data()` with data key + data or da
       .data()
         .add('versions', {'user/edit':[0,3,1], 'user/profile':[1,0,0]} )
         .add('models', {user: {name:String}} ))
-        .add('started', 'new Date()')
+        .add('started', function(){return new Date();})
+        .add('preserialized', "{'myKey':123}", true)
       .compile('./out.js');
 
-You can send almost anything to `data()`. The domain of what is safe is the set of `x` where `JSON.parse(JSON.stringify(x))` is the identity.
-Objects, Arrays, and Numbers satisfy this because they serialize and unserialize with ease.
-On the other hand Date objects do not parse, and functions will only serialize properly if you do not expect closured state from the server.
-If you wish to send such objects (or Objects containing such objects), you should pre-serialize it to a JavaScript string that will `eval` to what you want.
+You can send almost anything to `data()`. Everything will be serialized using `JSON.stringify` and evaluated back on the client.
+Objects that can not be serialized properly, like Date instances, will evaluate to strings on the client. Functions serialize with the `.toString()` method,
+and will not retain any closured state from the server. Such functions self execute at load.
 
-The `data::started` example above would execute on the client on load, meaning it is actually a reliable piece of data on the client, generated from an evaluating code on the client.
+The `data::started` value would actually be the client's first loaded time, not the server's compile time.
 
-Care should be employed when sending raw JavaScript as a string to `data()`, if it does not evaluate properly, it will break your build.
-Granted, this is easy to detect in a the console, but writing functions for the data domain should be kept to a minimum.
+If it is difficult to provide an actual object, and would like to do the serialization yourself, you can pass in an optional third parameter to true.
+If set, it will force the string straight through. Make sure `eval(str)` gives what you want.
+
+Care should be employed when sending raw JavaScript strings or as raw Function objects to `data()`, if it does not evaluate properly, it will break your build.
+Granted, this is easy to detect in a the console, but writing functions/customJs for the data domain should be kept to a minimum.
 This is because this code will not be scanned for requires, and it could inject malicious code that ruin the robustness of modul8's browser structure.
 To send extra behaviour down from the server, consider instead writing a plugin.
 
 A `.data()` call alternatively be made with an object of key=>string/serializableObj instead of chaining the key,vals on `.add()` individually.
+Note that this forces all keys to be serialized by modul8.
 
 The data attached above can be obtained on the client via `require()`
 
 - `require('data::models')`  -> {user: {name:String}}
 - `require('data::versions')['user/edit']`  -> [0,3,1]
 - `require('data::started').getTime()` -> 1320697746356
+- `require('data::preserialized').myKey` -> 123
 
 ## Using Plugins
 
@@ -179,7 +184,8 @@ Libraries do not show up in the dependency tree by default as they are not requi
 This can be changed by configuring arbiters for the globals in the require system. See the arbiters section below.
 
 #### Libraries List order
-Unlike the rest of code scanned with modul8, library code is unscanned, and the insertion order must be given by putting the input `list()` in the right order.
+Libraries passed to `list()` must be in the same order you would normally order your script tags.
+modul8 does not scan libraries in any way.
 
 ## Middleware
 

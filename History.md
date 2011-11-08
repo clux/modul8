@@ -1,3 +1,8 @@
+0.11.0 / 2011-11-09
+==================
+  * functions passed to `.data()` will self-execute on the client (the fn.toString representation) - to be used with caution
+  * strings passed in to `.data()` will no longer assumed to be code strings, they will be strings
+
 0.10.1 / 2011-11-08
 ==================
   * functions passed to `.data()` will be serialized using fn.toString() - to be used with caution

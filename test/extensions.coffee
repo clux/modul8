@@ -7,16 +7,12 @@ modul8 = require '../' #public interface
 dir = __dirname
 
 
-dataObj =
+data =
   a : "hello thar"
   b : {coolObj:{}}
   c : 5
   d : [2, 3, "abc", {'wee':[]}]
-  e : 9+'abc'
-
-data = {}
-for k of dataObj
-  data[k] = JSON.stringify(dataObj[k])
+  e : 9 + 'abc'
 
 
 generateApp = (options)-> # dont call this with size < 4 otherwise we wont get the mixins
@@ -35,6 +31,9 @@ generateApp = (options)-> # dont call this with size < 4 otherwise we wont get t
     .set('logging', false)
     #.analysis().output(console.log)
     .data(data)
+      .add('crazy1', -> new Date())
+      .add('crazy2', 'new Date()', true)
+      .add('crazy3', -> window)
     .compile(dir+'/output/flat.js')
 
 
@@ -51,12 +50,20 @@ exports["test require#extensions"] = ->
     assert.isDefined(browser.evaluate("QQ.require"), "require is globally accessible")
     assert.type(browser.evaluate("QQ.require"), 'function', "require is a function")
 
-    testCount = 4
+    assert.ok(browser.evaluate("QQ.require('data::crazy1')"), "require('data::crazy1') exists")
+    assert.ok(browser.evaluate("QQ.require('data::crazy2')"), "require('data::crazy2') exists")
+    assert.ok(browser.evaluate("QQ.require('data::crazy3')"), "require('data::crazy3') exists")
+
+    assert.ok(browser.evaluate("QQ.require('data::crazy1').getDay"), "require('data::crazy1') is an instance of Date")
+    assert.ok(browser.evaluate("QQ.require('data::crazy2').getDay"), "require('data::crazy2') is an instance of Date")
+    assert.ok(browser.evaluate("QQ.require('data::crazy3').QQ"), "require('data::crazy3') returns window (found namespace)")
+
+    testCount = 9
 
     for key of data
       #creating data
       assert.ok(browser.evaluate("QQ.require('data::#{key}')"), "require('data::#{key}') exists")
-      assert.eql(browser.evaluate("QQ.require('data::#{key}')"), dataObj[key], "require('data::#{key}') is dataObj[#{key}]")
+      assert.eql(browser.evaluate("QQ.require('data::#{key}')"), data[key], "require('data::#{key}') is data[#{key}]")
       browser.evaluate("var dataMod = QQ.data;")
 
       #editing data

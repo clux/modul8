@@ -82,8 +82,8 @@ To dive in properly; consult the [api docs](http://clux.github.com/modul8/docs/a
  - compiles CommonJS compatible JavaScript, CoffeeScript or hooked in AltJS
  - low footprint: ~1kB (minified/gzipped) output size inflation
  - enforces modularity best practices and logs an npm style dependency tree
- - injecd require data dynamically from the server or live from the client
- - no need to ever maintain include lists or order
+ - can inject data to require dynamically from the server or live from the client
+ - easy to write, modular plugins allows super easy client extensions with server logic and data
  - minimizes global usage, encapsulates exports in closures, absorbs library globals
  - only rebuilds on repeat calls if necessary (files modified || options changed)
  - ideal for single page web applications, 1 or 2 HTTP request to get all code
@@ -130,7 +130,7 @@ modul8('./client/app.js')
 
 To ensure that the `shared` domain here can work on the server and the client, any `require()` calls
 should be relative and not pull in anything outside that folder.
-As an example, a same-origin include of shared::defs should be done with a **./** prefix:  `require('./defs')`.
+As an example, a same-origin include of `shared::defs` should be done with a **./** prefix:  `require('./defs')`.
 
 The dependency analyzer will typically output something like this if configured
 
@@ -180,8 +180,8 @@ Writing your own plugins is also really easy. Please share yours.
 
 ### Available Plugins
 
-- [https://www.github.com/clux/m8-mongoose](m8-mongoose)
-- [https://www.github.com/clux/m8-templation](m8-templation)
+- [m8-mongoose](https://www.github.com/clux/m8-mongoose)
+- [m8-templation](https://www.github.com/clux/m8-templation)
 
 ## External Injection
 
@@ -198,7 +198,7 @@ Read it, try it out, and give feedback if you like or hate it / parts of it, or 
 modul8 is my first proper open source project. It was crafted out of necessity, but it has grown into something larger.
 Version 1.0 should be ready relatively soon - so the current code can be considered mostly stable.
 
-Version 0.10.0 (and probably most before) support node v0.6 - although npm does not seem to work there yet.
+Version 0.10.0 has been tested with node v0.6.
 
 ## Running Tests
 

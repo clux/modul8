@@ -45,12 +45,12 @@ Modul8::use = (inst) ->
   @removeSubClassMethods()
 
   if inst.data and _.isFunction(inst.data)
-    [key, val] = inst.data()
+    [key, val, serialized] = inst.data()
     if !key
       throw new Error("plugin to modul8 retuned missing key from its data method")
     if !val
       throw new Error("plugin to modul8 retuned bad/missing value from its data method for #{key}")
-    @data().add(key,val)
+    @data().add(key,val, serialized)
 
   if inst.domain and _.isFunction(inst.domain)
     [key2, val2] = inst.domain()
@@ -109,23 +109,26 @@ Data = ->
 Data:: = new Modul8('Data')
 
 
-Data::add = (key, val) ->
+Data::add = (key, val, serialized=false) ->
   return @ if !@subclassMatches('Data','add')
   return @ if !@environmentMatches
   if key and val
     key += '' # force string
-    if _.isObject(val) or _.isArray(val) or _.isNumber(val)
-      # we can serialize {}, [], Number, as these are easily invertible from and to string
-      obj.data[key] = JSON.stringify(val)
-    else if _.isFunction
-      # we can serialize functions directly like their definition, but they will not have closure state from the server
-      obj.data[key] = val.toString()
-    else # string or raw js
-      # we can NOT serialize Date objects
-      # we can however, use raw JS as a string input to get anything not covered by the above
+    if serialized
+      # assume the users know what they are doing
       obj.data[key] = val+''
+    else if _.isFunction(val)
+      # we can serialize functions directly like their definition, but they will not have closure state from the server
+      obj.data[key] = val.toString()+'()' # self-execute on the client
+    else #
+      obj.data[key] = JSON.stringify(val)
+
   @
 
+# cant have both 1: 'new Date()' functionality AND 2: '1233' functionality - no way to tell them apart
+# option a) allow 2, and disable 1 (unless you can write it in terms of a function)
+# option b) disallow 2 completeley, and maintain current behaviour => bad, people will pass in strings..
+#started()
 
 
 Modul8::domains = (input) ->
