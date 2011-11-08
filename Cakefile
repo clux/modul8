@@ -2,7 +2,7 @@ fs      = require 'fs'
 md      = require("node-markdown").Markdown
 path    = __dirname
 
-files = ['api', 'cli', 'xcjs', 'modularity', 'require']
+files = ['api', 'cli', 'xcjs', 'plugins', 'modularity', 'require']
 
 task 'docs', 'build docs', (opts) ->
   head = fs.readFileSync('head.html', 'utf8')

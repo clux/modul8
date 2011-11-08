@@ -10,6 +10,7 @@
       <li><a href="https://github.com/clux/modul8/tree/master/examples" title="Examples from github source">Examples</a></li>
       <li><a href="api.html" title="API documentation">API</a></li>
       <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
+      <li><a href="plugins.html" title="available plugins, and how to write them">Plugins</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
       <li><a href="xcjs.html" title="Extended CommonJS: basic and extensions">X-CommonJS</a></li>
       <li><a href="modularity.html" title="Modularity: issues and advice">Modularity</a></li>
@@ -46,7 +47,7 @@ then it suffices to:</p>
 
 <p>This assumes the name of the main domain is the name of the folder where <code>entry</code> lives, i.e. <code>app</code> in this case.</p>
 
-<p>If you want to hold of the DOM using jQuery, append the <code>-w jQuery</code> option (see wrapper below).</p>
+<p>If you want to wait for the DOM using jQuery, append the <code>-w jQuery</code> option (see wrapper below).</p>
 
 <h3>Advanced</h3>
 
@@ -89,7 +90,7 @@ then it suffices to:</p>
 
 <pre><code>-w or --wrapper &lt;str&gt; ⇔ set('domloader', &lt;str&gt;)
 -n or --namespace &lt;str&gt; ⇔ set('namespace', &lt;str&gt;)
--l or --logging ⇔ set('logging', 'ERROR')
+-l or --logging  &lt;str&gt; ⇔ set('logging', &lt;str&gt;)
 </code></pre>
 
 <h4>Booleans</h4>
