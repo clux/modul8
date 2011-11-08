@@ -117,8 +117,10 @@ Data::add = (key, val) ->
     if _.isObject(val) or _.isArray(val) or _.isNumber(val)
       # we can serialize {}, [], Number, as these are easily invertible from and to string
       obj.data[key] = JSON.stringify(val)
+    else if _.isFunction
+      # we can serialize functions directly like their definition, but they will not have closure state from the server
+      obj.data[key] = val.toString()
     else # string or raw js
-      # we can NOT serialize function objects, because they expect closured state from the server
       # we can NOT serialize Date objects
       # we can however, use raw JS as a string input to get anything not covered by the above
       obj.data[key] = val+''

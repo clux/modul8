@@ -26,23 +26,25 @@ The following are equivalent from a file in the root of the application domain, 
     require('./validation') //.js extension always gets searched before .coffee
     require('validation') // resolves this domain first (but moves on if this fails)
 
+The last form should be avoided if possible. If not careful it can pull in dependencies from other domains than intended.
+
 More information on `require()` priority is available in [this section](require.html)
 
 ## Injecting Data
 
 One of the eternal problems with web development is how to export data from the server to the client reliably.
 State-dependent data are best transported via your normal request handlers, so this section is useful for
-state-independent data, i.e. app level data like templates and models.
+state-independent data, i.e. app level data like templates and server model logic.
 modul8 provides two simple ways of making such data available on the client without having to duplicate files.
 
- - Add the object directly onto the `data` domain
- - Put the CommonJS data exporting file on the shared domain
+ - Put the CommonJS data exporting file on a shared domain
+ - Export the object directly onto the `data` domain
 
 The first is good if you have static data like definitions, because they are perhaps useful to the server as well,
 but suppose you want to export more ephemeral data that the server has no need for, like perhaps templates or template versions.
 To export these to the server, you will have to obtain the data somehow, and dump the result to modul8.
 
-The data API is simply chaining `add()` onto `data()` with data key and data or data string to add.
+The data API is simply chaining `add()` onto `data()` with data key + data or data string to add.
 
     modul8(dir+'/app/client/app.js')
       .data()
@@ -51,23 +53,25 @@ The data API is simply chaining `add()` onto `data()` with data key and data or 
         .add('started', 'new Date()')
       .compile('./out.js');
 
-You can send almost anything to `data()`. The domain of what is legal is the set of `x` where `JSON.parse(JSON.stringify(x))` is the identity.
+You can send almost anything to `data()`. The domain of what is safe is the set of `x` where `JSON.parse(JSON.stringify(x))` is the identity.
 Objects, Arrays, and Numbers satisfy this because they serialize and unserialize with ease.
-On the other hand Date objects do not parse, and functions do not properly serialize because they expect closured state at creation place.
+On the other hand Date objects do not parse, and functions will only serialize properly if you do not expect closured state from the server.
 If you wish to send such objects (or Objects containing such objects), you should pre-serialize it to a JavaScript string that will `eval` to what you want.
 
-The `data::started` example above would execute on the client on load, meaning it is actually a reliable piece of data on the client, generated from an evaluated code string.
+The `data::started` example above would execute on the client on load, meaning it is actually a reliable piece of data on the client, generated from an evaluating code on the client.
 
-Care should be employed when sending raw JavaScript as a string to `data()`, if it can not evaluate, it will break your build.
-Granted, this is easy to detect in a the console, but the practice of possibly writing functions here strikes us as an absurdly bad practice.
+Care should be employed when sending raw JavaScript as a string to `data()`, if it does not evaluate properly, it will break your build.
+Granted, this is easy to detect in a the console, but writing functions for the data domain should be kept to a minimum.
+This is because this code will not be scanned for requires, and it could inject malicious code that ruin the robustness of modul8's browser structure.
+To send extra behaviour down from the server, consider instead writing a plugin.
 
 A `.data()` call alternatively be made with an object of key=>string/serializableObj instead of chaining the key,vals on `.add()` individually.
 
 The data attached above can be obtained on the client via `require()`
 
- - `require('data::models')  // {user: {name:String}}
- - `require('data::versions')['user/edit']  // [0,3,1]
- - `require('data::started').getTime() // 1320697746356
+- `require('data::models')`  -> {user: {name:String}}
+- `require('data::versions')['user/edit']`  -> [0,3,1]
+- `require('data::started').getTime()` -> 1320697746356
 
 ## Using Plugins
 
@@ -78,14 +82,14 @@ Note that all code that is exported by plugins have to be explicitly required to
 Plugins can typically be used by calling `.use()` with a `new Plugin(opts)` instance.
 
     modul8('./client/app.js')
-      .use(new Plugin({}))
+      .use(new Plugin())
       .compile('./out.js');
 
 An intro to available plugins, and how to write them is available in the [plugin section](plugins.html).
 
 ## Code Analysis
 
-To dynamically resolve dependencies from a single entry point, modul8 does a recursive analysis of `require()`d code.
+To dynamically resolve dependencies from a single entry point, modul8 does a recursive analysis what is passed to `require()`.
 Note that modul8 enforces a **no circular dependencies rule**. Granted, this is possible with sufficient fiddling,
 but it brings one major disadvantages to the table:
 
@@ -104,9 +108,9 @@ With the no circulars rule enforced, we can print a pretty `npm list`-like depen
     └──┬shared::validation
        └───shared::defs
 
-While this usually grows much lot bigger than what is seen here, by putting this in your face, it helps you identify what pieces of code
+While this usually grows much lot bigger than what is seen here, by putting this in your face at every change, it helps you identify what pieces of code
 that perhaps should not need to be required at a particular point. In essence, we feel this helps promote more loosely coupled applications.
-We strongly encourage you to use it if possible. The API consists of chaining 1-3 methods on `analysis()`:
+We strongly encourage you to use it if possible. The API consists of chaining 1-3 methods on `analysis()`, or using it directly (further below)
 
     modul8('app.js')
       .domains({app : dir+'/app/client/'})
@@ -173,6 +177,9 @@ Don't overdo this, however. HTTP requests are still expensive. Two or three Java
 #### Libraries + require()
 Libraries do not show up in the dependency tree by default as they are not required, but rather implicitly available through globals.
 This can be changed by configuring arbiters for the globals in the require system. See the arbiters section below.
+
+#### Libraries List order
+Unlike the rest of code scanned with modul8, library code is unscanned, and the insertion order must be given by putting the input `list()` in the right order.
 
 ## Middleware
 

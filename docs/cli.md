@@ -25,7 +25,7 @@ from the `code/` directory.
 
 This assumes the name of the main domain is the name of the folder where `entry` lives, i.e. `app` in this case.
 
-If you want to hold of the DOM using jQuery, append the `-w jQuery` option (see wrapper below).
+If you want to wait for the DOM using jQuery, append the `-w jQuery` option (see wrapper below).
 
 ### Advanced
 
@@ -60,7 +60,8 @@ The following are equivalent methods for the programmatic API calls to `.set()`
 
     -w or --wrapper <str> ⇔ set('domloader', <str>)
     -n or --namespace <str> ⇔ set('namespace', <str>)
-    -l or --logging ⇔ set('logging', 'ERROR')
+    -l or --logging  <str> ⇔ set('logging', <str>)
+
 
 #### Booleans
 The following are slightly limited versions of the programmatic API's `.before()`, `.after()` and `.analysis()`

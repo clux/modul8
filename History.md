@@ -1,9 +1,15 @@
-0.10.0 / 2011-11-08
+0.10.1 / 2011-11-08
+==================
+  * functions passed to `.data()` will be serialized using fn.toString() - to be used with caution
+  * Plugin documentation tweaks
+  * More sensibly, the logging option on the CLI can set the level, so that the unset default corresponds to the API default.
+
+0.10.0 / 2011-11-07
 ==================
   * Data functions are executed in the interface rather than in the last step
   * Plugin interface via `.use()`
   * Documentation of Plugins + two quick plugins introduced
-  * `.data()` by default now does not take functions (only for use by plugins), can take objects,arrays,numbers or serialized JavaScript
+  * `.data()` no longer uses pull functions but expects the data directly - it will serialize itself if needed - can take objects,arrays,numbers or serialized JavaScript
   * Server side logging now includes a socket.io style logger class
   * Better documentation of logging
   * node v0.6.0 shown to work (although some tests segfaults)

@@ -18,12 +18,12 @@ program
   .option('-p, --domains <name:path>,..', 'specify require domains')
   .option('-d, --data <key:path>,..', 'attach json parsed data from path to data::key')
   .option('-a, --arbiters <shortcut:glob.glob2>,...', 'specify arbiters to be added to compiled file for deleted globals')
+  .option('-l, --logging <str', 'set the logging level')
 
   .option('-n, --namespace <str>', 'specify the target namespace used in the compiled file')
   .option('-w, --wrapper <str>', 'name of wrapping domloader function')
   .option('-t, --testcutter', 'enable pre-processing of files to cut out local tests and their dependencies')
   .option('-m, --minifier', 'enable uglifyjs post processing')
-  .option('-l, --logging', 'enable logging failed requires on the client') # cli does not use ERROR as default
 
 program.on '--help', ->
   console.log('  Examples:')
@@ -50,7 +50,7 @@ program.parse(process.argv)
 # simple options
 wrapper = program.wrapper
 namespace = program.namespace ? 'M8'
-logging = !!program.logging
+logging = program.logging ? 'ERROR'
 analyze = !!program.analyze
 i_d = (a) -> a
 testcutter = if program.testcutter then modul8.testcutter else i_d
@@ -93,7 +93,7 @@ modul8(entry)
     .output(if analyze then console.log else false)
   .arbiters(arbiters)
   .set('namespace', namespace)
-  .set('logging', if logging then 'ERROR' else false)
+  .set('logging', logging)
   .before(testcutter)
   .after(minifier)
   .set('domloader', wrapper or false)
