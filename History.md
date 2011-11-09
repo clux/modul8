@@ -2,6 +2,8 @@
 ==================
   * functions passed to `.data()` will self-execute on the client (the fn.toString representation) - to be used with caution
   * strings passed in to `.data()` will no longer assumed to be code strings, they will be strings
+  * strings passed in to `.data().add()` when third parameter is set to true, it will be assumed to be a code string
+  * Ditto for plugin API (docs updated)
 
 0.10.1 / 2011-11-08
 ==================
