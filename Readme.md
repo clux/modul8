@@ -1,4 +1,4 @@
-# Extensible CommonJS in the browser
+# Extensible CommonJS Code Sharing with the Browser
 ## Intro
 
 Write a `main.js` as the application entry point
@@ -47,7 +47,7 @@ $ modul8 client/main.js -p shared:shared/ > out.js
 
 from the path containing fhe shared/ and client/ folders.
 
-To load the CommonJS compatible output file from your site stick a script tag in your HTML:
+To load the CommonJS compatible output file from your site simply stick it in the HTML
 
 ````html
 <script src="/out.js"></script>
@@ -63,7 +63,6 @@ can exist on the server and be referenced via a normal `require(dir+'module')`, 
 
 To give you full overview and control over what code is pulled in, modul8 automatically generates a depedency tree. This allows
 fast analysis and identification of extraneous links, and becomes a very important tool for refactoring.
-Note that the depedency tree is truly a tree because we enforce a strict no circular dependencies rule - allowing these are just bad for modularity.
 
 modul8 supports live extensions of certain exports containers via third party script loaders, and server side data injection at compile time.
 
