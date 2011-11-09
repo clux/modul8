@@ -76,10 +76,10 @@ To dive in properly; consult the [api docs](http://clux.github.com/modul8/docs/a
 
 ## Features
 
- - (extensible) client side require
- - simple code sharing between the server and the client
+ - highly extensible client side require
+ - simple and safe code sharing between the server and the client
  - dynamic resolution and compilation of dependencies server-side
- - compiles CommonJS compatible JavaScript, CoffeeScript or hooked in AltJS
+ - compatible with JavaScript, CoffeeScript or (configurable) AltJS languages
  - low footprint: ~1kB (minified/gzipped) output size inflation
  - enforces modularity best practices and logs an npm style dependency tree
  - can inject data to require dynamically from the server or live from the client
@@ -128,9 +128,9 @@ modul8('./client/app.js')
   .compile('./out.js');
 ````
 
-To ensure that the `shared` domain here can work on the server and the client, any `require()` calls
+To ensure that the `shared` domain here can work on the server and the client, any `require()` calls within domains
 should be relative and not pull in anything outside that folder.
-As an example, a same-origin include of `shared::defs` should be done with a **./** prefix:  `require('./defs')`.
+As an example, a same-origin require of `shared::defs` should be done with a **./** prefix:  `require('./defs')`.
 
 The dependency analyzer will typically output something like this if configured
 
@@ -157,7 +157,7 @@ modul8('./client/app.js')
 
 The `data` domain is initialized from the server with every key specified to `.data()`, but can be extended live on the client.
 The data API is particularly useful for web applications that needs particular application data to always be bundled.
-Anything that can be serialized (including pre-serialized string input) can be sent to the data domain.
+Anything that can be serialized (including pre-serialized javascript input) can be sent to the data domain.
 
 ## Using Plugins
 Extending the data domain in conjunction with creating specialized domains to handle that data,
@@ -176,7 +176,7 @@ Using a Plugin will inflate 'out.js' by the size of the data it creates plus **o
 
 Thus, adding plugins is a remarkably safe, monitorable, and robust way, to get discrete units of code - that shares logic with the server - to the client.
 
-Writing your own plugins is also really easy. Please share yours.
+Writing your own plugins is also really easy. Please share.
 
 ### Available Plugins
 
@@ -185,7 +185,7 @@ Writing your own plugins is also really easy. Please share yours.
 
 ## External Injection
 
-Finally, modul8 defines an `external` domain for asynchronous script loaders to dump their results. This domain can only be used from the client.
+Finally, modul8 defines an `external` domain for asynchronous script loaders to dump their results. This domain can only be used and extended from the client.
 
 Both the `data` and `external` domains are only allowed to be modified through safe proxies. Objects residing on these domains can be referenced
 with `require()` without messing up the compile time code analysis, but they can still show up in the dependency tree if desirable.
@@ -198,7 +198,8 @@ Read it, try it out, and give feedback if you like or hate it / parts of it, or 
 modul8 is my first proper open source project. It was crafted out of necessity, but it has grown into something larger.
 Version 1.0 should be ready relatively soon - so the current code can be considered mostly stable.
 
-Version 0.10.0 has been tested with node v0.6.
+Version 0.10.0 and up should work fine with node v0.6.
+
 
 ## Running Tests
 
@@ -216,7 +217,7 @@ $ expresso
 
 Actively tested with node:
 
-  - 0.4.10
+  - 0.4.12
 
 ## License
 
