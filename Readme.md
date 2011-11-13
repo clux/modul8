@@ -15,7 +15,7 @@ cool = require('shared::cool') # cross-domain require
 exports.isCool = (input) -> input.filter(cool)
 ````
 
-and finally its required `cool.js` on the `shared` domain [?](http://clux.github.com/modul8/docs/xcjs.html)
+and finally its required `cool.js` on the `shared` domain [?](http://clux.github.com/modul8/docs/xcjs.html#modul8extensions)
 
 ````javascript
 module.exports = function(name){
