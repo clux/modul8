@@ -43,32 +43,33 @@ The skeleton of such a plugin class should look something like this in CoffeeScr
 
     class Plugin
       constructor : (@o={}) ->
-        @o.domain or= 'domainName'
-        @o.key    or= 'dataKey'
+        @o.name or= 'pluginName'
 
-      data  : ->
-        [@o.key, s]
+      name   : -> @o.name
 
-      domain : ->
-        [@o.domain, __dirname+'/dom/']
+      data   : -> obj or stringify(obj)
+
+      domain : -> __dirname+'/dom/'
+
+### name method
+The `name` method must return a string indicating the name used by the plugin.
+It will specify the key used to export data to the `data` domain (if specified), as well as the domain name used by the exporting domain (if specified).
+
+This name should be configurable from the class constructor to avoid clashes, but it should default to the plugin name.
 
 ### data method
-The `data` method must return a pair [key, s] or a triple [key, s, serialized], where `key` is the key to attach `s` to on the data domain.
-If a triple is exported, the thirt element, `serialized` must be a bool indicating whether `s` is already serialized. If it is a raw object, pass false or just exclude the variable.
-If it is a pre-serialized object that requires no further serialization, and evaluates to an object via `eval`, you must return a triple, with `serialized` equal to true.
-
-The value of `s` can be whatever the value sent to modul8's `.data().add(key,s)`. The same [warnings apply](api.html#data) for data injection - avoid putting behaviour on `s`.
-Anything that does not serialize well (or contains something that does not), should be pre-serialized to something that will `eval` to what you want.
+The `data` method must return an object or a pre-serialized object/array to attach to the data domain.
+If a string is passed from `data` it will be assumed to be a pre-serialized object that evaluates so something sensible via `eval`.
+Anything else will be internally serialized for you with eirther `JSON.stringify` or `.toString` if Function type.
 
 ### domain method
-The `domain` method must return a pair [name, path] where name is the domain name to export, and path is the path corresponding to the root of this domain.
+The `domain` method must return a path corresponding to the root of the exporting domain.
 If a domain is exported, it should be clear on the server what files are available to the client by looking at the directory structure of the plugin.
 It is recommended to put all these files within a `dom` subdirectory of your node module `lib` root.
 
-The domain name and the data key should be configurable from the class constructor, and should have semantic defaults.
-
 ## Domain
-The domain method, if set, will add a domain for the modul8 build. It will not append the files to the output, unless any of them have been required from the client.
+The domain method is set, modul8 will add a domain for named after the plugin (specified in name).
+It will not append the files to the output, unless any of them have been required from the client.
 If they are, however, they will pull in the dependencies (althoug only from this domain) they need to operate.
 
 To make most use of domains, try to not duplicate work and note code under `dom/` can be required on the server from the `lib` directory.

@@ -44,21 +44,25 @@ Modul8::after = (fn) ->
 Modul8::use = (inst) ->
   @removeSubClassMethods()
 
+  if !inst.name or !_.isFunction(inst.name)
+    throw new Error("modul8 plugins require a name method")
+
+  name = inst.name()+''
+  if !name
+    throw new Error("plugin to modul8 gave non-existant name from its name method")
+
   if inst.data and _.isFunction(inst.data)
-    [key, val, serialized] = inst.data()
-    if !key
-      throw new Error("plugin to modul8 retuned missing key from its data method")
-    if !val
-      throw new Error("plugin to modul8 retuned bad/missing value from its data method for #{key}")
-    @data().add(key,val, serialized)
+    data = inst.data()
+    if !data
+      throw new Error("modul8 plugin registering to #{name} retuned bad/missing value from its data method")
+
+    @data().add(name, data, _.isString(data)) # if strings are passed from plugins, we assume they are serialized (otherwise plugin usage seems unnecessary)
 
   if inst.domain and _.isFunction(inst.domain)
-    [key2, val2] = inst.domain()
-    if !key2
-      throw new Error("plugin to modul8 retuned missing key from its domain method")
-    if !val2
-      throw new Error("plugin to modul8 retuned bad/missing value from its domain method for #{key2}")
-    @domains().add(key2,val2)
+    dom = inst.domain()
+    if !dom
+      throw new Error("modul8 plugin registering to #{name} retuned bad/missing value from its domain method")
+    @domains().add(name, dom)
 
   @
 

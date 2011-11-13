@@ -1,3 +1,7 @@
+0.12.0 / 2011-11-13
+==================
+  * Plugin API more semantic, name, data, domain methods all returning singles rather than pairs and triples.
+
 0.11.2 / 2011-11-13
 ==================
   * Better package.json future proofing of build breaking updates from dependencies
