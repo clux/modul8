@@ -1,4 +1,4 @@
-# Extensible CommonJS Code Sharing with the Browser
+# Extensible CommonJS browser code sharing
 ## Intro
 
 Write a `main.js` as the application entry point
