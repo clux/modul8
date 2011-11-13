@@ -1,6 +1,8 @@
 0.12.0 / 2011-11-13
 ==================
   * Plugin API more semantic, name, data, domain methods all returning singles rather than pairs and triples.
+  * Deprecates m8-templation <0.2.0 and m8-mongoose <0.2.0 (newer versions released simultaneously - and plugin API expected to freeze soon)
+  * Tests for Plugin interface
 
 0.11.2 / 2011-11-13
 ==================
