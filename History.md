@@ -1,4 +1,4 @@
-0.11.1 / 2011-11-13
+0.11.2 / 2011-11-13
 ==================
   * Better package.json future proofing of build breaking updates from dependencies
 
