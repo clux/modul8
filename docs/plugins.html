@@ -65,36 +65,38 @@ to utilize this data in a helpful way.</p>
 
 <pre><code>class Plugin
   constructor : (@o={}) -&gt;
-    @o.domain or= 'domainName'
-    @o.key    or= 'dataKey'
+    @o.name or= 'pluginName'
 
-  data  : -&gt;
-    [@o.key, s]
+  name   : -&gt; @o.name
 
-  domain : -&gt;
-    [@o.domain, __dirname+'/dom/']
+  data   : -&gt; obj or stringify(obj)
+
+  domain : -&gt; __dirname+'/dom/'
 </code></pre>
+
+<h3>name method</h3>
+
+<p>The <code>name</code> method must return a string indicating the name used by the plugin.
+It will specify the key used to export data to the <code>data</code> domain (if specified), as well as the domain name used by the exporting domain (if specified).</p>
+
+<p>This name should be configurable from the class constructor to avoid clashes, but it should default to the plugin name.</p>
 
 <h3>data method</h3>
 
-<p>The <code>data</code> method must return a pair [key, s] or a triple [key, s, serialized], where <code>key</code> is the key to attach <code>s</code> to on the data domain.
-If a triple is exported, the thirt element, <code>serialized</code> must be a bool indicating whether <code>s</code> is already serialized. If it is a raw object, pass false or just exclude the variable.
-If it is a pre-serialized object that requires no further serialization, and evaluates to an object via <code>eval</code>, you must return a triple, with <code>serialized</code> equal to true.</p>
-
-<p>The value of <code>s</code> can be whatever the value sent to modul8's <code>.data().add(key,s)</code>. The same <a href="api.html#data">warnings apply</a> for data injection - avoid putting behaviour on <code>s</code>.
-Anything that does not serialize well (or contains something that does not), should be pre-serialized to something that will <code>eval</code> to what you want.</p>
+<p>The <code>data</code> method must return an object or a pre-serialized object/array to attach to the data domain.
+If a string is passed from <code>data</code> it will be assumed to be a pre-serialized object that evaluates so something sensible via <code>eval</code>.
+Anything else will be internally serialized for you with eirther <code>JSON.stringify</code> or <code>.toString</code> if Function type.</p>
 
 <h3>domain method</h3>
 
-<p>The <code>domain</code> method must return a pair [name, path] where name is the domain name to export, and path is the path corresponding to the root of this domain.
+<p>The <code>domain</code> method must return a path corresponding to the root of the exporting domain.
 If a domain is exported, it should be clear on the server what files are available to the client by looking at the directory structure of the plugin.
 It is recommended to put all these files within a <code>dom</code> subdirectory of your node module <code>lib</code> root.</p>
 
-<p>The domain name and the data key should be configurable from the class constructor, and should have semantic defaults.</p>
-
 <h2>Domain</h2>
 
-<p>The domain method, if set, will add a domain for the modul8 build. It will not append the files to the output, unless any of them have been required from the client.
+<p>The domain method is set, modul8 will add a domain for named after the plugin (specified in name).
+It will not append the files to the output, unless any of them have been required from the client.
 If they are, however, they will pull in the dependencies (althoug only from this domain) they need to operate.</p>
 
 <p>To make most use of domains, try to not duplicate work and note code under <code>dom/</code> can be required on the server from the <code>lib</code> directory.
