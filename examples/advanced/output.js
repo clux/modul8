@@ -4,7 +4,7 @@ QQ.data.test = "{\"hi\": \"there\"}\n";
 (function(){
 
 /**
- * modul8 v0.11.0
+ * modul8 v0.12.0
  */
 
 var config    = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"logging":1}
