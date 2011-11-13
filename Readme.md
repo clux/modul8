@@ -26,6 +26,8 @@ module.exports = function(name){
 To compile these files invoke `modul8()` and chain on options
 
 ````javascript
+var modul8 = require('modul8');
+
 modul8('./client/main.js')
   .domains({'shared': './shared/'})
   .compile('./out.js');
