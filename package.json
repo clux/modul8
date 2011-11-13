@@ -1,7 +1,7 @@
 {
   "name": "modul8",
   "description": "Extensible CommonJS browser code sharing",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
   "repository": {
     "type": "git",
@@ -29,9 +29,12 @@
   "engines": {
     "node": ">= 0.4.10"
   },
-  "bugs": { "url": "http://github.com/clux/modul8/issues" },
+  "bugs": {
+    "url": "http://github.com/clux/modul8/issues"
+  },
   "licenses": [
-    { "type": "MIT",
+    {
+      "type": "MIT",
       "url": "http://github.com/clux/modul8/raw/master/LICENSE"
     }
   ]
