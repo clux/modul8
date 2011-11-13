@@ -47,7 +47,7 @@ Compilation can also be performed via the command line interface by typing
 $ modul8 client/main.js -p shared:shared/ > out.js
 ````
 
-from the path containing fhe shared/ and client/ folders.
+from the path containing the shared/ and client/ folders.
 
 To load the CommonJS compatible output file from your site simply stick it in the HTML
 
