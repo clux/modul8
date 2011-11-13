@@ -3,7 +3,7 @@ window.M8 = {data:{}};
 (function(){
 
 /**
- * modul8 v0.10.0
+ * modul8 v0.11.0
  */
 
 var config    = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["$","jQuery"]},"logging":1}
@@ -63,7 +63,7 @@ function makeRequire(dom, pathName) {
       reqStr = toAbsPath(pathName, reqStr.slice(2));
     } else if (reqStr.slice(0,3) === '../') {
       scannable = [dom];
-      reqStr = toAbsPath(pathName, reqStr)
+      reqStr = toAbsPath(pathName, reqStr);
     } else if (DomReg.test(reqStr)) {
       scannable = [reqStr.match(DomReg)[1]];
       reqStr = reqStr.split('::')[1];

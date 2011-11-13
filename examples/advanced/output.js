@@ -1,11 +1,10 @@
 (function(){
 window.QQ = {data:{}};
-QQ.data.test = {"hi": "there"}
-;
+QQ.data.test = "{\"hi\": \"there\"}\n";
 (function(){
 
 /**
- * modul8 v0.10.0
+ * modul8 v0.11.0
  */
 
 var config    = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"logging":1}
@@ -65,7 +64,7 @@ function makeRequire(dom, pathName) {
       reqStr = toAbsPath(pathName, reqStr.slice(2));
     } else if (reqStr.slice(0,3) === '../') {
       scannable = [dom];
-      reqStr = toAbsPath(pathName, reqStr)
+      reqStr = toAbsPath(pathName, reqStr);
     } else if (DomReg.test(reqStr)) {
       scannable = [reqStr.match(DomReg)[1]];
       reqStr = reqStr.split('::')[1];
@@ -141,18 +140,23 @@ ns.external = function(name, exported) {
 // shared code
 
 QQ.define('calc','shared',function(require, module, exports){
+
 module.exports = {
   divides: function(d, n) {
     return !(d % n);
   }
 };
+
 });
 QQ.define('validation','shared',function(require, module, exports){
 var divides;
+
 divides = require('./calc').divides;
+
 exports.isLeapYear = function(yr) {
   return divides(yr, 4) && (!divides(yr, 100) || divides(yr, 400));
 };
+
 });
 
 // app code - safety wrap
@@ -160,35 +164,53 @@ exports.isLeapYear = function(yr) {
 
 (function(){
 QQ.define('bigthing/sub2','app',function(require, module, exports){
+
 module.exports = function(str) {
   return console.log(str);
 };
+
 });
 QQ.define('helper','app',function(require, module, exports){
 var testRunner;
+
 module.exports = function(str) {
   return console.log(str);
 };
+
 });
 QQ.define('bigthing/sub1','app',function(require, module, exports){
 var sub2;
+
 sub2 = require('./sub2');
+
 exports.doComplex = function(str) {
   return sub2(str + ' (sub1 added this, passing to sub2)');
 };
+
 });
 QQ.define('main','app',function(require, module, exports){
 var b, helper, m, test, v;
+
 helper = require('./helper');
+
 helper('hello from app via helper');
+
 b = require('bigthing/sub1');
+
 b.doComplex('app calls up to sub1');
+
 v = require('validation.coffee');
+
 console.log('2004 isLeapYear?', v.isLeapYear(2004));
+
 m = require('monolith');
+
 console.log("monolith:" + m);
+
 test = require('data::test');
+
 console.log('injected data:', test);
+
 });
 })();
 })();

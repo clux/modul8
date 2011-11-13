@@ -1,3 +1,7 @@
+0.11.1 / 2011-11-13
+==================
+  * Better package.json future proofing of build breaking updates from dependencies
+
 0.11.0 / 2011-11-09
 ==================
   * functions passed to `.data()` will self-execute on the client (the fn.toString representation) - to be used with caution
