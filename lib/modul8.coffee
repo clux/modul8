@@ -120,9 +120,6 @@ Data::add = (key, val) ->
     if _.isString(val)
       # assume the users know what they are doing
       obj.data[key] = val
-    else if _.isFunction(val)
-      # we can serialize functions directly like their definition, but they will not have closure state from the server
-      obj.data[key] = val.toString()+'()' # self-execute on the client
     else
       # otherwise, assume we can serialize it
       obj.data[key] = JSON.stringify(val)

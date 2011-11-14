@@ -54,9 +54,9 @@ generateApp = (options)-> # dont call this with size < 4 otherwise we wont get t
     .use(new PluginTwo())
     #.analysis().output(console.log)
     .data(data)
-      .add('crazy1', -> new Date())
-      .add('crazy2', 'new Date()', true)
-      .add('crazy3', -> window)
+      .add('crazy1', 'new Date()')
+      .add('crazy2', '(function(){return new Date();})()')
+      .add('crazy3', 'window')
     .compile(dir+'/output/flat.js')
 
 compile = utils.makeCompiler()
