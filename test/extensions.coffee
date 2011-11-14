@@ -8,11 +8,11 @@ dir = __dirname
 
 
 data =
-  a : "hello thar"
+  a : {str: 'hello thar'}
   b : {coolObj:{}}
   c : 5
   d : [2, 3, "abc", {'wee':[]}]
-  e : 9 + 'abc'
+  e : {str2: 9 + 'abc'}
 
 
 class PluginOne

@@ -37,11 +37,11 @@ State-dependent data are best transported via your normal request handlers, so t
 state-independent data, i.e. app level data like templates and server model logic.
 modul8 provides two simple ways of making such data available on the client without having to duplicate files.
 
- - Put the CommonJS data exporting file on a shared domain
+ - Put the data exporting CommonJS compatible file on a shared domain
  - Export the object directly onto the `data` domain
 
 The first is good if you have static data like definitions, because they are perhaps useful to the server as well,
-but suppose you want to export more ephemeral data that the server has no need for, like perhaps templates or template versions.
+but suppose you want to export more ephemeral data that the server has no need for, like perhaps template versions or auto-generated client versions of server objects.
 To export these to the server, you will have to obtain the data somehow, and dump the result to modul8.
 
 The data API is simply chaining `add()` onto `data()` with data key + data or data string to add.
@@ -49,38 +49,32 @@ The data API is simply chaining `add()` onto `data()` with data key + data or da
     modul8(dir+'/app/client/app.js')
       .data()
         .add('versions', {'user/edit':[0,3,1], 'user/profile':[1,0,0]} )
-        .add('models', {user: {name:String}} ))
-        .add('started', function(){return new Date();})
-        .add('preserialized', "{'myKey':123}", true)
+        .add('models', {user: {name:'clux', type:'String'}} ))
+        .add('preserialized', "{'myKey':123}")
+        .add('started', 'new Date()')
       .compile('./out.js');
 
-You can send almost anything to `data()`. Everything will be serialized using `JSON.stringify` and evaluated back on the client.
-Objects that can not be serialized properly, like Date instances, will evaluate to strings on the client. Functions serialize with the `.toString()` method,
-and will not retain any closured state from the server. Such functions self execute at load.
+Anything sent to `data()` that isn't a string will be serialized using `JSON.stringify` and evaluated back on the client.
+Note that certain objects cannot be serialized properly: Date instances, for instance, will evaluate to strings on the client.
+Functions will not serialize at all, and objects containing functions will likely lose those keys.
 
-The `data::started` value would actually be the client's first loaded time, not the server's compile time.
-
-If it is difficult to provide an actual object, and would like to do the serialization yourself, you can pass in an optional third parameter to true.
-If set, it will force the string straight through. Make sure `eval(str)` gives what you want.
-
-Care should be employed when sending raw JavaScript strings or as raw Function objects to `data()`, if it does not evaluate properly, it will break your build.
-Granted, this is easy to detect in a the console, but writing functions/customJs for the data domain should be kept to a minimum.
-This is because this code will not be scanned for requires, and it could inject malicious code that ruin the robustness of modul8's browser structure.
-To send extra behaviour down from the server, consider instead writing a plugin.
+If you pass a string, it will assume to be a valid serialization or valid code and assign it verbatim on its key as code.
+Thus, you should in general avoid passing down strings unless you have to. It is error prone, and can break your build
+(although a quick source inspection is likely to point out where it went wrong).
+If you do want to bundle extra behaviour with the data, either place this on a separate domain, or encapsulate this behaviour in a plugin with the data.
 
 A `.data()` call alternatively be made with an object of key=>string/serializableObj instead of chaining the key,vals on `.add()` individually.
-Note that this forces all keys to be serialized by modul8.
 
 The data attached above can be obtained on the client via `require()`
 
-- `require('data::models')`  -> {user: {name:String}}
+- `require('data::models')`  -> {user: {name:'clux', type:'String'}}
 - `require('data::versions')['user/edit']`  -> [0,3,1]
 - `require('data::started').getTime()` -> 1320697746356
 - `require('data::preserialized').myKey` -> 123
 
 ## Using Plugins
 
-Plugins are perhaps the most awesome feature of modul8. They are essentially shortcuts for exporting both data and code to a domain.
+Plugins are perhaps the coolest feature of modul8. They are neat shortcuts for exporting both data and code to a domain.
 This means the code can come with the data it depends on can be joined on the server so that you get a very modular programming structure.
 Note that all code that is exported by plugins have to be explicitly required to actually get pulled into the bundle.
 

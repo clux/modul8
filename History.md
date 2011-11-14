@@ -1,3 +1,7 @@
+0.13.0 / 2011-11-1?
+==================
+  * data API for strings now only take code strings (pre-serialized values)
+
 0.12.0 / 2011-11-13
 ==================
   * Plugin API more semantic, name, data, domain methods all returning singles rather than pairs and triples.

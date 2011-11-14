@@ -56,7 +56,7 @@ Modul8::use = (inst) ->
     if !data
       throw new Error("modul8 plugin registering to #{name} retuned bad/missing value from its data method")
 
-    @data().add(name, data, _.isString(data)) # if strings are passed from plugins, we assume they are serialized (otherwise plugin usage seems unnecessary)
+    @data().add(name, data)
 
   if inst.domain and _.isFunction(inst.domain)
     dom = inst.domain()
@@ -105,34 +105,29 @@ start = (entry) ->
 Modul8::data = (input) ->
   return @ if !@environmentMatches
   dt = new Data()
-  return dt if !input
-  dt.add(key, val) for key,val of input if _.isObject(input)
+  dt.add(key, val) for key,val of input if input and _.isObject(input)
   dt
 
 Data = ->
 Data:: = new Modul8('Data')
 
 
-Data::add = (key, val, serialized=false) ->
+Data::add = (key, val) ->
   return @ if !@subclassMatches('Data','add')
   return @ if !@environmentMatches
   if key and val
     key += '' # force string
-    if serialized
+    if _.isString(val)
       # assume the users know what they are doing
-      obj.data[key] = val+''
+      obj.data[key] = val
     else if _.isFunction(val)
       # we can serialize functions directly like their definition, but they will not have closure state from the server
       obj.data[key] = val.toString()+'()' # self-execute on the client
-    else #
+    else
+      # otherwise, assume we can serialize it
       obj.data[key] = JSON.stringify(val)
 
   @
-
-# cant have both 1: 'new Date()' functionality AND 2: '1233' functionality - no way to tell them apart
-# option a) allow 2, and disable 1 (unless you can write it in terms of a function)
-# option b) disallow 2 completeley, and maintain current behaviour => bad, people will pass in strings..
-#started()
 
 
 Modul8::domains = (input) ->
