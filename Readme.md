@@ -49,7 +49,7 @@ $ modul8 client/main.js -p shared:shared/ > out.js
 
 from the path containing the shared/ and client/ folders.
 
-To load the CommonJS compatible output file from your site simply stick it in the HTML
+To load the browser compatible output file from your site simply stick it in the HTML
 
 ````html
 <script src="/out.js"></script>
