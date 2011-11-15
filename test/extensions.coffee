@@ -64,7 +64,7 @@ compile = utils.makeCompiler()
 exports["test require#plugins"] = ->
   generateApp()
   browser = new zombie.Browser()
-  browser.visit 'file:///'+dir+"/output/empty.html", (err, browser, status) ->
+  browser.visit 'file:///'+dir+"/empty.html", (err, browser, status) ->
     throw err if err
     mainCode = compile(dir+'/output/flat.js')
     assert.isUndefined(browser.evaluate(mainCode), ".compile() result evaluates successfully") # will throw if it fails
@@ -94,7 +94,7 @@ exports["test require#data"] = ->
   generateApp()
 
   browser = new zombie.Browser()
-  browser.visit 'file:///'+dir+"/output/empty.html", (err, browser, status) ->
+  browser.visit 'file:///'+dir+"/empty.html", (err, browser, status) ->
     throw err if err
     mainCode = compile(dir+'/output/flat.js')
 

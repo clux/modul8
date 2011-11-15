@@ -97,7 +97,7 @@ exports["test require#collisions"] = ->
   compile = utils.makeCompiler()
 
   browser = new zombie.Browser()
-  browser.visit 'file:///'+dir+"/output/empty.html", (err, browser, status) ->
+  browser.visit 'file:///'+dir+"/empty.html", (err, browser, status) ->
     throw err if err
     mainCode = compile(dir+'/output/outc.js')
 

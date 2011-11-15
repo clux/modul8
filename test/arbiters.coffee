@@ -140,7 +140,7 @@ exports["test arbiters#handling"] = ->
             compileApp(useLibs, separateLibs, useArbiters)
             b[k] = new zombie.Browser()
 
-            b[k].visit 'file:///'+dir+"/output/empty.html", (err, browser, status) ->
+            b[k].visit 'file:///'+dir+"/empty.html", (err, browser, status) ->
               throw err if err
 
               count = 2
