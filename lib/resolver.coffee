@@ -7,7 +7,7 @@ isRelative = (reqStr) ->
 
 # ignorelist regex check and filter fn to be used on each detective result
 domainIgnoresReg = /^data(?=::)|^external(?=::)|^M8(?=::)/
-domainReg = /^(.*::)/
+domainReg = /^([\w]*::)/
 isLegalRequire = (reqStr) ->
   return true if domainIgnoresReg.test(reqStr)
   if domainReg.test(reqStr) and isRelative(stripDomain(reqStr))
