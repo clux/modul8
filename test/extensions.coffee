@@ -16,18 +16,12 @@ data =
 
 
 class PluginOne
-  constructor : (@o={}) ->
-    @o.name or= 'myStupidDefault'
-
-  name   : -> @o.name
+  constructor : (@name='myStupidDefault') ->
   data   : -> data
   domain : -> dir+'/input/dom/'
 
 class PluginTwo
-  constructor : (@o={}) ->
-    @o.name or= 'plug2'
-
-  name   : -> @o.name
+  constructor : (@name='plug2') ->
   data   : -> JSON.stringify(data)
 
 generated = false
@@ -50,7 +44,7 @@ generateApp = (options)-> # dont call this with size < 4 otherwise we wont get t
     .set('force', true)
     .set('namespace', 'QQ')
     .set('logging', false)
-    .use(new PluginOne({name:'plug1'}))
+    .use(new PluginOne('plug1'))
     .use(new PluginTwo())
     #.analysis().output(console.log)
     .data(data)

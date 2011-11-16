@@ -44,12 +44,9 @@ Modul8::after = (fn) ->
 Modul8::use = (inst) ->
   @removeSubClassMethods()
 
-  if !inst.name or !_.isFunction(inst.name)
-    throw new Error("modul8 plugins require a name method")
-
-  name = inst.name()+''
+  name = inst.name+''
   if !name
-    throw new Error("plugin to modul8 gave non-existant name from its name method")
+    throw new Error("plugin to modul8 has an undefined name key")
 
   if inst.data and _.isFunction(inst.data)
     data = inst.data()

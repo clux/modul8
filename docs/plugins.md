@@ -41,19 +41,13 @@ A plugin can export as many things as it wants to be used on the server, but it 
 ## Structure
 The skeleton of such a plugin class should look something like this in CoffeeScript
 
-    class Plugin
-      constructor : (@o={}) ->
-        @o.name or= 'pluginName'
+    Plugin = (@name='PluginName') ->
+    Plugin::data = -> obj or stringify(obj)
+    Plugin::domain = -> __dirname+'/dom/'
 
-      name   : -> @o.name
-
-      data   : -> obj or stringify(obj)
-
-      domain : -> __dirname+'/dom/'
-
-### name method
-The `name` method must return a string indicating the name used by the plugin.
-It will specify the key used to export data to the `data` domain (if specified), as well as the domain name used by the exporting domain (if specified).
+### name key
+The `name` key must be specified and have a default indicating the name used by the plugin.
+It will specify the name of the key exported to the `data` domain (if it exports data), as well as the name of the domain exported to (if it exports behaviour).
 
 This name should be configurable from the class constructor to avoid clashes, but it should default to the plugin name.
 

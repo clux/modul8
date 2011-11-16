@@ -1,6 +1,11 @@
 0.13.0 / 2011-11-1?
 ==================
   * data API for strings now only take code strings (pre-serialized values)
+  * tests now pass with node 0.6.1 using `npm test`
+  * tests (when npm installed) now include vital file
+  * Plugin::name can be a simple key (cleaner Plugin API)
+  * CLI allows concatenating on libraries like the main API (but without the separate libraries().target() option available)
+  * CLI revamped to be consistent with itself.
 
 0.12.0 / 2011-11-13
 ==================

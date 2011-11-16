@@ -10,93 +10,105 @@ utils   = require('../lib/utils')
 dir     = fs.realpathSync()
 {basename, dirname, resolve, join} = path
 
+# parsers
+hashMap = (val) ->
+  out = {}
+  for e in (val.split('#') or [])
+    [k,v] = e.split('=')
+    out[k] = v
+  out
+
+hashDouble = (val) ->
+  out = {}
+  for e in (val.split('#') or [])
+    [k,v] = e.split('=')
+    out[k] = v?.replace(/\[/,'').replace(/\]/,'').split(',')
+  out
+
 # options
 
 program
   .version(modul8.version)
   .option('-z, --analyze', 'analyze dependencies instead of compiling')
-  .option('-p, --domains <name:path>,..', 'specify require domains')
-  .option('-d, --data <key:path>,..', 'attach json parsed data from path to data::key')
-  .option('-a, --arbiters <shortcut:glob.glob2>,...', 'specify arbiters to be added to compiled file for deleted globals')
-  .option('-l, --logging <str', 'set the logging level')
+  .option('-p, --domains name=path', 'specify require domains', hashMap)
+  .option('-d, --data key=path', 'attach json parsed data from path to data::key', hashMap)
 
-  .option('-n, --namespace <str>', 'specify the target namespace used in the compiled file')
-  .option('-w, --wrapper <str>', 'name of wrapping domloader function')
+  .option('-b, --libraries path=[lib1,lib2]', 'concatenate libraries in front of the standard output in the given order', hashDouble)
+  .option('-a, --arbiters shortcut=[glob,glob2]', 'specify arbiters shortcut for list of globals', hashDouble)
+  .option('-g, --plugins path=[arg,arg2]', 'load in plugins from path using array of constructor arguments', hashDouble)
+
+  .option('-l, --logging <level>', 'set the logging level')
+  .option('-n, --namespace <name>', 'specify the target namespace used in the compiled file')
+  .option('-w, --wrapper <fnName>', 'name of wrapping domloader function')
   .option('-t, --testcutter', 'enable pre-processing of files to cut out local tests and their dependencies')
-  .option('-m, --minifier', 'enable uglifyjs post processing')
+  .option('-m, --minifier', 'enable uglifyjs post-processing')
 
 program.on '--help', ->
   console.log('  Examples:')
   console.log('')
-  console.log('    # compile application from entry point')
-  console.log('    $ modul8 app/entry.js > output.js')
-  console.log('')
   console.log('    # analyze application dependencies from entry point')
   console.log('    $ modul8 app/entry.js -z')
   console.log('')
-  console.log('    # specify domains manually')
-  console.log('    $ modul8 app/entry.js -p shared:shared/,bot:bot/')
+  console.log('    # compile application from entry point')
+  console.log('    $ modul8 app/entry.js > output.js')
+  console.log('')
+  console.log('    # specify extra domains')
+  console.log('    $ modul8 app/entry.js -p shared=shared/#bot=bot/')
   console.log('')
   console.log('    # specify arbiters')
-  console.log('    $ modul8 app/entry.js -a jQuery:$.jQuery,Spine:Spine')
+  console.log('    $ modul8 app/entry.js -a jQuery=[$,jQuery]#Spine')
   console.log('')
   console.log('    # wait for the DOM using the jQuery function')
-  console.log('    $ modul8 app/entry.js -a jQuery:$.jQuery -w jQuery')
+  console.log('    $ modul8 app/entry.js -w jQuery')
   console.log('')
-
+  console.log('    # specify plugins')
+  console.log('    $ modul8 app/entry.js -g m8-templation:[template_path,.jade]')
+  console.log('')
 
 program.parse(process.argv)
 
-# simple options
-wrapper = program.wrapper
-namespace = program.namespace ? 'M8'
-logging = program.logging ? 'ERROR'
-analyze = !!program.analyze
-i_d = (a) -> a
-testcutter = if program.testcutter then modul8.testcutter else i_d
-minifier = if program.minifier then modul8.minifier else i_d
-
-#parse domains (if none, only app domain code)
-domains = {}
-for p in (program.domains?.split(',') or [])
-  [n,d] = p.split(':')
-  d = join(dir, d)
-  domains[n] = d
-
-# parse mediators
-arbiters = {}
-for m in (program.arbiters?.split(',') or [])
-  [key, vals] = m.split(':')
-  arbiters[key] = vals?.split('.') or [key]
-
-
-data = {}
-for d in (program.data?.split(',') or [])
-  [key, p] = d.split(':')
-  if not p or not path.existsSync p
-    console.error("invalid data usage: key:pathtofile")
-    process.exit()
-  data[key] = fs.readFileSync(p, 'utf8')
-
-
-# first arg is entry
+# first arg must be entry
 entry = program.args[0]
 if !entry
   console.error("usage: modul8 entry [options]")
   console.log("or modul8 -h for help")
   process.exit()
 
+# convenience processing of plugins and data input
+console.log program.plugins
+return
+plugins = {}
+data = {}
+for name,optry of program.plugins
+  #try
+  #console.log name
+  P = require(name).Plugin
+  P.apply(inst={}, optAry)
+  plugins.push inst
+  #catch e
+  #  throw new Error(name+' not a requirable plugin')
+
+for k,p of program.data
+  if not p or not path.existsSync p
+    console.error("invalid data usage: value must be a path to a file")
+    process.exit()
+  data[k] = fs.readFileSync(p, 'utf8')
+
+null for libPath,libs of program.libraries
+
+i_d = (a) -> a
+
 modul8(entry)
-  .domains(domains)
+  .domains(program.domains)
   .data(data)
-  .analysis()
-    .output(if analyze then console.log else false)
-  .arbiters(arbiters)
-  .set('namespace', namespace)
-  .set('logging', logging)
-  .before(testcutter)
-  .after(minifier)
-  .set('domloader', wrapper or false)
+  .analysis(if program.analyze then console.log else false)
+  .arbiters(program.arbiters)
+  .libraries(libs or [], libPath)
+  .set('namespace', program.namespace ? 'M8')
+  .set('logging', program.logging ? 'ERROR') # if not set, do like default server behaviour
+  .before(if program.testcutter then modul8.testcutter else i_d)
+  .after(if program.minifier then modul8.minifier else i_d)
+  .set('domloader', program.wrapper)
   .set('force', true) # always rebuild when using this
-  .compile(if analyze then false else console.log)
+  .compile(if program.analyze then false else console.log)
 
