@@ -159,12 +159,7 @@ Libraries::list = (list) ->
   obj.libFiles = list if @environmentMatches and _.isArray(list)
   @
 
-#Probably bad idea, libPath linked up to lib list, can change this though
-#but if we use add, then it has to add after the list call has taken place..
-#Libraries::add = (lib) -> #TODO: good idea? for data plugins - if useful, then should also add arbiters for plugins
-#  return @ if !@subclassMatches('Libraries','add')
-#  obj.libFiles.push(lib+'')
-#  @
+#TODO: maybe add an Libraries::add call if we can sort out race conditions with ::list and if it is needed
 
 Libraries::path = (dir) ->
   return @ if !@subclassMatches('Libraries','path')
@@ -240,13 +235,28 @@ Modul8::compile = (target) ->
   @removeSubClassMethods()
   return @ if !@environmentMatches
   obj.target = target
+  obj.logLevel = logLevels[(obj.options.logging+'').toLowerCase()] ? 0
   sanityCheck(obj)
   bundle(obj)
   @ # keep chaining in case there are subsequent calls chained on in different environments
 
+
+logLevels =
+  error   : 1
+  warn    : 2
+  info    : 3
+  debug   : 4
+
 sanityCheck = (o) ->
   if !o.domains
     throw new Error("modul8 requires domains specified - got "+JSON.stringify(o.domains))
+
+  ns = o.options.namespace+''
+  if !ns
+    throw new Error("modul8 cannot use a blank namespace")
+
+  if !/^[\w_$]*$/.test(ns) or !/^[A-Za-z_$]/.test(ns) # [alphanumeric_$], but must start with [alpha_$]
+    throw new Error("modul8 requires the namespace to be a valid as a variable name, got #{ns}")
 
   if !exists(o.domains['app'] + o.entryPoint)
     throw new Error("modul8 requires the entryPoint to be contained in the app domain - could not find: "+o.domains['app'] + o.entryPoint) # can remove this soon

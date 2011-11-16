@@ -12,9 +12,9 @@ anonWrap = (code) ->
   "(function(){\n#{code}\n})();"
 
 makeWrapper = (ns, fnstr, hasArbiter) ->
+  return anonWrap if !fnstr
   location = if hasArbiter then ns+".require('M8::#{fnstr}')" else fnstr
-  selfexec = if !fnstr then '()' else '' # if fnstr is '' or was false'd -> we use a self executing anon fn
-  (code) -> location+"(function(){\n"+code+"\n})"+selfexec+";"
+  (code) -> location+"(function(){\n"+code+"\n});"
 
 # creates a unique filename to use for the serializers
 # uniqueness based on execution path, target.js and targetlibs.js - should be sufficient
@@ -27,18 +27,11 @@ makeGuid = (vals) ->
 verifyCollisionFree = (codeList) ->
   for [dom, file] in codeList
     uid = dom+'::'+file.split('.')[0]
-    for [d,f] in codeList when (dom isnt d and file isnt f) # dont check self
+    for [d,f] in codeList when dom isnt d or file isnt f # dont check self
       uidi = d+'::'+f.split('.')[0]
       if uid is uidi
         throw new Error("modul8: does not support requiring of two files of the same name on the same path with different extensions: #{dom}::#{file} and #{d}::{#f} ")
   return
-
-#TODO: this should sit in modul8.coffee
-logLevels =
-  error   : 1
-  warn    : 2
-  info    : 3
-  debug   : 4
 
 # checks whether serialized options object corresponds to the one we passed in
 isOptionsChanged = (guid, o, log) ->
@@ -93,7 +86,7 @@ bundleApp = (codeList, ns, domload, compile, o) ->
     namespace : ns
     domains   : name for name of o.domains
     arbiters  : o.arbiters
-    logging   : logLevels[(o.options.logging+'').toLowerCase()] ? 0
+    logging   : o.logLevel
 
   l.push anonWrap( read(__dirname+'/require.js')
     .replace(/__VERSION__/, JSON.parse(read(__dirname+'/../package.json')).version)
@@ -128,10 +121,9 @@ module.exports = (o) ->
   guid = makeGuid([o.target, o.libsOnlyTarget])
   forceUpdate = isOptionsChanged(guid, o) or o.options.force # force option (using CLI)
 
-  ns = o.options.namespace ? 'M8'
-
-  domloader = _dl = o.options.domloader
-  domloader = makeWrapper(ns, _dl or '', (_dl or '') of o.arbiters) if !_dl or !_.isFunction(_dl) # force into string if not a fn
+  ns = o.options.namespace+''         # force into string (we know it's valid from before)
+  domwrap = o.options.domloader or '' # force into string if not function or falsy
+  domwrap = makeWrapper(ns, domwrap, domwrap of o.arbiters) if !domwrap or !_.isFunction(domwrap) # else use (empty?) str to make wrapper
 
   o.before = if o.pre.length > 0 then _.compose.apply({}, o.pre) else _.identity
   o.after = if o.post.length > 0 then _.compose.apply({}, o.post) else _.identity
@@ -153,18 +145,19 @@ module.exports = (o) ->
     verifyCollisionFree(codelist)
 
     useLog = o.options.logging and !_.isFunction(o.target) # dont log anything from server if we output result to console
-    level = logLevels[(o.options.logging+'').toLowerCase()] ? 0
+    logCompiles = useLog and o.logLevel >= 2
+    logDebugs = useLog and o.logLevel >= 4
 
-    appUpdated = mTimeCheck(guid, codelist, o.domains, 'app', useLog and level >= 4)
+    appUpdated = mTimeCheck(guid, codelist, o.domains, 'app', logDebugs)
 
-    c = bundleApp(codelist, ns, domloader, compile, o)
+    c = bundleApp(codelist, ns, domwrap, compile, o)
     c = o.after(c)
 
     return o.target(c) if _.isFunction(o.target) # pipe output to fn without libs for now
 
     if o.libDir and o.libFiles
 
-      libsUpdated = mTimeCheck(guid, (['libs', f] for f in o.libFiles), {libs: o.libDir}, 'libs', useLog and level >= 4)
+      libsUpdated = mTimeCheck(guid, (['libs', f] for f in o.libFiles), {libs: o.libDir}, 'libs', logDebugs)
 
       if libsUpdated or (appUpdated and !o.libsOnlyTarget) or forceUpdate
         # necessary to do this work if libs changed
@@ -174,7 +167,7 @@ module.exports = (o) ->
 
       if o.libsOnlyTarget and libsUpdated
         fs.writeFileSync(o.libsOnlyTarget, libs)
-        log.info 'modul8 - compiling separate libs' if useLog and level >= 2
+        log.info 'modul8 - compiling separate libs' if logCompiles
         libsUpdated = false # no need to take this state into account anymore since they are written separately
       else if !o.libsOnlyTarget
         c = libs + c
@@ -183,7 +176,7 @@ module.exports = (o) ->
 
     if appUpdated or (libsUpdated and !o.libsOnlyTarget) or forceUpdate
       # write target if there were any changes relevant to this file
-      log.info 'modul8 - compiling' if useLog and level >= 2
+      log.info 'modul8 - compiling' if logCompiles
       fs.writeFileSync(o.target, c)
       #console.log 'writing app! bools: libsUp='+libsUpdated+', appUp='+appUpdated+', force='+forceUpdate
 
