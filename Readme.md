@@ -201,6 +201,9 @@ Version 1.0 should be ready relatively soon - so the current code can be conside
 
 Version 0.10.0 and up should work fine with node v0.6.
 
+## Compatibility
+Compiled code will work with ES5 compatible browsers (recent browsers minus Opera)
+If you target older browsers, include [ES5-shim](https://github.com/kriskowal/es5-shim).
 
 ## Running Tests
 
