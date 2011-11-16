@@ -35,7 +35,7 @@ program
 
   .option('-b, --libraries path=[lib1,lib2]', 'concatenate libraries in front of the standard output in the given order', hashDouble)
   .option('-a, --arbiters shortcut=[glob,glob2]', 'specify arbiters shortcut for list of globals', hashDouble)
-  .option('-g, --plugins path=[arg,arg2]', 'load in plugins from path using array of constructor arguments', hashDouble)
+  .option('-g, --plugins path=[arg,arg2]', 'load in plugins from path using array of simple constructor arguments', hashDouble)
 
   .option('-l, --logging <level>', 'set the logging level')
   .option('-n, --namespace <name>', 'specify the target namespace used in the compiled file')
@@ -82,7 +82,7 @@ data = {}
 for name,optry of program.plugins
   #try
   #console.log name
-  P = require(name).Plugin
+  P = require(name).Plugin # will throw - requires name to be a resolvable path
   P.apply(inst={}, optAry)
   plugins.push inst
   #catch e
