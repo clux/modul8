@@ -5,7 +5,10 @@
   * tests (when npm installed) now include vital file
   * Plugin::name can be a simple key (cleaner Plugin API)
   * CLI allows concatenating on libraries like the main API (but without the separate libraries().target() option available)
-  * CLI revamped to be consistent with itself.
+  * Existing CLI API modified to be consistent with itself: Same delimiters everywhere, essentially.
+  * Fixed bug causing collision testing to not be strict enough
+  * Fixed bug causing arbiters with globals different to its name to not resolve on the client
+  * Bundled require code passes through JSLint
 
 0.12.0 / 2011-11-13
 ==================
