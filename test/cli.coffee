@@ -19,6 +19,7 @@ argv = [
   'QQ',
   '-d',
   'test=./examples/advanced/data.json'
+  '-z'
 ]
 
 exports["test CLI"] = ->
