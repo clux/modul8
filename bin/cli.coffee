@@ -65,54 +65,62 @@ program.on '--help', ->
   console.log('    http://clux.github.com/modul8/')
   console.log('')
 
-program.parse(process.argv)
 
-# first arg must be entry
-entry = program.args[0]
-if !entry
-  console.error("usage: modul8 entry [options]")
-  console.log("or modul8 -h for help")
-  process.exit()
-
-# convenience processing of plugins and data input
-
-plugins = []
-data = {}
-
-construct = (Ctor, args) ->
-  F = -> Ctor.apply(@, args)
-  F:: = Ctor::
-  new F()
-
-for name,optAry of program.plugins
-  rel = join(fs.realpathSync(), name)
-  name = rel if path.existsSync(rel)
-  # path can now be absolute, relative to execution directory or relative to CLI directory
-  P = require(name).Plugin
-  plugins.push construct(P, optAry)
-
-for k,p of program.data
-  if not p or not path.existsSync p
-    console.error("invalid data usage: value must be a path to a file")
+complete = ->
+  # first arg must be entry
+  entry = program.args[0]
+  if !entry
+    console.error("usage: modul8 entry [options]")
+    console.log("or modul8 -h for help")
     process.exit()
-  data[k] = fs.readFileSync(p, 'utf8')
 
-null for libPath,libs of program.libraries
+  # utils
+  i_d = (a) -> a
+  construct = (Ctor, args) ->
+    F = -> Ctor.apply(@, args)
+    F:: = Ctor::
+    new F()
 
-i_d = (a) -> a
+  # convenience processing of plugins and data input
 
-modul8(entry)
-  .domains(program.domains)
-  .data(data)
-  .use(plugins)
-  .analysis(if program.analyze then console.log else false)
-  .arbiters(program.arbiters)
-  .libraries(libs or [], libPath)
-  .set('namespace', program.namespace ? 'M8')
-  .set('logging', program.logging ? 'ERROR') # if not set, do like default server behaviour
-  .before(if program.testcutter then modul8.testcutter else i_d)
-  .after(if program.minifier then modul8.minifier else i_d)
-  .set('domloader', program.wrapper)
-  .set('force', true) # always rebuild when using this
-  .compile(if program.analyze then false else console.log)
+  plugins = []
+  data = {}
 
+  for name,optAry of program.plugins
+    rel = join(fs.realpathSync(), name)
+    name = rel if path.existsSync(rel)
+    # path can now be absolute, relative to execution directory or relative to CLI directory
+    P = require(name).Plugin
+    plugins.push construct(P, optAry)
+
+  for k,p of program.data
+    if not p or not path.existsSync p
+      console.error("invalid data usage: value must be a path to a file")
+      process.exit()
+    data[k] = fs.readFileSync(p, 'utf8')
+
+  null for libPath,libs of program.libraries
+
+  modul8(entry)
+    .domains(program.domains)
+    .data(data)
+    .use(plugins)
+    .analysis(if program.analyze then console.log else false)
+    .arbiters(program.arbiters)
+    .libraries(libs or [], libPath)
+    .set('namespace', program.namespace ? 'M8')
+    .set('logging', program.logging ? 'ERROR') # if not set, do like default server behaviour
+    .before(if program.testcutter then modul8.testcutter else i_d)
+    .after(if program.minifier then modul8.minifier else i_d)
+    .set('domloader', program.wrapper)
+    .set('force', true) # always rebuild when using this
+    .compile(if program.analyze then false else console.log)
+
+
+# allow injecting of custom argv to test cli
+module.exports = (argv) ->
+  program.parse(argv)
+  complete()
+
+if module is require.main
+  module.exports(process.argv)
