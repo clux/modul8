@@ -242,7 +242,7 @@ Modul8::compile = (target) ->
   obj.target = target
   obj.logLevel = logLevels[(obj.options.logging+'').toLowerCase()] ? 0
   sanityCheck(obj)
-  #bundle(obj)
+  bundle(obj)
   #console.log obj
   @ # keep chaining in case there are subsequent calls chained on in different environments
 

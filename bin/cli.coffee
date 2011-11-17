@@ -11,8 +11,6 @@ dir     = fs.realpathSync()
 {basename, dirname, resolve, join} = path
 
 # parse query string like options in two ways
-# if isValueList then we expect a list of values as the value
-# else, simple key=value&key2=value2 parsing
 makeQsParser = (isValueList) ->
   (val) ->
     out = {}
@@ -21,17 +19,20 @@ makeQsParser = (isValueList) ->
       out[k] = if isValueList then v?.split(',') else v
     out
 
+simpleQs = makeQsParser(0)
+listQs = makeQsParser(1)
+
 # options
 
 program
   .version(modul8.version)
   .option('-z, --analyze', 'analyze dependencies instead of compiling')
-  .option('-p, --domains name=path', 'specify require domains', makeQsParser())
-  .option('-d, --data key=path', 'attach json parsed data from path to data::key', makeQsParser())
+  .option('-p, --domains name=path', 'specify require domains', simpleQs)
+  .option('-d, --data key=path', 'attach json parsed data from path to data::key', simpleQs)
 
-  .option('-b, --libraries path=lib1,lib2', 'concatenate listed libraries in front of the standard output', makeQsParser(1))
-  .option('-a, --arbiters shortcut=glob,glob2', 'specify arbiters shortcut for list of globals', makeQsParser(1))
-  .option('-g, --plugins path=arg,arg2', 'load in plugins from path using listed constructor arguments', makeQsParser(1))
+  .option('-b, --libraries path=lib1,lib2', 'concatenate listed libraries in front of the standard output', listQs)
+  .option('-a, --arbiters shortcut=glob,glob2', 'specify arbiters shortcut for list of globals', listQs)
+  .option('-g, --plugins path=arg,arg2', 'load in plugins from path using listed constructor arguments', listQs)
 
   .option('-l, --logging <level>', 'set the logging level')
   .option('-n, --namespace <name>', 'specify the target namespace used in the compiled file')
@@ -65,6 +66,8 @@ program.on '--help', ->
   console.log('')
 
 program.parse(process.argv)
+console.log program
+return
 
 # first arg must be entry
 entry = program.args[0]
@@ -100,6 +103,7 @@ null for libPath,libs of program.libraries
 
 i_d = (a) -> a
 
+return
 modul8(entry)
   .domains(program.domains)
   .data(data)

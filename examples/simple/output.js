@@ -1,7 +1,6 @@
 (function(){
 window.M8 = {data:{}};
 (function(){
-
 /**
  * modul8 v0.12.0
  */
@@ -11,29 +10,31 @@ var config    = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["$","j
   , domains   = config.domains
   , arbiters  = []
   , exports   = {}
-  , DomReg    = /^(.*)::/;
+  , DomReg    = /^([\w]*)::/;
 
 /**
  * Initialize the exports container with domain names + move data to it
  */
-for (var i = 0; i < domains.length; i++)
-  exports[domains[i]] = {};
-
 exports.M8 = {};
 exports.external = {};
 exports.data = ns.data;
 delete ns.data;
 
+domains.forEach(function(e){
+  exports[e] = {};
+});
+
 /**
  * Attach arbiters to the require system then delete them from the global scope
  */
-for (var name in config.arbiters) {
-  var arry  = config.arbiters[name]
-    , temp = window[name];
+Object.keys(config.arbiters).forEach(function(name){
+  var arbAry = config.arbiters[name];
   arbiters.push(name);
-  for (var j = 0; j < arry.length; j++) delete window[arry[j]];
-  exports.M8[name] = temp;
-}
+  exports.M8[name] = window[arbAry[0]];
+  arbAry.forEach(function(e){
+    delete window[e];
+  });
+});
 
 /**
  * Converts a relative path to an absolute one
@@ -45,7 +46,7 @@ function toAbsPath(pathName, relReqStr) {
     relReqStr = relReqStr.slice(3);
   }
   return folders.concat(relReqStr.split('/')).join('/');
-};
+}
 
 /**
  * Require Factory for ns.define
@@ -53,49 +54,59 @@ function toAbsPath(pathName, relReqStr) {
  */
 function makeRequire(dom, pathName) {
   return function(reqStr) {
-    var o, scannable, k;
+    var o, scannable, k, skipFolder;
 
-    if (config.logging >= 4)
+    if (config.logging >= 4) {
       console.debug('modul8: '+dom+':'+pathName+" <- "+reqStr);
+    }
 
     if (reqStr.slice(0, 2) === './') {
       scannable = [dom];
       reqStr = toAbsPath(pathName, reqStr.slice(2));
-    } else if (reqStr.slice(0,3) === '../') {
+    }
+    else if (reqStr.slice(0,3) === '../') {
       scannable = [dom];
       reqStr = toAbsPath(pathName, reqStr);
-    } else if (DomReg.test(reqStr)) {
+    }
+    else if (DomReg.test(reqStr)) {
       scannable = [reqStr.match(DomReg)[1]];
       reqStr = reqStr.split('::')[1];
-    } else if (arbiters.indexOf(reqStr) >= 0) {
+    }
+    else if (arbiters.indexOf(reqStr) >= 0) {
       scannable = ['M8'];
-    } else {
+    }
+    else {
       scannable = [dom].concat(domains.filter(function(e) {return e !== dom;}));
     }
+
     reqStr = reqStr.split('.')[0];
     if (reqStr.slice(-1) === '/') {
       reqStr += 'index';
-      var skipFolder = true;
+      skipFolder = true;
     }
 
-    if (config.logging >= 3)
-      console.log('modul8: '+dom+':'+pathName+" <- "+reqStr);
-    if (config.logging >= 4)
-      console.debug('modul8: scanned '+JSON.stringify(scannable))
+    if (config.logging >= 3) {
+      console.log('modul8: '+dom+':'+pathName+' <- '+reqStr);
+    }
+    if (config.logging >= 4) {
+      console.debug('modul8: scanned '+JSON.stringify(scannable));
+    }
 
-    for (k = 0; k < scannable.length; k++) {
+    for (k = 0; k < scannable.length; k += 1) {
       o = scannable[k];
-      if (exports[o][reqStr])
+      if (exports[o][reqStr]) {
         return exports[o][reqStr];
-
-      if (!skipFolder && exports[o][reqStr + '/index'])
+      }
+      if (!skipFolder && exports[o][reqStr + '/index']) {
         return exports[o][reqStr + '/index'];
+      }
     }
 
-    if (config.logging >= 1)
+    if (config.logging >= 1) {
       console.error("modul8: Unable to resolve require for: " + reqStr);
+    }
   };
-};
+}
 
 ns.define = function(name, domain, fn) {
   var module = {};
@@ -125,13 +136,21 @@ ns.require = makeRequire('app', 'CONSOLE');
  */
 
 ns.data = function(name, exported) {
-  if (exports.data[name]) delete exports.data[name];
-  if (exported) exports.data[name] = exported;
+  if (exports.data[name]) {
+    delete exports.data[name];
+  }
+  if (exported) {
+    exports.data[name] = exported;
+  }
 };
 
 ns.external = function(name, exported) {
-  if (exports.external[name]) delete exports.external[name];
-  if (exported) exports.external[name] = exported;
+  if (exports.external[name]) {
+    delete exports.external[name];
+  }
+  if (exported) {
+    exports.external[name] = exported;
+  }
 };
 
 })();
