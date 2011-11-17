@@ -84,7 +84,7 @@ bundleApp = (codeList, ns, domload, compile, o) ->
   # 3. attach require code
   config =
     namespace : ns
-    domains   : name for name of o.domains
+    domains   : Object.keys(o.domains)
     arbiters  : o.arbiters
     logging   : o.logLevel
 

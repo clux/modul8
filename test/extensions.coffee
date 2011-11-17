@@ -46,6 +46,7 @@ generateApp = (options)-> # dont call this with size < 4 otherwise we wont get t
     .set('logging', false)
     .use(new PluginOne('plug1'))
     .use(new PluginTwo())
+    #.use([new PluginOne('plug1'), new PluginTwo()])
     #.analysis().output(console.log)
     .data(data)
       .add('crazy1', 'new Date()')

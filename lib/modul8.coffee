@@ -43,8 +43,13 @@ Modul8::after = (fn) ->
 
 Modul8::use = (inst) ->
   @removeSubClassMethods()
+  return @ if !@environmentMatches
 
-  name = inst.name+''
+  if _.isArray(inst)
+    @use plug for plug in inst
+    return @
+
+  name = inst.name
   if !name
     throw new Error("plugin to modul8 has an undefined name key")
 
@@ -237,7 +242,8 @@ Modul8::compile = (target) ->
   obj.target = target
   obj.logLevel = logLevels[(obj.options.logging+'').toLowerCase()] ? 0
   sanityCheck(obj)
-  bundle(obj)
+  #bundle(obj)
+  #console.log obj
   @ # keep chaining in case there are subsequent calls chained on in different environments
 
 
@@ -288,10 +294,9 @@ if module is require.main
     .set('domloader', (code) -> code)
     .set('namespace', 'QQ')
     .set('logging', 'INFO')
+    #.set('working directory', path) # maybe do this to avoid having to prefix dir+ on almost all API inputs
     .register('.cs', (code) -> coffee.compile(code))
     .before(modul8.testcutter)
-    #.set('compiler', {extension:'.coca', fn: (fileName) -> (js)}) # not worth it yet.
-    #.set('working directory', path) # maybe do this to avoid having to prefix dir+ on almost all API inputs
     .libraries()
       .list(['jQuery.js','history.js'])
       .path('/app/client/libs/')
@@ -306,8 +311,8 @@ if module is require.main
       .add('app', '/app/client/')
       .add('shared', '/app/shared/')
     .data()
-      .add('models', -> '{modeldata:{getssenttoclient}}')
-      .add('versions', -> '{users/view:[0.2.5]}')
+      .add('models', '{modeldata:{getssenttoclient}}')
+      .add('versions', {'users/view':[0,2,5]})
     .analysis()
       .prefix(true)
       .suffix(false)

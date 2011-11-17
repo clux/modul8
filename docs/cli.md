@@ -50,9 +50,9 @@ If you want to wait for the DOM using jQuery, append the `-w jQuery` option (see
 ## Advanced Features
 
 ### Domains
-Multiple domains are partition of name=path values delimited by a hash symbol:
+Multiple domains are partition of name=path values delimited like a query string:
 
-    $ modul8 app/entry.js -p shared=shared/#bot=../libs/bot/
+    $ modul8 app/entry.js -p shared=shared/&bot=../libs/bot/
 
 ### Arbiters
 Loading of arbiters works like the programmatic API:
@@ -63,13 +63,13 @@ We can omit the right hand side of an expression if the shortcut has the same na
 
     $ modul8 app/entry.js -a Spine
 
-Multiple globals for a given shortcuts can be listed inside brackets:
+Multiple globals for a given shortcuts can be comma separated:
 
-    $ modul8 app/entry.js -a jQuery=[$,jQuery]
+    $ modul8 app/entry.js -a jQuery=jQuery,$
 
-Multiple arbiters can be delimited with a hash symbol
+Multiple arbiters can be delimited with an & symbol
 
-    $ modul8 app/entry.js -a jQuery=[$,jQuery]#Spine
+    $ modul8 app/entry.js -a jQuery=$,jQuery&Spine
 
 ### Data Injection
 Data injection works fundamentally different from the shell than from your node program.
@@ -77,22 +77,29 @@ Here you rely on your data pre-existing in a `.json` file and specify what key t
 
     $ modul8 app/entry.js -d myKey=myData.json
 
-Multiple data elements can be delimited with a hash symbol like above.
+Multiple data elements can be delimited with the & symbol like above.
 
 ## Loading Libraries
 Libraries can be concatenated on in the order they wish to be included.
 Load them with the `-b` flag, supplying a path as the key, and a list of files inside that path.
 
-    $ modul8 app/entry.js -b libs/=[jQuery.js,jQuery.ui.js,plugins/datepicker.js]
+    $ modul8 app/entry.js -b libs/=jQuery.js,jQuery.ui.js,plugins/datepicker.js
 
 ### Loading Plugins
-Plugins work different from the programmatic API as well.
-It requires either a name (or the path to the module if it is not requirable from (current?) location) as the key,
-and a list of options to pass to the `require(pathOrNameOfModule).Plugin` constructor.
+It requires a relative or absolute path to the plugins root, and an optional list of options
+to pass as strings to the `require(pathOrNameOfModule).Plugin` constructor.
 
-    $ modul8 app/entry.js -g pathToModule=[arg1,..]
+    $ modul8 app/entry.js -g pathToModule=opt1,opt2
 
-Arguments are serialized as comma separated strings????????
+This would be the equivalent of doing
+
+    var Plugin = require('pathToModule');
+    modul8(..)
+      .use(new Plugin('opt1', 'opt2'))
+      ..
+
+For a blank constructor call, do not use `-g pathToModule=` as this is used to pass the empty string as the first parameter.
+Instead omit the equals sign: `-g pathToModule`
 
 ### Extra Options
 The following are equivalent methods for the programmatic API calls to `.set()`
@@ -100,7 +107,6 @@ The following are equivalent methods for the programmatic API calls to `.set()`
     -w or --wrapper <str> ⇔ set('domloader', <str>)
     -n or --namespace <str> ⇔ set('namespace', <str>)
     -l or --logging  <str> ⇔ set('logging', <str>)
-
 
 #### Booleans
 The following are slightly limited versions of the programmatic `.before()` and `.after()` API

@@ -22,7 +22,7 @@ modul8('./app_code/main.coffee')
   .compile('./output.js');
 
 // Alternatively use the CLI (for the app code):
-// $ modul8 app_code/main.coffee -p shared:shared_code/ -a monolith  -tn QQ -d test:data.json > output.js
+// $ modul8 app_code/main.coffee -p shared=shared_code/ -a monolith -tn QQ -d test=data.json > output.js
 
 // same call with replacing '> output.js' with '-z' to get the analysis
 

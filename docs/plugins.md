@@ -13,6 +13,7 @@ Plugins can typically be used by calling `.use()` with a `new PluginName(opts)` 
 
 Note that all code that is exported by plugins have to be explicitly required to actually get pulled into the bundle.
 
+Plugins can also be loaded - albeit somewhat primitively - via the [CLI](cli.html)
 
 ## Available Plugins
 A small current selection of available plugins follow. This section might be moved to the wiki.
@@ -41,9 +42,33 @@ A plugin can export as many things as it wants to be used on the server, but it 
 ## Structure
 The skeleton of such a plugin class should look something like this in CoffeeScript
 
-    Plugin = (@name='PluginName') ->
-    Plugin::data = -> obj or stringify(obj)
-    Plugin::domain = -> __dirname+'/dom/'
+    class Plugin
+      constructor : (@name='PluginName') ->
+      data : -> obj or stringify(obj)
+      domain : -> __dirname + '/dom/'
+
+Or something like this, if using plain JavaScript
+
+    var Plugin = function(name) {
+      this.name = (name != null) ? name : 'PluginName';
+    }
+    Plugin.prototype.data = function() {
+      return obj || stringify(obj);
+    };
+    Plugin.prototype.domain = function() {
+      return __dirname + '/domain/';
+    };
+
+### Constructor
+For compatibility with the CLI, the constructor should be able to take the essential parameters as ordered arguments.
+You decide how many parameters are essential, and you can encapsulate the remaining arguments in an object (for instance) to avoid having a huge number of ordered arguments.
+
+If you design for CLI compatibility, then the constructor should coerce important internal arguments from strings (to what they are supposed to be),
+as this is how they are passed in from the CLI. For instance, this design would work well with the CLI.
+
+    constructor : (@name='pluginName', number,  @obj={}) ->
+      @number = number | 0 # force to Int
+      @obj.foo ?= 'inessential param'
 
 ### name key
 The `name` key must be specified and have a default indicating the name used by the plugin.

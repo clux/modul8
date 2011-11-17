@@ -10,32 +10,28 @@ utils   = require('../lib/utils')
 dir     = fs.realpathSync()
 {basename, dirname, resolve, join} = path
 
-# parsers
-hashMap = (val) ->
-  out = {}
-  for e in (val.split('#') or [])
-    [k,v] = e.split('=')
-    out[k] = v
-  out
-
-hashDouble = (val) ->
-  out = {}
-  for e in (val.split('#') or [])
-    [k,v] = e.split('=')
-    out[k] = v?.replace(/\[/,'').replace(/\]/,'').split(',')
-  out
+# parse query string like options in two ways
+# if isValueList then we expect a list of values as the value
+# else, simple key=value&key2=value2 parsing
+makeQsParser = (isValueList) ->
+  (val) ->
+    out = {}
+    for e in (val.split('&') or [])
+      [k,v] = e.split('=')
+      out[k] = if isValueList then v?.split(',') else v
+    out
 
 # options
 
 program
   .version(modul8.version)
   .option('-z, --analyze', 'analyze dependencies instead of compiling')
-  .option('-p, --domains name=path', 'specify require domains', hashMap)
-  .option('-d, --data key=path', 'attach json parsed data from path to data::key', hashMap)
+  .option('-p, --domains name=path', 'specify require domains', makeQsParser())
+  .option('-d, --data key=path', 'attach json parsed data from path to data::key', makeQsParser())
 
-  .option('-b, --libraries path=[lib1,lib2]', 'concatenate libraries in front of the standard output in the given order', hashDouble)
-  .option('-a, --arbiters shortcut=[glob,glob2]', 'specify arbiters shortcut for list of globals', hashDouble)
-  .option('-g, --plugins path=[arg,arg2]', 'load in plugins from path using array of simple constructor arguments', hashDouble)
+  .option('-b, --libraries path=lib1,lib2', 'concatenate listed libraries in front of the standard output', makeQsParser(1))
+  .option('-a, --arbiters shortcut=glob,glob2', 'specify arbiters shortcut for list of globals', makeQsParser(1))
+  .option('-g, --plugins path=arg,arg2', 'load in plugins from path using listed constructor arguments', makeQsParser(1))
 
   .option('-l, --logging <level>', 'set the logging level')
   .option('-n, --namespace <name>', 'specify the target namespace used in the compiled file')
@@ -53,16 +49,19 @@ program.on '--help', ->
   console.log('    $ modul8 app/entry.js > output.js')
   console.log('')
   console.log('    # specify extra domains')
-  console.log('    $ modul8 app/entry.js -p shared=shared/#bot=bot/')
+  console.log('    $ modul8 app/entry.js -p shared=shared/&bot=bot/')
   console.log('')
   console.log('    # specify arbiters')
-  console.log('    $ modul8 app/entry.js -a jQuery=[$,jQuery]#Spine')
+  console.log('    $ modul8 app/entry.js -a jQuery=$,jQuery&Spine')
   console.log('')
   console.log('    # wait for the DOM using the jQuery function')
   console.log('    $ modul8 app/entry.js -w jQuery')
   console.log('')
   console.log('    # specify plugins')
-  console.log('    $ modul8 app/entry.js -g m8-templation:[template_path,.jade]')
+  console.log('    $ modul8 app/entry.js -g m8-templation=template_path,.jade')
+  console.log('')
+  console.log('    # Full documentation available at:')
+  console.log('    http://clux.github.com/modul8/')
   console.log('')
 
 program.parse(process.argv)
@@ -75,18 +74,21 @@ if !entry
   process.exit()
 
 # convenience processing of plugins and data input
-console.log program.plugins
-return
-plugins = {}
+
+plugins = []
 data = {}
-for name,optry of program.plugins
-  #try
-  #console.log name
-  P = require(name).Plugin # will throw - requires name to be a resolvable path
-  P.apply(inst={}, optAry)
-  plugins.push inst
-  #catch e
-  #  throw new Error(name+' not a requirable plugin')
+
+construct = (Ctor, args) ->
+  F = -> Ctor.apply(@, args)
+  F:: = Ctor::
+  new F()
+
+for name,optAry of program.plugins
+  rel = join(fs.realpathSync(), name)
+  name = rel if path.existsSync(rel)
+  # path can now be absolute, relative to execution directory or relative to CLI directory
+  P = require(name).Plugin
+  plugins.push construct(P, optAry)
 
 for k,p of program.data
   if not p or not path.existsSync p
@@ -101,6 +103,7 @@ i_d = (a) -> a
 modul8(entry)
   .domains(program.domains)
   .data(data)
+  .use(plugins)
   .analysis(if program.analyze then console.log else false)
   .arbiters(program.arbiters)
   .libraries(libs or [], libPath)
