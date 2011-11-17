@@ -228,6 +228,8 @@ Arbiters::add = (name, globs) ->
   return @ if !@subclassMatches('Arbiters','add')
   return @ if !@environmentMatches
   if globs and _.isArray(globs)
+    globs = globs.filter (e) -> e isnt ''
+    globs = name if globs.length is 0
     obj.arbiters[name] = globs
   else if globs
     obj.arbiters[name] = [globs+'']
