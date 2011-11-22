@@ -1,7 +1,7 @@
 TODO:
   * Use detective's new caching layer?
 
-0.13.0 / 2011-11-2?
+0.13.0 / 2011-11-22
 ==================
   * data API for strings now only take code strings (pre-serialized values)
   * tests now pass with node 0.6.1 using `npm test`
@@ -13,6 +13,7 @@ TODO:
   * Fixed bug causing collision testing to not be strict enough
   * Fixed bug causing arbiters with globals different to its name to not resolve on the client
   * Bundled require code passes through JSLint
+  * Domains can be required with simply `require('dom::')` if an index file is present on the domain.
 
 0.12.0 / 2011-11-13
 ==================
