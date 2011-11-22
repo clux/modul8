@@ -7,4 +7,4 @@ modul8('./app_code/app.js')
   .compile('./output.js');
 
 // alternatively use the CLI:
-// $ modul8 app_code/app.js -a jQuery=jQuery,$ -w jQuery > output.js
+// $ modul8 app/app.js -a jQuery=jQuery,$ -w jQuery > output.js

@@ -14,11 +14,10 @@ modul8('./app_code/main.coffee')
     .add('shared', './shared_code/')
   .analysis()
     .output(console.log)
-    .prefix(true)
+    .prefix(false)
   .data()
     .add('test', fs.readFileSync('./data.json', 'utf8'))
   .set('namespace', 'QQ')
-  .set('domloader', false)
   .set('force', true)
   .compile('./output.js');
 

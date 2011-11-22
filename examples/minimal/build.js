@@ -5,4 +5,4 @@ modul8('./app/app.js')
   .compile('./output.js');
 
 // alternatively use the CLI:
-// $ modul8 app_code/app.js > output.js
+// $ modul8 app/app.js > output.js
