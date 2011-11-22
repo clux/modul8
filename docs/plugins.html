@@ -32,6 +32,8 @@ and help encapsulate logic for the server. Additionally, if designed well, code 
 
 <p>Note that all code that is exported by plugins have to be explicitly required to actually get pulled into the bundle.</p>
 
+<p>Plugins can also be loaded - albeit somewhat primitively - via the <a href="cli.html">CLI</a></p>
+
 <h2>Available Plugins</h2>
 
 <p>A small current selection of available plugins follow. This section might be moved to the wiki.</p>
@@ -64,20 +66,41 @@ to utilize this data in a helpful way.</p>
 <p>The skeleton of such a plugin class should look something like this in CoffeeScript</p>
 
 <pre><code>class Plugin
-  constructor : (@o={}) -&gt;
-    @o.name or= 'pluginName'
-
-  name   : -&gt; @o.name
-
-  data   : -&gt; obj or stringify(obj)
-
-  domain : -&gt; __dirname+'/dom/'
+  constructor : (@name='PluginName') -&gt;
+  data : -&gt; obj or stringify(obj)
+  domain : -&gt; __dirname + '/dom/'
 </code></pre>
 
-<h3>name method</h3>
+<p>Or something like this, if using plain JavaScript</p>
 
-<p>The <code>name</code> method must return a string indicating the name used by the plugin.
-It will specify the key used to export data to the <code>data</code> domain (if specified), as well as the domain name used by the exporting domain (if specified).</p>
+<pre><code>var Plugin = function(name) {
+  this.name = (name != null) ? name : 'PluginName';
+}
+Plugin.prototype.data = function() {
+  return obj || stringify(obj);
+};
+Plugin.prototype.domain = function() {
+  return __dirname + '/domain/';
+};
+</code></pre>
+
+<h3>Constructor</h3>
+
+<p>For compatibility with the CLI, the constructor should be able to take the essential parameters as ordered arguments.
+You decide how many parameters are essential, and you can encapsulate the remaining arguments in an object (for instance) to avoid having a huge number of ordered arguments.</p>
+
+<p>If you design for CLI compatibility, then the constructor should coerce important internal arguments from strings (to what they are supposed to be),
+as this is how they are passed in from the CLI. For instance, this design would work well with the CLI.</p>
+
+<pre><code>constructor : (@name='pluginName', number,  @obj={}) -&gt;
+  @number = number | 0 # force to Int
+  @obj.foo ?= 'inessential param'
+</code></pre>
+
+<h3>name key</h3>
+
+<p>The <code>name</code> key must be specified and have a default indicating the name used by the plugin.
+It will specify the name of the key exported to the <code>data</code> domain (if it exports data), as well as the name of the domain exported to (if it exports behaviour).</p>
 
 <p>This name should be configurable from the class constructor to avoid clashes, but it should default to the plugin name.</p>
 

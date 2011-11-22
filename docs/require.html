@@ -52,6 +52,9 @@ This ensures that each module has the necessary context for the <code>require()<
 just use a pure relative require where the current domain is implicitly assumed.</li>
 </ul>
 
+<p>Note that <code>require('dom::')</code> will look for an index file in the root of that domain. So if you want to minimize the cross-domain interaction,
+export everything relevant from there.</p>
+
 <h5>Data Domain</h5>
 
 <ul>

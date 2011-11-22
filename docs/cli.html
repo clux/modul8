@@ -23,66 +23,129 @@
 <pre><code>$ npm install -g modul8
 </code></pre>
 
-<p>This tool is more restrictive than the programmatic API, because it tries to expose the core functionality in as minimal way as possible.
-You cannot use it to include your libraries, but these are just concatenated on before the main output anyway.</p>
+<p>This tool tries to expose the core functionality in as minimal way as possible, and may in a few ways be a little more restrictive with its options, but in most ways it is identical.</p>
 
 <h2>Usage</h2>
 
-<h3>Basic</h3>
+<h3>Code Analysis</h3>
 
-<p>If you have a directory structure like so:</p>
+<p>Analyse application dependencies from an entrypoint via the <code>-z</code> flag</p>
+
+<pre><code>$ modul8 entry.js -z
+</code></pre>
+
+<p>This will output only the dependency tree:</p>
+
+<pre><code>app::app
+ ├──┬app::controllers/users
+ │  └──┬app::models/user
+ │     └───app::utils/validation
+ └───app::utils
+</code></pre>
+
+<h3>Minimal Compilation</h3>
+
+<p>Simply specify the entry point, and pipe the result to a file</p>
+
+<pre><code>$ modul8 entry.js &gt; output.js
+</code></pre>
+
+<p>Alternatively, you can also use the <code>-o</code> flag:</p>
+
+<pre><code>$ modul8 entry.js -o output.js
+</code></pre>
+
+<p>The application domain is assumed to be in the location <code>entry.js</code> is found in.</p>
+
+<h3>Basic Compilation</h3>
+
+<p>Suppose you also have a shared code domain in a different folder like so</p>
 
 <pre><code>code
 ├───app
 └───shared
 </code></pre>
 
-<p>With your main application files in <code>code/app/</code>, with an entry point <code>entry.js</code> on that path, and shared code in <code>code/shared/</code>,
-then it suffices to:</p>
+<p>Then either</p>
 
-<pre><code>$ modul8 app/entry.js -p shared:shared/ &gt; output.js
+<p>$ modul8 entry.js -p shared=../shared/ > output.js</p>
+
+<p>from the <code>app</code> directory, or</p>
+
+<pre><code>$ modul8 app/entry.js -p shared=shared/ &gt; output.js
 </code></pre>
 
 <p>from the <code>code/</code> directory.</p>
 
-<p>This assumes the name of the main domain is the name of the folder where <code>entry</code> lives, i.e. <code>app</code> in this case.</p>
-
 <p>If you want to wait for the DOM using jQuery, append the <code>-w jQuery</code> option (see wrapper below).</p>
 
-<h3>Advanced</h3>
+<h2>Advanced Features</h2>
 
-<h4>Domains</h4>
+<h3>Domains</h3>
 
-<p>Multiple domains are specified using a comma separated list of name:path values.</p>
+<p>Multiple domains are partition of name=path values delimited like a query string:</p>
 
-<pre><code>$ modul8 app/entry.js -p shared:shared/,bot:../libs/bot/ &gt; output.js
+<pre><code>$ modul8 app/entry.js -p shared=shared/&amp;bot=../libs/bot/
 </code></pre>
 
 <h3>Arbiters</h3>
 
 <p>Loading of arbiters works like the programmatic API:</p>
 
-<pre><code>$ modul8 app/entry.js -a jQuery:jQuery.$,Spine:Spine &gt; output.js
+<pre><code>$ modul8 app/entry.js -a Spine=Spine
 </code></pre>
 
-<p>We can omit the colon for arbiters were the shortcut has the same name as the global.</p>
+<p>We can omit the right hand side of an expression if the shortcut has the same name as the global.</p>
 
-<pre><code>$ modul8 app/entry.js -a jQuery:jQuery.$,Spine &gt; output.js
+<pre><code>$ modul8 app/entry.js -a Spine
 </code></pre>
 
-<p>The globals to delete for a given shortcut is delimited by a dot.</p>
+<p>Multiple globals for a given shortcuts can be comma separated:</p>
+
+<pre><code>$ modul8 app/entry.js -a jQuery=jQuery,$
+</code></pre>
+
+<p>Multiple arbiters can be delimited with an &amp; symbol</p>
+
+<pre><code>$ modul8 app/entry.js -a jQuery=$,jQuery&amp;Spine
+</code></pre>
 
 <h3>Data Injection</h3>
 
-<p>Data injection works fundamentally different from the shell than from your node program. Here you rely on your data pre-existing in a <code>.json</code> file and specify what key to attach it to.</p>
+<p>Data injection works fundamentally different from the shell than from your node program.
+Here you rely on your data pre-existing in a <code>.json</code> file and specify what key to attach it to.</p>
 
-<pre><code>$ modul8 app/entry.js -d myKey:myData.json &gt; output.js
+<pre><code>$ modul8 app/entry.js -d myKey=myData.json
 </code></pre>
 
-<p>Multiple data files can be imported by comma separating the above -d input</p>
+<p>Multiple data elements can be delimited with the &amp; symbol like above.</p>
 
-<pre><code>$ modul8 app/entry.js -d myKey:myData.json,mySecondKey:mySecondData.json &gt; output.js
+<h2>Loading Libraries</h2>
+
+<p>Libraries can be concatenated on in the order they wish to be included.
+Load them with the <code>-b</code> flag, supplying a path as the key, and a list of files inside that path.</p>
+
+<pre><code>$ modul8 app/entry.js -b libs/=jQuery.js,jQuery.ui.js,plugins/datepicker.js
 </code></pre>
+
+<h3>Loading Plugins</h3>
+
+<p>It requires a relative or absolute path to the plugins root, and an optional list of options
+to pass as strings to the <code>require(pathOrNameOfModule).Plugin</code> constructor.</p>
+
+<pre><code>$ modul8 app/entry.js -g pathToModule=opt1,opt2
+</code></pre>
+
+<p>This would be the equivalent of doing</p>
+
+<pre><code>var Plugin = require('pathToModule');
+modul8('./app/entry.js')
+  .use(new Plugin('opt1', 'opt2'))
+  .compile(console.log)
+</code></pre>
+
+<p>For a blank constructor call, do not use <code>-g pathToModule=</code> as this is used to pass the empty string as the first parameter.
+Instead omit the equals sign: <code>-g pathToModule</code></p>
 
 <h3>Extra Options</h3>
 
@@ -95,13 +158,12 @@ then it suffices to:</p>
 
 <h4>Booleans</h4>
 
-<p>The following are slightly limited versions of the programmatic API's <code>.before()</code>, <code>.after()</code> and <code>.analysis()</code></p>
+<p>The following are slightly limited versions of the programmatic <code>.before()</code> and <code>.after()</code> API</p>
 
 <pre><code>-t or --testcutter ⇔ before(modul8.testcutter)
 -m or --minifier ⇔ after(modul8.minifier)
--z or --analyze ⇔ analysis(console.log) &amp;&amp; !compile()
 </code></pre>
 
-<p>The <code>-z</code> flag will in other words not compile anything, just print the dependency tree.</p>    </div>
+<p>See the <a href="api.html">API</a> for more details on how these work.</p>    </div>
   </body>
 </html>
