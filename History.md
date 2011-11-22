@@ -1,4 +1,4 @@
-0.14.0 / 2011-11-2?
+0.13.1 / 2011-11-2?
 ==================
   * Use detective's new caching layer?
   * Store states in a config file in user home rather than one file per output in the states directory.

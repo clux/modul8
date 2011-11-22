@@ -214,6 +214,7 @@ $ npm install
 ````
 
 Run the tests
+
 ````bash
 $ npm test
 ````
