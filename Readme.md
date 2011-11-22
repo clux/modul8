@@ -207,21 +207,19 @@ If you target older browsers, include [ES5-shim](https://github.com/kriskowal/es
 
 ## Running Tests
 
-Install development dependencies:
+Install development dependencies
 
 ````bash
 $ npm install
 ````
 
-Then run expresso
-
+Run the tests
 ````bash
-$ expresso
+$ npm test
 ````
 
-Actively tested with node:
-
-  - 0.4.12
+This was actively tested with node 0.4.10-12 until very recently.
+It is now exclusively tested with the 0.6 (>=0.6.1) branch.
 
 ## License
 

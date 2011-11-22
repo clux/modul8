@@ -26,6 +26,9 @@ You can indicate a relative require by using either the `./` prefix, or the fold
 - `require('shared::val.js')` - Like absolute requires, but specifies the only domain which will be searched. If you want to do relative domain specific requires,
 just use a pure relative require where the current domain is implicitly assumed.
 
+Note that `require('dom::')` will look for an index file in the root of that domain. So if you want to minimize the cross-domain interaction,
+export everything relevant from there.
+
 ##### Data Domain
 
 - `require('data::datakey')` - Data on this domain does not represent actual files, but data injected into the require system on the server. It will not show up in the dependency tree.

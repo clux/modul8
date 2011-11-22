@@ -1,5 +1,7 @@
-TODO:
+0.14.0 / 2011-11-2?
+==================
   * Use detective's new caching layer?
+  * Store states in a config file in user home rather than one file per output in the states directory.
 
 0.13.0 / 2011-11-22
 ==================
@@ -13,7 +15,8 @@ TODO:
   * Fixed bug causing collision testing to not be strict enough
   * Fixed bug causing arbiters with globals different to its name to not resolve on the client
   * Bundled require code passes through JSLint
-  * Domains can be required with simply `require('dom::')` if an index file is present on the domain.
+  * Domains can be required with simply `require('dom::')` if an index file is present on the domain
+  * If compile target is deleted, forceUpdate output regardless of cached states
 
 0.12.0 / 2011-11-13
 ==================

@@ -17,7 +17,7 @@ compile = utils.makeCompiler()
 
 exports["test CLI#examples/simple"] = ->
   workDir = './examples/simple/'
-  str = "#{workDir}app_code/app.js -a jQuery=jQuery,$ -w jQuery -o #{workDir}cliout.js"
+  str = "#{workDir}app/app.js -a jQuery=jQuery,$ -w jQuery -o #{workDir}cliout.js"
   callCLI(str)
 
   browser = new zombie.Browser()
