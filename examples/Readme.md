@@ -10,6 +10,9 @@ Browser behaviour can be tested by loading `test.html` in the browser (includes 
 Simply analyses from an entry point and loads resources from a `shared` domain.
 If it works, what is required from the `shared` domain will be sent to `alert`.
 
+    app::app
+     └───shared::
+
 ### Simple Example
 jQuery integration using arbiters for the global variable and waits for the DOM with the `jQuery()` function.
 It also contains a sample MVC application structure. That it funnels some data through.
