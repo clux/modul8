@@ -34,6 +34,7 @@ program
   .option('-a, --arbiters <shortcut=glob,glob2>', 'specify arbiters shortcut for list of globals', listQs)
   .option('-g, --plugins <path=arg,arg2>', 'load in plugins from path using listed constructor arguments', listQs)
 
+  .option('-o, --output <file>', 'write output to a file rather than send to stdout')
   .option('-l, --logging <level>', 'set the logging level')
   .option('-n, --namespace <name>', 'specify the target namespace used in the compiled file')
   .option('-w, --wrapper <fnName>', 'name of wrapping domloader function')
@@ -61,9 +62,6 @@ program.on '--help', ->
   console.log('    # specify plugins')
   console.log('    $ modul8 app/entry.js -g m8-templation=template_path,.jade')
   console.log('')
-  console.log('    # Full documentation available at:')
-  console.log('    http://clux.github.com/modul8/')
-  console.log('')
 
 
 complete = ->
@@ -82,11 +80,11 @@ complete = ->
     new F()
 
   # convenience processing of plugins and data input
-
   plugins = []
-  data = {}
-
   for name,optAry of program.plugins
+    if !name
+      console.error("invalid plugin usage: -g path=[args]")
+      process.exit()
     rel = join(fs.realpathSync(), name)
     name = rel if path.existsSync(rel)
     # path can now be absolute, relative to execution directory or relative to CLI directory
@@ -97,13 +95,14 @@ complete = ->
     if not p or not path.existsSync p
       console.error("invalid data usage: value must be a path to a file")
       process.exit()
-    data[k] = fs.readFileSync(p, 'utf8')
+    program.data[k] = fs.readFileSync(p, 'utf8')
 
-  null for libPath,libs of program.libraries
+  libPath = Object.keys(program.libraries ? {})[0]?
+  libs = program.libraries?[libPath]?
 
   modul8(entry)
     .domains(program.domains)
-    .data(data)
+    .data(program.data)
     .use(plugins)
     .analysis(if program.analyze then console.log else false)
     .arbiters(program.arbiters)
@@ -114,13 +113,30 @@ complete = ->
     .after(if program.minifier then modul8.minifier else i_d)
     .set('domloader', program.wrapper)
     .set('force', true) # always rebuild when using this
-    .compile(if program.analyze then false else console.log)
+    .compile(if program.analyze then false else program.output ? console.log)
 
+if module is require.main
+  program.parse(process.argv)
+  complete()
 
 # allow injecting of custom argv to test cli
 module.exports = (argv) ->
   program.parse(argv)
   complete()
 
-if module is require.main
-  module.exports(process.argv)
+  # for testing, program retains state between multiple calls
+  resettables = [
+    'analyze'    # -z
+    'data'       # -d
+    'domains'    # -p
+    'namespace'  # -n
+    'testcutter' # -t
+    'minifier'   # -m
+    'wrapper'    # -w
+    'output'     # -o
+    'arbiters'   # -a
+    'logging'    # -l
+    'plugins'    # -g
+    'libraries'  # -b
+  ]
+  delete program[k] for k in resettables

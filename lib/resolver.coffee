@@ -45,7 +45,9 @@ Resolver = (@domains, @arbiters, @exts) ->
 Resolver::locate = (reqStr, subFolders, domain) ->
   #console.log reqStr, subFolders, domain
   [absReq, foundDomain] = toAbsPath(reqStr, subFolders, domain)
-  #console.log absReq, foundDomain
+  #console.log absReq
+  absReq = 'index' if absReq is ''
+
 
   # sanity
   if !domainIgnoresReg.test(reqStr)

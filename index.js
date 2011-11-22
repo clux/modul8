@@ -9,6 +9,6 @@ var fs = require('fs');
 var modul8 = require('./lib/modul8.coffee');
 modul8.minifier = require('./lib/plugins/minifier.coffee');
 modul8.testcutter = require('./lib/plugins/testcutter.coffee');
-modul8.version = JSON.parse(fs.readFileSync(__dirname+'/package.json','utf8')).version
+modul8.version = JSON.parse(fs.readFileSync(__dirname+'/package.json','utf8')).version;
 
 module.exports = modul8;

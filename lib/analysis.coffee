@@ -59,6 +59,8 @@ makeCounter = (ignores) ->
 
 formatName = (absReq, extSuffix, domPrefix, dom) ->
   n = if extSuffix then absReq else absReq.split('.')[0]
+  # take out reduntant index specifications to make (but only if we show domains)
+  n = '' if n[0...5] is 'index' and not ('/' in n) and domPrefix # arguable feature perhaps
   n = dom+'::'+n if domPrefix
   n
 

@@ -120,6 +120,7 @@ bundleApp = (codeList, ns, domload, compile, o) ->
 module.exports = (o) ->
   guid = makeGuid([o.target, o.libsOnlyTarget])
   forceUpdate = isOptionsChanged(guid, o) or o.options.force # force option (using CLI)
+  #TODO: forceUpdate |= targetFilesDeleted
 
   ns = o.options.namespace+''         # force into string (we know it's valid from before)
   domwrap = o.options.domloader or '' # force into string if not function or falsy

@@ -19,6 +19,7 @@ modul8('./app_code/main.coffee')
     .add('test', fs.readFileSync('./data.json', 'utf8'))
   .set('namespace', 'QQ')
   .set('domloader', false)
+  .set('force', true)
   .compile('./output.js');
 
 // Alternatively use the CLI (for the app code):

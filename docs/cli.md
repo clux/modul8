@@ -26,6 +26,10 @@ Simply specify the entry point, and pipe the result to a file
 
     $ modul8 entry.js > output.js
 
+Alternatively, you can also use the `-o` flag:
+
+    $ modul8 entry.js -o output.js
+
 The application domain is assumed to be in the location `entry.js` is found in.
 
 ### Basic Compilation
@@ -94,9 +98,9 @@ to pass as strings to the `require(pathOrNameOfModule).Plugin` constructor.
 This would be the equivalent of doing
 
     var Plugin = require('pathToModule');
-    modul8(..)
+    modul8('./app/entry.js')
       .use(new Plugin('opt1', 'opt2'))
-      ..
+      .compile(console.log)
 
 For a blank constructor call, do not use `-g pathToModule=` as this is used to pass the empty string as the first parameter.
 Instead omit the equals sign: `-g pathToModule`

@@ -5,7 +5,7 @@ window.M8 = {data:{}};
  * modul8 v0.12.0
  */
 
-var config    = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["$","jQuery"]},"logging":1}
+var config    = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["jQuery","$"]},"logging":1}
   , ns        = window[config.namespace]
   , domains   = config.domains
   , arbiters  = []
