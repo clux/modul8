@@ -14,11 +14,13 @@ If it works, what is required from the `shared` domain will be sent to `alert`.
 jQuery integration using arbiters for the global variable and waits for the DOM with the `jQuery()` function.
 It also contains a sample MVC application structure. That it funnels some data through.
 
+
     app::app
      ├──┬app::controllers/users
      │  └──┬app::models/user
      │     └───app::utils/validation
      └───M8::jQuery
+
 
 If it works, data is passed from model/user via validation down to app::app, and to prove that the domloader works with arbiters,
 it outputs the result in a dom element.

@@ -140,3 +140,4 @@ module.exports = (argv) ->
     'libraries'  # -b
   ]
   delete program[k] for k in resettables
+  return
