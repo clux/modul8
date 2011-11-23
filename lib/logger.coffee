@@ -1,5 +1,7 @@
 # Logger
 # Adapted from socket.io-node's logger
+c = require('colors')
+
 
 # arguments helper
 toArray = (enu) ->
@@ -15,10 +17,10 @@ levels = [
 
 # Colors for log levels
 colors = [
-  31
-  33
-  36
-  90
+  c.red
+  c.yellow
+  c.green
+  c.cyan
 ]
 
 # Count from levels
@@ -26,26 +28,30 @@ max = Math.max.apply({}, levels.map((l) -> l.length))
 num = levels.length
 
 # Pads the nice output to the longest log level
-pad = (str) ->
-  return str + new Array(max - str.length + 1).join(' ') if str.length < max
-  str
+pad = (str, len) ->
+  if str.length < len then str + new Array(len - str.length + 1).join(' ') else str
 
 # Public API
 
-# Logger Class (used to be exports)
-module.exports = Logger = (@colors=true) ->
+# Logger Class
+Logger = (@prefix, @size = 10) ->
 
 # Log method
 Logger::log = (type) ->
   index = levels.indexOf(type)
   return @ if index >= num
+  type = pad(type, max).toUpperCase()
+
+  @delim = colors[index]('-')
+  end = if @prefix then [c.blue(c.bold(pad(@prefix, @size))), @delim] else []
+  #console.log @size, @prefix.length, @prefix
 
   console.log.apply console, [
-      if @colors
-        '   \033[' + colors[index] + 'm' + pad(type) + ' -\033[39m'
-      else
-        type + ':'
-    ].concat(toArray(arguments)[1...])
+    c.grey new Date().toLocaleTimeString()
+    @delim
+    if type is 'error' then c.bold type else type
+    @delim
+  ].concat(end).concat(toArray(arguments)[1...])
   @
 
 # Generate methods
@@ -53,7 +59,14 @@ levels.forEach (name) ->
   Logger::[name] = ->
     @log.apply(@, [name].concat(toArray(arguments)))
 
+module.exports = Logger
+
 # Quick test
 if module is require.main
-  log = new Logger({colors:true})
-  log.warn('this could be bad').info('wee').error('this bad.').debug('irrelephant')
+  size = 10
+  log = new Logger('logger', size)
+  log.error('this is very bad').warn('this could be bad').info('standard message').debug('irrelephant message')
+  log = new Logger('deathmatch', size)
+  log.error('this is very bad').warn('this could be bad').info('standard message').debug('irrelephant message')
+  log = new Logger()
+  log.error('this is very bad').warn('this could be bad').info('standard message').debug('irrelephant message')
