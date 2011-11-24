@@ -20,13 +20,7 @@ read = (name) -> fs.readFileSync(name, 'utf8')
 
 # compile factory
 makeCompiler = (external={}) ->
-  # sanity
-  for key,fn of external
-    if key in ['','.js','.coffee']
-      throw new Error("modul8: cannot re-register #{key} extension")
-    if !_.isFunction(fn)
-      throw new Error("modul8: registered compiler must be a fn returning a string")
-
+  # sanity checked in main interface
   (file, bare=true) ->
     ext = path.extname(file)
     raw = read(file)

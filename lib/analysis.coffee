@@ -6,7 +6,7 @@ utils       = require './utils'
 
 
 # constructor - resolves dependency tree and stores in @tree
-CodeAnalysis = ({@entryPoint, @domains, @before, @ignoreDoms, exts, arbiters}, @compile) ->
+CodeAnalysis = ({@entryPoint, @domains, @ignoreDoms, exts, arbiters}, @before, @compile) ->
   @resolver = new Resolver(@domains, arbiters, exts)
   @buildTree()
   return
@@ -107,8 +107,8 @@ CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
 
 
 # export a closure bound instance of CodeAnalysis and an object of public methods
-module.exports = (obj, compile) ->
-  o = new CodeAnalysis(obj, compile)
+module.exports = (obj, before, compile) ->
+  o = new CodeAnalysis(obj, before, compile)
   {
     printed : -> o.printed.apply(o, arguments)   # -> dependency tree string
     sorted  : -> o.sorted.apply(o, arguments)    # -> array of [domain, name] pairs in the order they should be inserted

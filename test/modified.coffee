@@ -46,7 +46,7 @@ compile = (useLibs, separateLibs) ->
   modul8(options.paths.app+'entry.js')
     #.analysis().output(console.log).suffix(true)
     #.arbiters().add('0').add('1').add('2') #TODO: fix priority here as well!
-    .set('logging', 'WARN')
+    .set('logging', 'DEBUG')
     .libraries()
       .list(if useLibs then (i+'.js' for i in [0...appSize]) else false)
       .path(options.paths.libs)
@@ -75,7 +75,7 @@ wasUpdated = (type) ->
 
 
 exports["test compile#modified"] = ->
-  if true
+  if false
     console.log 'compile#modified on hold - skipping 24 second test'
     return
 
@@ -139,6 +139,7 @@ exports["test compile#modified"] = ->
             assert.ok(appChanged, "modified #{name}::#{i} - compiling with app changes changes app mtime")
 
           testCount += 2
+
 
   # takes sleepDuration * appSize * 2 * 2 * numPaths = 2*1*2*2*3 = 24s
 

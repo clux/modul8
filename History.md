@@ -1,7 +1,10 @@
+  * Use detective's new caching layer?
+
 0.13.1 / 2011-11-2?
 ==================
-  * Use detective's new caching layer?
-  * Store states in a config file in user home rather than one file per output in the states directory.
+  * Logger moved out of modul8 to clux/logule
+  * Persistance logic moved to its own file
+  * Persister stores the states in a config file in configurable directory rather than one file per output in the states directory
 
 0.13.0 / 2011-11-22
 ==================

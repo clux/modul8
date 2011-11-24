@@ -134,11 +134,11 @@ exports["test analyzer#order"] = ->
   ca = analysis
     entryPoint : 'entry.js'
     domains    : options.domains
-    before     : (a) -> a
     arbiters   : {}
     ignoreDoms : []
     exts       : exts
-    compile # argument 2
+    (a) -> a # before
+    compile  # argument 3
   order = ca.sorted()
 
   assert.ok(order.length, "order is a non-empty array") # we are testing the giant app

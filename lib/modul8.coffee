@@ -1,5 +1,6 @@
-bundle = require './bundle.coffee'
-_      = require 'underscore'
+fs     = require('fs')
+bundle = require('./bundle.coffee')
+_      = require('underscore')
 {exists, domainSplit} = require './utils'
 
 #process.chdir(self.options['working directory']);
@@ -97,6 +98,7 @@ start = (entry) ->
       domloader   : false
       logging     : 'ERROR'
       force       : false
+      persist     : __dirname+'/../state.json' #process.env.HOME+'/.modul8_settings.json' ?
 
   new Modul8()
 
@@ -242,7 +244,7 @@ Modul8::compile = (target) ->
   @removeSubClassMethods()
   return @ if !@environmentMatches
   obj.target = target
-  obj.logLevel = logLevels[(obj.options.logging+'').toLowerCase()] ? 0
+  preProcess(obj)
   sanityCheck(obj)
   bundle(obj)
   #console.log obj
@@ -255,12 +257,18 @@ logLevels =
   info    : 3
   debug   : 4
 
+preProcess = (o) ->
+  o.options.namespace += '' # force to string
+  obj.logLevel = logLevels[(obj.options.logging+'').toLowerCase()] ? 0
+  o.exts = ['','.js','.coffee'].concat(Object.keys(o.compilers))
+  return
+
 sanityCheck = (o) ->
   if !o.domains
     throw new Error("modul8 requires domains specified - got "+JSON.stringify(o.domains))
 
-  ns = o.options.namespace+''
-  if !ns
+  ns = o.options.namespace
+  if !(ns)
     throw new Error("modul8 cannot use a blank namespace")
 
   if !/^[\w_$]*$/.test(ns) or !/^[A-Za-z_$]/.test(ns) # [alphanumeric_$], but must start with [alpha_$]
@@ -282,8 +290,16 @@ sanityCheck = (o) ->
     throw new Error("modul8 requires a function as post-processing plugin") if !_.isFunction(fnb)
 
   for d in obj.ignoreDoms
-    throw new Error("modul8::analysis cannot ignore the app domain") if 'app' is d
+    throw new Error("modul8 analysis cannot ignore the app domain") if 'app' is d
 
+  if o.options.persist and !exists(o.options.persist)
+    throw new Error("modul8 got an invalid persist file as an option")
+
+  for key,fn of o.compilers
+    if key in ['','.js','.coffee']
+      throw new Error("modul8: cannot re-register #{key} extension")
+    if !_.isFunction(fn)
+      throw new Error("modul8: registered compiler must be a fn returning a string")
   return
 
 module.exports = start

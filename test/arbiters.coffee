@@ -82,10 +82,10 @@ exports["test arbiters#priority"] = ->
     ca = analysis
       entryPoint : 'entry.js'
       domains    : doms
-      before     : (a) -> a
       arbiters   : arbs
       exts       : exts
       ignoreDoms : []
+      (a) -> a # before
       compile
     order = ca.sorted()
     assert.includes(order[order.length-1], 'entry.js', "ordered list includes entry when libsRequired=#{libReq}")

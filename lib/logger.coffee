@@ -68,5 +68,9 @@ if module is require.main
   log.error('this is very bad').warn('this could be bad').info('standard message').debug('irrelephant message')
   log = new Logger('deathmatch', size)
   log.error('this is very bad').warn('this could be bad').info('standard message').debug('irrelephant message')
+  d = -> log.debug.apply(log, arguments)
+  d("arst")
+
   log = new Logger()
   log.error('this is very bad').warn('this could be bad').info('standard message').debug('irrelephant message')
+
