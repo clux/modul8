@@ -2,10 +2,10 @@ _           = require 'underscore'
 fs          = require 'fs'
 path        = require 'path'
 codeAnalyis = require './analysis'
-Logger      = require './logger'
+Logule      = require 'logule'
 Persister   = require './persist'
 {makeCompiler, exists, read} = require './utils'
-log = new Logger('modul8', 6)
+log = new Logule('modul8')
 
 # helpers
 anonWrap = (code) ->
@@ -117,7 +117,7 @@ module.exports = (o) ->
 
       if o.libsOnlyTarget and libsUpdated and not _.isFunction(o.libsOnlyTarget)
         fs.writeFileSync(o.libsOnlyTarget, libs)
-        log.info 'modul8 - compiling separate libs' if logCompiles
+        log.info 'compiling separate libs' if logCompiles
         libsUpdated = false # no need to take this state into account anymore since they are written separately
       else if _.isFunction(o.libsOnlyTarget)
         o.libsOnlyTarget(libs)
@@ -131,6 +131,6 @@ module.exports = (o) ->
 
     if appUpdated or (libsUpdated and !o.libsOnlyTarget) or forceUpdate
       # write target if there were any changes relevant to this file
-      log.info 'modul8 - compiling app' if logCompiles
+      log.info 'compiling app' if logCompiles
       fs.writeFileSync(o.target, c)
   return

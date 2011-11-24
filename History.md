@@ -1,6 +1,6 @@
   * Use detective's new caching layer?
 
-0.13.1 / 2011-11-2?
+0.13.1 / 2011-11-24
 ==================
   * Logger moved out of modul8 to clux/logule
   * Persistance logic moved to its own file
