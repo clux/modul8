@@ -14,7 +14,7 @@ makeGuid = (vals) ->
 
 Persister = (guidVals, @persistFile, @log = ->) ->
   guid = makeGuid(guidVals)
-  @log('persisting to '+persistFile)
+  #@log('persisting to '+persistFile)
   @pdata = if @persistFile then JSON.parse(read(@persistFile)) else {}
   @cfg = @pdata[guid] ?= {}
   @opts = @cfg['opts'] ?= {}

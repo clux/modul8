@@ -107,10 +107,7 @@ module.exports = (o) ->
 
     c = after(bundleApp(codelist, ns, domwrap, compile, before, o))
 
-    return o.target(c) if _.isFunction(o.target) # pipe output to fn without libs for now
-
     if o.libDir and o.libFiles
-
       libsUpdated = persist.filesModified((['libs', f] for f in o.libFiles), {libs: o.libDir}, 'libs')
 
       if libsUpdated or (appUpdated and !o.libsOnlyTarget) or forceUpdate
@@ -118,19 +115,22 @@ module.exports = (o) ->
         # but also if app changed and we write it to the same file
         libs = after((compile(o.libDir+file, false) for file in o.libFiles).join('\n')) # concatenate libs as is - safetywrap any .coffee files
 
-      if o.libsOnlyTarget and libsUpdated
+      if o.libsOnlyTarget and libsUpdated and not _.isFunction(o.libsOnlyTarget)
         fs.writeFileSync(o.libsOnlyTarget, libs)
         log.info 'modul8 - compiling separate libs' if logCompiles
         libsUpdated = false # no need to take this state into account anymore since they are written separately
+      else if _.isFunction(o.libsOnlyTarget)
+        o.libsOnlyTarget(libs)
       else if !o.libsOnlyTarget
         c = libs + c
     else
       libsUpdated = false # no need to take lib state into account anymore since they dont exist
 
+    if _.isFunction(o.target)
+      return o.target(c)
+
     if appUpdated or (libsUpdated and !o.libsOnlyTarget) or forceUpdate
       # write target if there were any changes relevant to this file
       log.info 'modul8 - compiling app' if logCompiles
       fs.writeFileSync(o.target, c)
-      #console.log 'writing app! bools: libsUp='+libsUpdated+', appUp='+appUpdated+', force='+forceUpdate
-
   return

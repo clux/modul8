@@ -5,6 +5,7 @@
   * Logger moved out of modul8 to clux/logule
   * Persistance logic moved to its own file
   * Persister stores the states in a config file in configurable directory rather than one file per output in the states directory
+  * Bug in CLI caused libs not to be compiled when going via stdout
 
 0.13.0 / 2011-11-22
 ==================
