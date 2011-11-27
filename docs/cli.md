@@ -81,7 +81,7 @@ Here you rely on your data pre-existing in a `.json` file and specify what key t
 
     $ modul8 app/entry.js -d myKey=myData.json
 
-Multiple data elements can be delimited with the & symbol like above.
+Multiple data elements can be delimited with an ampersand like above.
 
 ## Loading Libraries
 Libraries can be concatenated on in the order they wish to be included.
