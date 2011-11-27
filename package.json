@@ -20,7 +20,7 @@
     "uglify-js": "~1.1.1",
     "detective": "~0.0.3",
     "underscore": "~1.2.1",
-    "logule": "~0.1.0"
+    "logule": "~0.3.0"
   },
   "devDependencies": {
     "zombie": "~0.10.2",
@@ -28,7 +28,7 @@
     "rimraf": "~1.0.8"
   },
   "engines": {
-    "node": ">= 0.4.10"
+    "node": ">=0.4.10"
   },
   "bugs": {
     "url": "http://github.com/clux/modul8/issues"
