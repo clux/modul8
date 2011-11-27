@@ -108,7 +108,7 @@ complete = ->
     .arbiters(program.arbiters)
     .libraries(libs or [], libPath)
     .set('namespace', program.namespace ? 'M8')
-    .set('logging', program.logging ? 'ERROR') # if not set, do like default server behaviour
+    .set('logging', program.logging ? 'ERROR') # if not set, do like default server behaviour (log failed requires on client only)
     .before(if program.testcutter then modul8.testcutter else i_d)
     .after(if program.minifier then modul8.minifier else i_d)
     .set('domloader', program.wrapper)

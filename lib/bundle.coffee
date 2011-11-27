@@ -2,10 +2,9 @@ _           = require 'underscore'
 fs          = require 'fs'
 path        = require 'path'
 codeAnalyis = require './analysis'
-Logule      = require 'logule'
+logule      = require 'logule'
 Persister   = require './persist'
 {makeCompiler, exists, read} = require './utils'
-log = new Logule('modul8')
 
 # helpers
 anonWrap = (code) ->
@@ -74,10 +73,12 @@ bundleApp = (codeList, ns, domload, compile, before, o) ->
 
 module.exports = (o) ->
   useLog = o.options.logging and !_.isFunction(o.target) # dont log anything from server if we output result to console
-  logCompiles = useLog and o.logLevel >= 2
-  logDebugs = useLog and o.logLevel >= 4
+  log = if o.logger then o.logger else logule.sub('modul8')
+  # keep API log level compatible
+  log.suppress('debug') if !useLog or o.logLevel < 4
+  log.suppress('info', 'warn') if !useLog or o.logLevel < 2
 
-  persist = new Persister([o.target, o.libsOnlyTarget], o.options.persist, if logDebugs then -> log.debug.apply(log, arguments))
+  persist = new Persister([o.target, o.libsOnlyTarget], o.options.persist, log.get('debug'))
   forceUpdate = o.options.force or persist.optionsModified(o)
   forceUpdate |= (o.target and !_.isFunction(o.target) and !exists(o.target)) # also forceUpdate if target deleted or does not exist
 
@@ -117,7 +118,7 @@ module.exports = (o) ->
 
       if o.libsOnlyTarget and libsUpdated and not _.isFunction(o.libsOnlyTarget)
         fs.writeFileSync(o.libsOnlyTarget, libs)
-        log.info 'compiling separate libs' if logCompiles
+        log.info 'compiling separate libs'
         libsUpdated = false # no need to take this state into account anymore since they are written separately
       else if _.isFunction(o.libsOnlyTarget)
         o.libsOnlyTarget(libs)
@@ -131,6 +132,6 @@ module.exports = (o) ->
 
     if appUpdated or (libsUpdated and !o.libsOnlyTarget) or forceUpdate
       # write target if there were any changes relevant to this file
-      log.info 'compiling app' if logCompiles
+      log.info 'compiling app'
       fs.writeFileSync(o.target, c)
   return

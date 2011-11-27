@@ -2,6 +2,13 @@ TODO
 ==================
   * Use detective's new caching layer?
 
+0.14.0 / 2011-11-27?
+==================
+  * Updated to newer logule
+  * Optionally pass down a logule sub (or something else with compatible API) as an optional way of defining log output
+  * npm tests closer to passing again (but at the moment dependencies are broken in 0.6.3)
+  * Simple example syntax error fixed
+
 0.13.1 / 2011-11-24
 ==================
   * Logger moved out of modul8 to clux/logule

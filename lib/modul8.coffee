@@ -42,6 +42,11 @@ Modul8::after = (fn) ->
   obj.post.push fn if @environmentMatches
   @
 
+Modul8::logger = (sub) ->
+  @removeSubClassMethods()
+  obj.logger = sub if @environmentMatches
+  @
+
 Modul8::use = (inst) ->
   @removeSubClassMethods()
   return @ if !@environmentMatches
@@ -294,6 +299,9 @@ sanityCheck = (o) ->
 
   if o.options.persist and !exists(o.options.persist)
     throw new Error("modul8 got an invalid persist file as an option")
+
+  if o.logger and (!o.logger.info or !_.isFunction(o.logger.info)) #TODO: test this better somehow. semver?
+    throw new Error("modul8 got an invalid logule instance sent to logger")
 
   for key,fn of o.compilers
     if key in ['','.js','.coffee']
