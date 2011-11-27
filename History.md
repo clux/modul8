@@ -6,7 +6,7 @@ TODO
 ==================
   * Updated to newer logule
   * Optionally pass down a logule sub (or something else with compatible API) as an optional way of defining log output
-  * npm tests
+  * npm test in npm 1.0.106 works from scratch, 1.1.0 alphas need to manually clone test dependencies for now
   * Simple example syntax error fixed
 
 0.13.1 / 2011-11-24
