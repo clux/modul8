@@ -1,7 +1,7 @@
 var modul8 = require('../../');
 
-modul8('./app_code/app.js')
-  .arbiters({jQuery:['jQuery','$'])
+modul8('./app/app.js')
+  .arbiters({'jQuery':['jQuery','$']})
   .analysis(console.log)
   .set('domloader', 'jQuery')
   .compile('./output.js');

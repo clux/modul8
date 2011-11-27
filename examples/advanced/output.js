@@ -4,7 +4,7 @@ QQ.data.test = {"hi": "there"}
 ;
 (function(){
 /**
- * modul8 v0.12.0
+ * modul8 v0.13.1
  */
 
 var config    = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"logging":1}
@@ -82,7 +82,7 @@ function makeRequire(dom, pathName) {
     }
 
     reqStr = reqStr.split('.')[0];
-    if (reqStr.slice(-1) === '/') {
+    if (reqStr.slice(-1) === '/' || reqStr === '') {
       reqStr += 'index';
       skipFolder = true;
     }
