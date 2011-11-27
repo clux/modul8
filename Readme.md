@@ -220,7 +220,7 @@ $ npm test
 ````
 
 This was actively tested with node 0.4.10-12 until very recently.
-It is now exclusively tested with the 0.6 (>=0.6.1) branch.
+It is now exclusively tested with the 0.6 (>=0.6.3) branch.
 
 ## License
 
