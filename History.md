@@ -2,11 +2,11 @@ TODO
 ==================
   * Use detective's new caching layer?
 
-0.14.0 / 2011-11-27?
+0.14.0 / 2011-11-27
 ==================
   * Updated to newer logule
   * Optionally pass down a logule sub (or something else with compatible API) as an optional way of defining log output
-  * npm tests now only broken due to broken dependencies (pull from github:zombie, then npm install deps, pull from failing html5 module's master)
+  * npm tests
   * Simple example syntax error fixed
 
 0.13.1 / 2011-11-24
