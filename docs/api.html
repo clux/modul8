@@ -252,7 +252,7 @@ It could, however, pose problems in more specialized situations.</p>
 <ul>
 <li><code>domloader</code>  A function or name of a global fn that safety wraps code with a DOMContentLoaded barrier</li>
 <li><code>namespace</code>  The namespace modul8 uses in your browser, to export console helpers to, defaulting to <code>M8</code></li>
-<li><code>logging</code>    Boolean to set whether to log <code>require()</code> calls in the console, defaults to <code>false</code></li>
+<li><code>logging</code>    Logging level for the client and the server (see below), defaults to false (no logging)</li>
 <li><code>force</code>      Boolean to set whether to force recompilation or not - should only be useful when working on modul8 itself.</li>
 </ul>
 
@@ -281,6 +281,8 @@ This information is encapsulated in a closure. The namespace'd object simply con
   .compile('./out.js');
 </code></pre>
 
+<h3>Logging</h3>
+
 <p>Logging has 3 levels at the moment</p>
 
 <ul>
@@ -293,12 +295,25 @@ This information is encapsulated in a closure. The namespace'd object simply con
 
 <ul>
 <li>ERROR will only give failed to resolve require messages in the client console via <code>console.error</code>.</li>
-<li>INFO additionally gives recompile information on the server (via internal logger class).</li>
-<li>DEBUG adds log messages from require on the client to show what is attempted resolved via <code>console.log</code>.</li>
+<li>INFO additionally gives recompile information on the server (via logule).</li>
+<li>DEBUG adds log messages from require on the client to show what is attempted resolved via <code>console.log</code></li>
+<li>DEBUG also adds messages from the internal persist module of why recompilation is required.</li>
 </ul>
 
 <p>ERROR level will not give any messages on the server, but if you don't even want the fail messages from require, you may disable logging altogether by pasing in false.
 Note that ERROR is the default.</p>
+
+<h4>Integrating With Logule</h4>
+
+<p>It is possible to pass down a <a href="https://github.com/clux/logule">logule</a> instance itself if you would like to control log output on the server that way.
+That way you can also prefix the appropriate namespaces to the log output.</p>
+
+<pre><code>modul8(filePath)
+  .logger(logule.sub('logPrefix'))
+</code></pre>
+
+<p>If you additionally set the log level like above, modul8 will call <code>suppress</code> on the appropriate methods of the passed in logule instance,
+but the idea is that with logule you can globally control it yourself.</p>
 
 <h2>Environment Conditionals</h2>
 
