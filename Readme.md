@@ -1,4 +1,4 @@
-# Extensible CommonJS browser code sharing
+# Extensible CommonJS browser code sharing ![travis build status](https://secure.travis-ci.org/clux/modul8.png)
 ## Intro
 
 Write a `main.js` as the application entry point
