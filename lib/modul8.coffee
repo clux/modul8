@@ -1,6 +1,7 @@
 fs     = require('fs')
 bundle = require('./bundle.coffee')
 _      = require('underscore')
+logule = require('logule')
 {exists, domainSplit} = require './utils'
 
 #process.chdir(self.options['working directory']);
@@ -300,8 +301,8 @@ sanityCheck = (o) ->
   if o.options.persist and !exists(o.options.persist)
     throw new Error("modul8 got an invalid persist file as an option")
 
-  if o.logger and (!o.logger.info or !_.isFunction(o.logger.info)) #TODO: test this better somehow. semver?
-    throw new Error("modul8 got an invalid logule instance sent to logger")
+  if o.logger and !logule.verify(o.logger)
+    throw new Error("modul8 got an invalid logule instance sent to logger (out of date?)")
 
   for key,fn of o.compilers
     if key in ['','.js','.coffee']
