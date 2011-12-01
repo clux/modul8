@@ -2,6 +2,12 @@ TODO
 ==================
   * Use detective's new caching layer?
 
+0.14.1 / 2011-11-31
+==================
+  * Fix failing CommonJS guards checking for module.exports when we used to expect it to be set if singular export.
+  * If module.exports has own properties, or is no longer an object at the end a file, then everything attached to exports will be discarded.
+  * Use logule@0.5.2's verify functionality to ensure correctly passed in logule instance
+
 0.14.0 / 2011-11-27
 ==================
   * Updated to newer logule

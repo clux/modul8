@@ -9,11 +9,11 @@ There are four different ways to use require:
 
 #### Absolutely
 
-- `require('subfolder/module.js')` - Can resolve subfolder/module.js on any domain - regardless of what subfolder or domain you are in - but will scan the current domain first.
+- `require('subfolder/module.js')` - Can resolve subfolder/module.js on any domain - regardless of what subfolder or domain you are in - but **will scan the current domain first**.
 
 #### Relatively
 
-- `require('./module.js')` - Can resolve a module.js file on the current domain in the current folder.
+- `require('./module.js')` - Can resolve a module.js file (only) on the current domain in the current folder.
 
 You can indicate a relative require by using either the `./` prefix, or the folder traversing `../` prefix. Going up folders is done by chaining on `../` strings.
 

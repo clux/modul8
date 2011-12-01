@@ -148,7 +148,7 @@ The dependency analyzer will typically output something like this if configured
 
 ## Injecting Data
 
-Data can by injected at compile time from the server by specifying keys and evaluable strings.
+Data can by injected at compile time from the server by specifying keys and serializable/pre-serialized data to be attatched on the specified key
 
 ````javascript
 modul8('./client/app.js')

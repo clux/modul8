@@ -1,6 +1,6 @@
 # API
 
-modul8's API is extremely simple, all we need to do pass a entry point and an output - in its basic form.
+modul8's API is extremely simple, in its basic form all we need to do pass a entry point and an output.
 To add extra require domains for the client pass a dictionary of form `{name : path}`.
 
     var modul8 = require('modul8');
@@ -18,7 +18,7 @@ Alternatively, you can `.add()` each domain separately.
       .compile('./out.js');
 
 You can add any number of domains to be scanned. Files on these domains can be required specifically with `require('domain::name')`.
-Both the domain and file extension can be omitted if there are no conflicts (current domain gets scanned first, .js scanned before .coffee).
+Both the domain and file extension can be omitted if there are no conflicts.
 
 The following are equivalent from a file in the root of the application domain, having the file `validation.js` in the same folder
 
@@ -333,7 +333,7 @@ See the debug section for how to log the `external` and `data` domains.
 
 ## Debugging
 
-If you have wrongly entered data to `require()`, you will not get any information other than an undefined reference back.
+If you have wrongly entered data to `require()`, you will only get an error log (if not disabled) and an undefined reference from require.
 Since all the exported data is encapsulated in a closure, you will also not be able to locate it from the console.
 
 To see where the object you are looking for should live or lives, you may find it useful to log the specified domain object
@@ -341,14 +341,14 @@ with the globally available `ns.inspect(domainName)` method. Additionally, you m
 `ns.domains()` command.
 
 If you want every `require()` call to be logged to the console, you can set the `logging` setting appropriately.
-The `ERROR` level is recommended as it will tell you when a `require()` call failed.
+The `ERROR` level is recommended as it will tell you when a `require()` call failed. `DEBUG` level will provide additional messages from `require()`.
 
 There is additionally a console friendly require version globally available at `ns.require()`.
 This acts as if you were a file called 'CONSOLE' in the same folder as your entrypoint, so you can use relative requires to get application code there..
 
 ## Arbiters
 
-These help reveal invisible dependencies by reduce the amounts global variables in your code.
+These help reveal invisible dependencies by reduce the amounts of global variables in your code.
 
     modul8(dir+'/app/client/app.js')
       .libraries(['jQuery.js','Spile.coffee'], dir+'/app/client/libs/')
@@ -357,12 +357,12 @@ These help reveal invisible dependencies by reduce the amounts global variables 
         .add('Spine')
       .compile(dir+'/out.js');
 
-This code would delete objects `$`, `jQuery` and `Spine` from `window` and under the covers add closure bound alternatives you can `require()`.
-The second parameter to `arbiters().add()` is the variable name/names to be deleted. If only a single variable should be deleted,
+This code would `delete` objects `$`, `jQuery` and `Spine` from `window` and under the covers add closure bound alternatives you can `require()`.
+The second parameter to `arbiters().add()` is the variable name(s) to be deleted. If only a single variable should be deleted,
 it can be entered as a string, but if this is the same as as the arbiter's name, then it can be omitted completely - as with Spine above.
 
 Arbitered libraries can be should be referenced simply with `require('jQuery')`, or `require('M8::jQuery')` it there is a conflicting
-jQuery.js file on your current domain. Normally this specificity should not be required.
+`jQuery.js` file on your current domain. Normally this specificity should not be required.
 
 Alternative adding syntax is to add an object directly to `arbiters()`
 
