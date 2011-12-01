@@ -18,7 +18,7 @@
     <div id="content">
 <h1>API</h1>
 
-<p>modul8's API is extremely simple, all we need to do pass a entry point and an output - in its basic form.
+<p>modul8's API is extremely simple, in its basic form all we need to do pass a entry point and an output.
 To add extra require domains for the client pass a dictionary of form <code>{name : path}</code>.</p>
 
 <pre><code>var modul8 = require('modul8');
@@ -38,7 +38,7 @@ modul8('./client/app.js')
 </code></pre>
 
 <p>You can add any number of domains to be scanned. Files on these domains can be required specifically with <code>require('domain::name')</code>.
-Both the domain and file extension can be omitted if there are no conflicts (current domain gets scanned first, .js scanned before .coffee).</p>
+Both the domain and file extension can be omitted if there are no conflicts.</p>
 
 <p>The following are equivalent from a file in the root of the application domain, having the file <code>validation.js</code> in the same folder</p>
 
@@ -386,7 +386,7 @@ See the debug section for how to log the <code>external</code> and <code>data</c
 
 <h2>Debugging</h2>
 
-<p>If you have wrongly entered data to <code>require()</code>, you will not get any information other than an undefined reference back.
+<p>If you have wrongly entered data to <code>require()</code>, you will only get an error log (if not disabled) and an undefined reference from require.
 Since all the exported data is encapsulated in a closure, you will also not be able to locate it from the console.</p>
 
 <p>To see where the object you are looking for should live or lives, you may find it useful to log the specified domain object
@@ -394,14 +394,14 @@ with the globally available <code>ns.inspect(domainName)</code> method. Addition
 <code>ns.domains()</code> command.</p>
 
 <p>If you want every <code>require()</code> call to be logged to the console, you can set the <code>logging</code> setting appropriately.
-The <code>ERROR</code> level is recommended as it will tell you when a <code>require()</code> call failed.</p>
+The <code>ERROR</code> level is recommended as it will tell you when a <code>require()</code> call failed. <code>DEBUG</code> level will provide additional messages from <code>require()</code>.</p>
 
 <p>There is additionally a console friendly require version globally available at <code>ns.require()</code>.
 This acts as if you were a file called 'CONSOLE' in the same folder as your entrypoint, so you can use relative requires to get application code there..</p>
 
 <h2>Arbiters</h2>
 
-<p>These help reveal invisible dependencies by reduce the amounts global variables in your code.</p>
+<p>These help reveal invisible dependencies by reduce the amounts of global variables in your code.</p>
 
 <pre><code>modul8(dir+'/app/client/app.js')
   .libraries(['jQuery.js','Spile.coffee'], dir+'/app/client/libs/')
@@ -411,12 +411,12 @@ This acts as if you were a file called 'CONSOLE' in the same folder as your entr
   .compile(dir+'/out.js');
 </code></pre>
 
-<p>This code would delete objects <code>$</code>, <code>jQuery</code> and <code>Spine</code> from <code>window</code> and under the covers add closure bound alternatives you can <code>require()</code>.
-The second parameter to <code>arbiters().add()</code> is the variable name/names to be deleted. If only a single variable should be deleted,
+<p>This code would <code>delete</code> objects <code>$</code>, <code>jQuery</code> and <code>Spine</code> from <code>window</code> and under the covers add closure bound alternatives you can <code>require()</code>.
+The second parameter to <code>arbiters().add()</code> is the variable name(s) to be deleted. If only a single variable should be deleted,
 it can be entered as a string, but if this is the same as as the arbiter's name, then it can be omitted completely - as with Spine above.</p>
 
 <p>Arbitered libraries can be should be referenced simply with <code>require('jQuery')</code>, or <code>require('M8::jQuery')</code> it there is a conflicting
-jQuery.js file on your current domain. Normally this specificity should not be required.</p>
+<code>jQuery.js</code> file on your current domain. Normally this specificity should not be required.</p>
 
 <p>Alternative adding syntax is to add an object directly to <code>arbiters()</code></p>
 

@@ -28,13 +28,13 @@ This ensures that each module has the necessary context for the <code>require()<
 <h4>Absolutely</h4>
 
 <ul>
-<li><code>require('subfolder/module.js')</code> - Can resolve subfolder/module.js on any domain - regardless of what subfolder or domain you are in - but will scan the current domain first.</li>
+<li><code>require('subfolder/module.js')</code> - Can resolve subfolder/module.js on any domain - regardless of what subfolder or domain you are in - but <strong>will scan the current domain first</strong>.</li>
 </ul>
 
 <h4>Relatively</h4>
 
 <ul>
-<li><code>require('./module.js')</code> - Can resolve a module.js file on the current domain in the current folder.</li>
+<li><code>require('./module.js')</code> - Can resolve a module.js file (only) on the current domain in the current folder.</li>
 </ul>
 
 <p>You can indicate a relative require by using either the <code>./</code> prefix, or the folder traversing <code>../</code> prefix. Going up folders is done by chaining on <code>../</code> strings.</p>
