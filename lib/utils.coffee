@@ -1,7 +1,6 @@
 path      = require 'path'
 fs        = require 'fs'
 coffee    = require 'coffee-script'
-_         = require 'underscore'
 dir       = fs.realpathSync()
 
 # infer abs domain path and file name from path relative to dir

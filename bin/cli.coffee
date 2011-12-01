@@ -104,7 +104,7 @@ complete = ->
     .domains(program.domains)
     .data(program.data)
     .use(plugins)
-    .analysis(if program.analyze then console.log else false)
+    .analysis(if program.analyze then console.log)
     .arbiters(program.arbiters)
     .libraries(libs or [], libPath)
     .set('namespace', program.namespace ? 'M8')
