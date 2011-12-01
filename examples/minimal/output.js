@@ -2,7 +2,7 @@
 window.M8 = {data:{}};
 (function(){
 /**
- * modul8 v0.13.1
+ * modul8 v0.14.0
  */
 
 var config    = {"namespace":"M8","domains":["app","shared"],"arbiters":{},"logging":1}
@@ -109,12 +109,18 @@ function makeRequire(dom, pathName) {
 }
 
 ns.define = function(name, domain, fn) {
-  var module = {};
-  fn(makeRequire(domain, name), module, exports[domain][name] = {});
-  if (module.exports) {
-    delete exports[domain][name];
-    exports[domain][name] = module.exports;
+  var mod = {exports:{}}
+    , exp = {}
+    , target;
+  fn.call({}, makeRequire(domain, name), mod, exp);
+
+  if (Object.prototype.toString.call(mod.exports) === '[object Object]') {
+    target = (Object.keys(mod.exports).length) ? mod.exports : exp;
   }
+  else {
+    target = mod.exports;
+  }
+  exports[domain][name] = target;
 };
 
 /**
