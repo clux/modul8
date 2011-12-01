@@ -2,7 +2,7 @@ TODO
 ==================
   * Use detective's new caching layer?
 
-0.14.1 / 2011-11-31
+0.14.1 / 2011-12-01
 ==================
   * Fix failing CommonJS guards checking for module.exports when we used to expect it to be set if singular export.
   * If module.exports has own properties, or is no longer an object at the end a file, then everything attached to exports will be discarded.
