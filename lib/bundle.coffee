@@ -8,7 +8,7 @@ Persister   = require './persist'
 
 # helpers
 anonWrap = (code) ->
-  "(function(){\n#{code}\n})();"
+  "(function(){\n#{code}\n}());"
 
 makeWrapper = (ns, fnstr, hasArbiter) ->
   return anonWrap if !fnstr
