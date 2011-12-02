@@ -12,43 +12,43 @@ subCurrent = 'None'
 
 obj = {} # changed by all objects below
 
-Modul8 = (@sub = 'None')->
+Base = (@sub = 'None')->
 
-Modul8::__defineGetter__ 'environmentMatches', ->
+Base::__defineGetter__ 'environmentMatches', ->
   environment is envCurrent or envCurrent is 'all'
 
 # since the way we move between class instances might leave more methods exposed than we need, catch bad usage here and warn
-Modul8::subclassMatches = (subclass, method) ->
+Base::subclassMatches = (subclass, method) ->
   hasMatch = @sub is subclass
   console.warn("Ignoring an invalid call to "+subclass+"::"+method+" after having broken out from the "+subclass+" subclass") if !hasMatch
   hasMatch
 
 #subclass methods must call @subclassMatches
-Modul8::removeSubClassMethods = ->
+Base::removeSubClassMethods = ->
   @sub = 'None'
 
-Modul8::in = (env) ->
+Base::in = (env) ->
   # allow this to retain current sub-class
   envCurrent = env
   @
 
 # before and after calls will allow anything in, but we throw if any not fn at compile
-Modul8::before = (fn) ->
+Base::before = (fn) ->
   @removeSubClassMethods()
   obj.pre.push fn if @environmentMatches
   @
 
-Modul8::after = (fn) ->
+Base::after = (fn) ->
   @removeSubClassMethods()
   obj.post.push fn if @environmentMatches
   @
 
-Modul8::logger = (sub) ->
+Base::logger = (sub) ->
   @removeSubClassMethods()
   obj.logger = sub if @environmentMatches
   @
 
-Modul8::use = (inst) ->
+Base::use = (inst) ->
   @removeSubClassMethods()
   return @ if !@environmentMatches
 
@@ -75,13 +75,13 @@ Modul8::use = (inst) ->
 
   @
 
-Modul8::register = (ext, compiler) ->
+Base::register = (ext, compiler) ->
   @removeSubClassMethods()
   obj.compilers[ext] = compiler if @environmentMatches
   @
 
 
-Modul8::set = (key, val) ->
+Base::set = (key, val) ->
   @removeSubClassMethods()
   return @ if !(key of obj.options)
   obj.options[key] = val if @environmentMatches
@@ -106,20 +106,20 @@ start = (entry) ->
       force       : false
       persist     : __dirname+'/../state.json' #process.env.HOME+'/.modul8_settings.json' ?
 
-  new Modul8()
+  new Base()
 
 
 
 
 
-Modul8::data = (input) ->
+Base::data = (input) ->
   return @ if !@environmentMatches
   dt = new Data()
   dt.add(key, val) for key,val of input if input and _.isObject(input)
   dt
 
 Data = ->
-Data:: = new Modul8('Data')
+Data:: = new Base('Data')
 
 
 Data::add = (key, val) ->
@@ -137,14 +137,14 @@ Data::add = (key, val) ->
   @
 
 
-Modul8::domains = (input) ->
+Base::domains = (input) ->
   return @ if !@environmentMatches
   dom = new Domains()
   dom.add(key, val) for key,val of input if input and _.isObject(input)
   dom
 
 Domains = ->
-Domains:: = new Modul8('Domains')
+Domains:: = new Base('Domains')
 
 Domains::add = (key, val) ->
   return @ if !@subclassMatches('Domains','add')
@@ -155,7 +155,7 @@ Domains::add = (key, val) ->
 
 
 
-Modul8::libraries = (list, dir, target) ->
+Base::libraries = (list, dir, target) ->
   return @ if !@environmentMatches
   libs = new Libraries()
   libs.list(list) if list
@@ -165,7 +165,7 @@ Modul8::libraries = (list, dir, target) ->
 
 
 Libraries = ->
-Libraries:: = new Modul8('Libraries')
+Libraries:: = new Base('Libraries')
 
 Libraries::list = (list) ->
   return @ if !@subclassMatches('Libraries','list')
@@ -187,7 +187,7 @@ Libraries::target = (target) ->
 
 
 
-Modul8::analysis = (target, prefix, suffix, hide) ->
+Base::analysis = (target, prefix, suffix, hide) ->
   return @ if !@environmentMatches
   ana = new Analysis()
   ana.output(target) if target
@@ -197,7 +197,7 @@ Modul8::analysis = (target, prefix, suffix, hide) ->
   ana
 
 Analysis = ->
-Analysis:: = new Modul8('Analysis')
+Analysis:: = new Base('Analysis')
 
 Analysis::output = (target) ->
   return @ if !@subclassMatches('Analysis','output')
@@ -221,7 +221,7 @@ Analysis::hide = (domain) ->
     obj.ignoreDoms.push d for d in domains
   @
 
-Modul8::arbiters = (arbObj) ->
+Base::arbiters = (arbObj) ->
   return @ if !@environmentMatches
   arb = new Arbiters()
   if arbObj
@@ -230,7 +230,7 @@ Modul8::arbiters = (arbObj) ->
   arb
 
 Arbiters = ->
-Arbiters:: = new Modul8('Arbiters')
+Arbiters:: = new Base('Arbiters')
 
 Arbiters::add = (name, globs) ->
   return @ if !@subclassMatches('Arbiters','add')
@@ -246,7 +246,7 @@ Arbiters::add = (name, globs) ->
   @
 
 
-Modul8::compile = (target) ->
+Base::compile = (target) ->
   @removeSubClassMethods()
   return @ if !@environmentMatches
   obj.target = target
