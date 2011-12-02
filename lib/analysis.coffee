@@ -37,26 +37,19 @@ CodeAnalysis::buildTree = ->
         throw new Error("modul8::analysis revealed a circular dependency: "+chain.join(' <- '))
     return
 
-  ((t) =>
+  build = (t) ->
     for [name, domain, fake] in @resolveDependencies(t.name, t.folders, t.domain)
       uid = domain+'::'+name
       folders = name.split('/')[0...-1]
       t.deps[uid] = {name, domain, fake, folders, deps:{}, parent: t, level: t.level+1}
       if !fake
         circularCheck(t, uid) # throw on circular ref
-        arguments.callee.call(@, t.deps[uid]) # preserve context and recurse
+        build.call(@, t.deps[uid]) # preserve context and recurse
     return
-  )(@tree) # resolve and recurse
-
+  build.call(@, @tree) # resolve and recurse
   return
 
-# helpers for print
-makeCounter = (ignores) ->
-  (obj) ->
-    i = 0
-    i++ for own key of obj when !(obj[key].domain in ignores)
-    i
-
+# helper for print
 formatName = (absReq, extSuffix, domPrefix, dom) ->
   n = if extSuffix then absReq else absReq.split('.')[0]
   # take out reduntant index specifications to make (but only if we show domains)
@@ -67,9 +60,10 @@ formatName = (absReq, extSuffix, domPrefix, dom) ->
 # public method, returns an npm like dependency tree
 CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
   lines = [formatName(@entryPoint, extSuffix, domPrefix, 'app')]
-  objCount = makeCounter(ignores=@ignoreDoms)
+  objCount = (o) ->
+    Object.keys(o).filter((e) -> !(e in @ignoreDoms)).length
 
-  ((branch, level, parentAry) ->
+  print = (branch, level, parentAry) ->
     idx = 0
     bSize = objCount(branch.deps)
     for uid, {name, deps, domain} of branch.deps when !(domain in ignores)
@@ -83,9 +77,9 @@ CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
       lines.push " "+indent+turnChar+"──"+forkChar+displayName
 
       if hasChildren # recurse into uid's dependency tree keeping track of parent lines
-        arguments.callee(branch.deps[uid], level+1, parentAry.concat(isLast))
+        print(branch.deps[uid], level+1, parentAry.concat(isLast))
     return
-  )(@tree, 0, [])
+  print(@tree, 0, [])
 
   lines.join('\n')
 
@@ -94,12 +88,12 @@ CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
 CodeAnalysis::sorted = -> # must flatten the tree, and order based on level
   obj = {}
   obj['app::'+@entryPoint] = 0
-  ((t) ->
+  sort = (t) ->
     for uid,dep of t.deps when !dep.fake # impossible to compile fake files
       obj[uid] = Math.max(dep.level, obj[uid] or 0)
-      arguments.callee(dep)
+      sort(dep)
     return
-  )(@tree)
+  sort(@tree)
 
   ([uid,level] for uid,level of obj)  # convert obj to (sortable) array
     .sort((a,b) -> b[1] - a[1])       # sort by level descending

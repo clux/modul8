@@ -4,3 +4,4 @@ test/input/
 test/collisions/
 test/modified/
 test/arbiters/
+examples/simple/cliout.js

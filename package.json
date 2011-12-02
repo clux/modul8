@@ -27,6 +27,17 @@
     "expresso": "~0.9.0",
     "rimraf": "~1.0.8"
   },
+  "keywords": [
+    "browser",
+    "require",
+    "commonjs",
+    "bundle",
+    "compiler",
+    "analyzer",
+    "coffee",
+    "javascript",
+    "cli"
+  ],
   "engines": {
     "node": ">=0.4.10"
   },
