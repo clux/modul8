@@ -49,7 +49,7 @@ initDirs = (num) ->
   return
 
 testCount = 0
-num_tests = 7
+num_tests = 8
 testsDone = (count) ->
   testCount += count
   num_tests -= 1
@@ -58,6 +58,7 @@ testsDone = (count) ->
 
 
 generateApp = (opts, i) ->
+  console.log "generateApp", i
   plug = []
   plug.push "Plugin = function(name){this.name = (name != null) ? name : 'defaultName';};"
   plug.push "Plugin.prototype.data = function(){return {plugData:true};};"
@@ -81,9 +82,9 @@ generateApp = (opts, i) ->
   fs.writeFileSync(dir+'/input/'+i+'/main/temp.js', "require('./code1')") # write blank entry point (but require one of the plugin files)
 
 exports["test CLI#complicated"] = ->
-  num_tests = 8
-  initDirs(num_tests)
-  for k in [0...num_tests] then do (k) ->
+  num = 8
+  initDirs(num)
+  for k in [0...num] then do (k) ->
     opts = {}
     opts =
       dom     : k % 2 is 0
@@ -169,5 +170,7 @@ exports["test CLI#complicated"] = ->
         count += 2
 
       testsDone(count)
-    null
+      return
+    return
+  return
 
