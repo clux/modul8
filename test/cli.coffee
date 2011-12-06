@@ -82,7 +82,7 @@ generateApp = (opts, i) ->
   fs.writeFileSync(dir+'/input/'+i+'/main/temp.js', "require('./code1')") # write blank entry point (but require one of the plugin files)
 
 exports["test CLI#complicated"] = ->
-  num = 8
+  num = num_tests
   initDirs(num)
   for k in [0...num] then do (k) ->
     opts = {}
