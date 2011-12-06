@@ -12,7 +12,7 @@
     "modul8": "./bin/cli.coffee"
   },
   "scripts": {
-    "test": "expresso test/cli.coffee"
+    "test": "expresso"
   },
   "dependencies": {
     "commander": "~0.3.2",

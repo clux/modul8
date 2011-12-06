@@ -2,6 +2,7 @@ node_modules/
 gh-pages/
 test/input/
 test/collisions/
+test/cli/
 test/modified/
 test/arbiters/
 examples/simple/cliout.js

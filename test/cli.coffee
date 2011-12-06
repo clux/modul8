@@ -37,15 +37,15 @@ exports["test CLI#examples/simple"] = ->
 # dont test examples/advanced in here, it spams the log + not very general test case anyway
 initDirs = (num) ->
   # clean out old directory
-  try rimraf.sync(dir+'/input')
+  try rimraf.sync(dir+'/cli')
   catch e
-  fs.mkdirSync(dir+'/input', 0755)
+  fs.mkdirSync(dir+'/cli', 0755)
   for i in [0...num]
-    fs.mkdirSync(dir+'/input/'+i, 0755)
-    fs.mkdirSync(dir+'/input/'+i+'/libs', 0755)
-    fs.mkdirSync(dir+'/input/'+i+'/main', 0755)
-    fs.mkdirSync(dir+'/input/'+i+'/plug', 0755)
-    fs.mkdirSync(dir+'/input/'+i+'/dom', 0755)
+    fs.mkdirSync(dir+'/cli/'+i, 0755)
+    fs.mkdirSync(dir+'/cli/'+i+'/libs', 0755)
+    fs.mkdirSync(dir+'/cli/'+i+'/main', 0755)
+    fs.mkdirSync(dir+'/cli/'+i+'/plug', 0755)
+    fs.mkdirSync(dir+'/cli/'+i+'/dom', 0755)
   return
 
 testCount = 0
@@ -58,7 +58,6 @@ testsDone = (count) ->
 
 
 generateApp = (opts, i) ->
-  console.log "generateApp", i
   plug = []
   plug.push "Plugin = function(name){this.name = (name != null) ? name : 'defaultName';};"
   plug.push "Plugin.prototype.data = function(){return {plugData:true};};"
@@ -72,14 +71,14 @@ generateApp = (opts, i) ->
   entry.push "exports.domain = !!require('dom::');" if opts.dom
   entry.push "if (module === require.main) { require('server-requirement'); }"if opts.testcutter
 
-  fs.writeFileSync(dir+'/input/'+i+'/main/entry.js', entry.join('\n'))
-  fs.writeFileSync(dir+'/input/'+i+'/dom/index.js', "module.exports = 'domainCode';")
-  fs.writeFileSync(dir+'/input/'+i+'/libs/lib1.js', "window.lib1 = function(fn){fn();};") # lib1 is the domloader
-  fs.writeFileSync(dir+'/input/'+i+'/libs/lib2.js', "window.libTest2 = 'lib2';")
-  fs.writeFileSync(dir+'/input/'+i+'/plug/index.js', plug.join('\n')) if opts.plug
-  fs.writeFileSync(dir+'/input/'+i+'/data.json', JSON.stringify({hy:'thear', wee: 122}) ) if opts.data
+  fs.writeFileSync(dir+'/cli/'+i+'/main/entry.js', entry.join('\n'))
+  fs.writeFileSync(dir+'/cli/'+i+'/dom/index.js', "module.exports = 'domainCode';")
+  fs.writeFileSync(dir+'/cli/'+i+'/libs/lib1.js', "window.lib1 = function(fn){fn();};") # lib1 is the domloader
+  fs.writeFileSync(dir+'/cli/'+i+'/libs/lib2.js', "window.libTest2 = 'lib2';")
+  fs.writeFileSync(dir+'/cli/'+i+'/plug/index.js', plug.join('\n')) if opts.plug
+  fs.writeFileSync(dir+'/cli/'+i+'/data.json', JSON.stringify({hy:'thear', wee: 122}) ) if opts.data
 
-  fs.writeFileSync(dir+'/input/'+i+'/main/temp.js', "require('./code1')") # write blank entry point (but require one of the plugin files)
+  fs.writeFileSync(dir+'/cli/'+i+'/main/temp.js', "require('./code1')") # write blank entry point (but require one of the plugin files)
 
 exports["test CLI#complicated"] = ->
   num = num_tests
@@ -101,7 +100,7 @@ exports["test CLI#complicated"] = ->
 
     generateApp(opts, k)
 
-    workDir = dir+'/input/'+k+'/'
+    workDir = dir+'/cli/'+k+'/'
 
     flags = ["#{workDir}main/entry.js"]
     flags.push "-p dom=#{workDir}dom/" if opts.dom

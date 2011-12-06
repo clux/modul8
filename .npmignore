@@ -3,5 +3,6 @@ gh-pages/
 test/input/
 test/collisions/
 test/modified/
+test/cli/
 test/arbiters/
 examples/simple/cliout.js
