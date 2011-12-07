@@ -219,8 +219,8 @@ Run the tests
 $ npm test
 ````
 
-This was actively tested with node 0.4.10-12 until very recently.
-It is now exclusively tested with the 0.6 (>=0.6.4) branch
+modul8 is actively tested with the latest node on the 0.4 and the 0.6 branch.
+Many thanks to Travis-CI.
 
 ## License
 

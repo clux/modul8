@@ -4,7 +4,7 @@ TODO
 
 0.14.2 / 2011-12-07
 ==================
-  * Various refactoring and test improvements (travis build now succeeds from blank install)
+  * Various refactoring and test improvements (travis build now succeeds from blank install on both 0.4 and 0.6)
   * Use logule@0.5.3 to reduce dependency graph a little
 
 
