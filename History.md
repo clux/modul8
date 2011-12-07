@@ -2,6 +2,12 @@ TODO
 ==================
   * Use detective's new caching layer?
 
+0.14.2 / 2011-12-07
+==================
+  * Various refactoring and test improvements (travis build now succeeds from blank install)
+  * Use logule@0.5.3 to reduce dependency graph a little
+
+
 0.14.1 / 2011-12-01
 ==================
   * Fix failing CommonJS guards checking for module.exports when we used to expect it to be set if singular export.
