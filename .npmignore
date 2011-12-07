@@ -5,4 +5,5 @@ test/collisions/
 test/modified/
 test/cli/
 test/arbiters/
+test/output/*.js
 examples/simple/cliout.js

@@ -75,7 +75,7 @@ wasUpdated = (type) ->
 
 
 exports["test compile#modified"] = ->
-  if true
+  if false
     console.log 'compile#modified on hold - skipping 24 second test'
     return
 
