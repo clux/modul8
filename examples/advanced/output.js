@@ -4,7 +4,7 @@ QQ.data.test = {"hi": "there"}
 ;
 (function(){
 /**
- * modul8 v0.14.0
+ * modul8 v0.14.1
  */
 
 var config    = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"logging":1}
@@ -161,7 +161,7 @@ ns.external = function(name, exported) {
   }
 };
 
-})();
+}());
 
 // shared code
 
@@ -238,5 +238,5 @@ test = require('data::test');
 console.log('injected data:', test);
 
 });
-})();
-})();
+}());
+}());

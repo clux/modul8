@@ -2,7 +2,7 @@
 window.M8 = {data:{}};
 (function(){
 /**
- * modul8 v0.14.0
+ * modul8 v0.14.1
  */
 
 var config    = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["jQuery","$"]},"logging":1}
@@ -159,7 +159,7 @@ ns.external = function(name, exported) {
   }
 };
 
-})();
+}());
 
 // shared code
 
@@ -217,4 +217,4 @@ var App = {
 
 });
 });
-})();
+}());
