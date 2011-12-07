@@ -60,8 +60,9 @@ formatName = (absReq, extSuffix, domPrefix, dom) ->
 # public method, returns an npm like dependency tree
 CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
   lines = [formatName(@entryPoint, extSuffix, domPrefix, 'app')]
+  ignores = @ignoreDoms
   objCount = (o) ->
-    Object.keys(o).filter((e) -> !(e in @ignoreDoms)).length
+    Object.keys(o).filter((e) -> !(e in ignores)).length
 
   print = (branch, level, parentAry) ->
     idx = 0
