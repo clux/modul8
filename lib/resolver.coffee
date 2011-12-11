@@ -1,4 +1,7 @@
 {exists, read} = require './utils'
+path = require 'path'
+fs = require 'fs'
+
 
 # criteria for whether a require string is relative, rather than absolute
 # absolute require strings will scan on the defined require paths (@domains)
@@ -93,6 +96,12 @@ Resolver::locate = (reqStr, subFolders, domain) ->
     # req ends in valid folder ?
     continue if noTryFolder # already done this test
     return [found, dom, false] if found = @finder(@domains[dom], absReq + '/index')
+
+    packageJSONPath = path.join(absReq, 'package.json')
+    if @finder(@domains[dom], packageJSONPath)
+      json = JSON.parse(fs.readFileSync(path.join(@domains[dom], packageJSONPath)))
+      mainPath = path.join(absReq, json.main)
+      return [found, dom, false] if found = @finder(@domains[dom], mainPath)
 
   # could have gotten an absolute require of an npm module here do a final attempt to see if it is npm resolvable:
   #TODO:
