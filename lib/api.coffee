@@ -289,6 +289,8 @@ sanityCheck = (o) ->
     throw new Error("modul8 reserves the 'external' domain for externally loaded code")
   if o.domains.M8
     throw new Error("modul8 reserves the 'M8' domain for its internal API")
+  if o.domains.npm
+    throw new Error("modul8 reserves the 'npm' domain for npm modules")
 
   for fna in o.pre
     throw new Error("modul8 requires a function as pre-processing plugin") if !_.isFunction(fna)

@@ -1,33 +1,27 @@
-{exists} = require './utils'
+{exists, read} = require './utils'
 
 # criteria for whether a require string is relative, rather than absolute
 # absolute require strings will scan on the defined require paths (@domains)
-isRelative = (reqStr) ->
-  reqStr[0...2] is './' or reqStr[0...3] is '../'
+#isRelative = (reqStr) ->
+#  reqStr[0...2] is './' or reqStr[0...3] is '../'
 
 # ignorelist regex check and filter fn to be used on each detective result
 domainIgnoresReg = /^data(?=::)|^external(?=::)|^M8(?=::)/
 domainReg = /^([\w]*::)/
 isLegalRequire = (reqStr) ->
   return true if domainIgnoresReg.test(reqStr)
-  if domainReg.test(reqStr) and isRelative(stripDomain(reqStr))
+  if domainReg.test(reqStr) and isRelative(stripDomain(reqStr)) #TODO: need this test still?
     throw new Error("modul8::analysis found illegal require string combining domain prefix + relative")
   true
 
 # take out domain prefix from request string if exists
 stripDomain = (reqStr) -> reqStr.replace(domainReg,'')
 
-# absolutize path + separate out domain if specified
-toAbsPath = (name, subFolders, domain) -> # subFolders is array of folders after domain base that we were requiring from
-  return [stripDomain(name), name.match(domainReg)[1][0...-2]] if domainReg.test(name) # domain specific require includes domain in string
-  return [name, undefined] if !isRelative(name) # absolute require, we do not know domain
-  name = name[2...] if name[0...2] is './' # cut the insignificant variant of relative strings
-  while name[0...3] is '../'
-    subFolders = subFolders[0...-1] # slice away the top folder every time we see a '../' string
-    name = name[3...]
-  folderStr = subFolders.join('/')
-  prependStr = if folderStr then folderStr+'/' else ''
-  [prependStr+name, domain] # relative request => domain is this domain
+
+# new absolutize path (needs domain paths now)
+Resolver::toAbsPath = (name, subFolders, domain) -> # subFolders is path.normalize of reqStr \ path.baseName
+  return [stripDomain(name), name.match(domainReg)[1][0...-2]] if domainReg.test(name)
+  [path.resolve(@domains[domain], subFolders, name), domain]
 
 
 # exists helper for locate
@@ -35,6 +29,20 @@ makeFinder = (exts) ->
   (path, req) ->
     return req+ext for ext in exts when exists(path+req+ext)
     return false
+
+# returns the entry point of an npm module
+npmResolve = (path, name, silent) ->
+  if !path.existsSync(path+name) # will look for folder name
+    throw new Error('modul8 resolver could not resolve desired npm module: '+name) if !silent
+    return
+  if !path.existsSync(path+name+'/package.json')
+    throw new Error('modul8 resolver cannot include npm module '+name+' without a package.json file') if !silent
+    return
+  try
+    package = JSON.parse(read('path+name+/package.json'))
+  catch e
+  package?.main ? 'index'
+
 
 # resolver constructor
 Resolver = (@domains, @arbiters, @exts) ->
@@ -68,6 +76,9 @@ Resolver::locate = (reqStr, subFolders, domain) ->
     return [absReq, 'M8', true] # in case of collisions with normal domains, if not relative, arbiters must have priority over any domains, hence this line
 
 
+  #if foundDomain is 'npm' # explicit npm require or require from npm domain itself
+  #  return npmResolve(absReq)
+
   # else we have to verify the file exists (if we know domain, easy, else, scan all, starting in requiree's domain)
   scannable = if foundDomain then [foundDomain] else [domain].concat(name for name of @domains when name isnt domain)
 
@@ -82,6 +93,9 @@ Resolver::locate = (reqStr, subFolders, domain) ->
     # req ends in valid folder ?
     continue if noTryFolder # already done this test
     return [found, dom, false] if found = @finder(@domains[dom], absReq + '/index')
+
+  # could have gotten an absolute require of an npm module here do a final attempt to see if it is npm resolvable:
+  #TODO:
 
   throw new Error("modul8::analysis could not resolve a require for #{reqStr} from #{domain} - looked in #{scannable}, trying extensions #{@exts[1...]}")
 

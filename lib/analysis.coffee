@@ -25,7 +25,7 @@ CodeAnalysis::resolveDependencies = (absReq, folders, dom) ->
 
 # private - loads each files depedencies and recursively calls itself on each new branch
 CodeAnalysis::buildTree = ->
-  @tree = {name: @entryPoint, domain: 'app', folders: [], deps: {}, fake: 0, level: 0}
+  @tree = {name: @entryPoint, domain: 'app', folders: '', deps: {}, fake: 0, level: 0}
 
   circularCheck = (t, uid) -> # follows branch up to make sure it does not find itself
     chain = [uid]
@@ -40,20 +40,24 @@ CodeAnalysis::buildTree = ->
   build = (t) ->
     for [name, domain, fake] in @resolveDependencies(t.name, t.folders, t.domain)
       uid = domain+'::'+name
-      folders = name.split('/')[0...-1]
+      #folders = name.split('/')[0...-1]
+      folders = name.split(path.basename(name))[0]
+
       t.deps[uid] = {name, domain, fake, folders, deps:{}, parent: t, level: t.level+1}
       if !fake
-        circularCheck(t, uid) # throw on circular ref
+        circularCheck(t, uid) # throw if t is circularly referenced in this branch
         build.call(@, t.deps[uid]) # preserve context and recurse
     return
   build.call(@, @tree) # resolve and recurse
   return
 
+
 # helper for print
 formatName = (absReq, extSuffix, domPrefix, dom) ->
   n = if extSuffix then absReq else absReq.split('.')[0]
   # take out reduntant index specifications to make (but only if we show domains)
-  n = '' if n[0...5] is 'index' and not ('/' in n) and domPrefix # arguable feature perhaps
+  #n = '' if n[0...5] is 'index' and not ('/' in n) and domPrefix # arguable feature perhaps
+  n = '' if n.indexOf('index') >= 0 and path.basename(n) is n # should do same as above
   n = dom+'::'+n if domPrefix
   n
 
