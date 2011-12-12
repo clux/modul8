@@ -43,8 +43,8 @@ bundleApp = (codeList, ns, domload, compile, before, o) ->
     logging   : o.logLevel
 
   l.push anonWrap( read(__dirname+'/require.js')
-    .replace(/__VERSION__/, JSON.parse(read(__dirname+'/../package.json')).version)
-    .replace(/__REQUIRECONFIG__/, JSON.stringify(config))
+    .replace(/VERSION/, JSON.parse(read(__dirname+'/../package.json')).version)
+    .replace(/REQUIRECONFIG/, JSON.stringify(config))
   )
 
   # 4. include CommonJS compatible code in the order they have to be defined - defineWrap each module
