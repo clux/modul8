@@ -2,7 +2,7 @@
 window.M8 = {data:{}};
 (function(){
 /**
- * modul8 v0.14.1
+ * modul8 v0.14.2
  */
 
 var config    = {"namespace":"M8","domains":["app","shared"],"arbiters":{},"logging":1}

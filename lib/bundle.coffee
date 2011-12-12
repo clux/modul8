@@ -54,7 +54,7 @@ bundleApp = (codeList, ns, domload, compile, before, o) ->
   # 5. filter function split code into app code and non-app code
   harvest = (onlyMain) ->
     for [domain, name] in codeList when (domain is 'app') == onlyMain
-      code = before(compile(o.domains[domain] + name)) # middleware applied to code first
+      code = before(compile(path.join(o.domains[domain], name))) # middleware applied to code first
       basename = name.split('.')[0] # take out extension on the client (we throw if collisions requires have happened on the server)
       defineWrap(basename, domain, code)
 

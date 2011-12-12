@@ -11,21 +11,24 @@ CodeAnalysis = ({@entryPoint, @domains, @ignoreDoms, exts, arbiters}, @before, @
   @buildTree()
   return
 
-# finds all dependencies of a module based on reqStr + domain & folders array of requirees position
-CodeAnalysis::resolveDependencies = (absReq, folders, dom) ->
+# finds all dependencies of a module based on reqStr + domain & extraPath indicating requirees position relative to dom path
+CodeAnalysis::resolveDependencies = (absReq, extraPath, dom) ->
   # get javascript
-  code = @compile(@domains[dom]+absReq)
+  #console.log 'RESOLVE', absReq
+  code = @compile(path.join(@domains[dom], absReq))
 
   # apply pre-processing middleware here
   code = @before(code)
 
   # absolutize and locate everything here so we have a unique representation of each file
-  @resolver.locate(dep, folders, dom) for dep in detective(code) when isLegalRequire(dep)
+  tmp = (@resolver.locate(req, extraPath, dom) for req in detective(code) when isLegalRequire(req))
+  #console.log "resolver returned:", JSON.stringify(tmp)
+  tmp
 
 
 # private - loads each files depedencies and recursively calls itself on each new branch
 CodeAnalysis::buildTree = ->
-  @tree = {name: @entryPoint, domain: 'app', folders: '', deps: {}, fake: 0, level: 0}
+  @tree = {name: @entryPoint, domain: 'app', extraPath: '', deps: {}, fake: 0, level: 0}
 
   circularCheck = (t, uid) -> # follows branch up to make sure it does not find itself
     chain = [uid]
@@ -34,16 +37,17 @@ CodeAnalysis::buildTree = ->
       chain.push t.domain+'::'+t.name
       t = t.parent
       if chain[chain.length-1] is chain[0]
-        throw new Error("modul8::analysis revealed a circular dependency: "+chain.join(' <- '))
+        throw new Error("modul8 analysis revealed a circular dependency: "+chain.join(' <- '))
     return
 
   build = (t) ->
-    for [name, domain, fake] in @resolveDependencies(t.name, t.folders, t.domain)
+    for [name, domain, fake] in @resolveDependencies(t.name, t.extraPath, t.domain)
       uid = domain+'::'+name
-      #folders = name.split('/')[0...-1]
-      folders = name.split(path.basename(name))[0]
+      #console.log 'BUILD SPLIT', name, uid
+      extraPath = path.dirname(name)
+      #console.log 'BUILD SPLIT END', extraPath, name, path.join(@domains[domain], extraPath, name)
 
-      t.deps[uid] = {name, domain, fake, folders, deps:{}, parent: t, level: t.level+1}
+      t.deps[uid] = {name, domain, fake, extraPath, deps:{}, parent: t, level: t.level+1}
       if !fake
         circularCheck(t, uid) # throw if t is circularly referenced in this branch
         build.call(@, t.deps[uid]) # preserve context and recurse
@@ -64,9 +68,11 @@ formatName = (absReq, extSuffix, domPrefix, dom) ->
 # public method, returns an npm like dependency tree
 CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
   lines = [formatName(@entryPoint, extSuffix, domPrefix, 'app')]
+  #TODO: only show firstchilds of each node_modules folder
   ignores = @ignoreDoms
   objCount = (o) ->
     Object.keys(o).filter((e) -> !(e in ignores)).length
+
 
   print = (branch, level, parentAry) ->
     idx = 0

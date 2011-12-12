@@ -1,4 +1,5 @@
 fs     = require('fs')
+path   = require('path')
 bundle = require('./bundle.coffee')
 _      = require('underscore')
 logule = require('logule')
@@ -80,6 +81,15 @@ Base::register = (ext, compiler) ->
   obj.compilers[ext] = compiler if @environmentMatches
   @
 
+Base::npm = (dir) ->
+  @removeSubClassMethods()
+  return @ if !@environmentMatches
+  if dir
+    obj.npmEnabled = true
+    dom = new Domains()
+    dom.add('npm', dir)
+  @
+
 
 Base::set = (key, val) ->
   @removeSubClassMethods()
@@ -99,6 +109,7 @@ start = (entry) ->
     ignoreDoms  : []
     compilers   : {}
     entryPoint  : file
+    npmEnabled  : false
     options     :
       namespace   : 'M8'
       domloader   : false
@@ -147,8 +158,9 @@ Domains = ->
 Domains:: = new Base('Domains')
 
 Domains::add = (key, val) ->
-  return @ if !@subclassMatches('Domains','add')
-  obj.domains[key] = val if @environmentMatches
+  return @ if !@subclassMatches('Domains','add') or !@environmentMatches
+
+  obj.domains[key] = path.resolve(val)
   if key is 'app'
     throw new Error("modul8 reserves the 'app' domain for application code where the entry point resides")
   @
@@ -289,7 +301,7 @@ sanityCheck = (o) ->
     throw new Error("modul8 reserves the 'external' domain for externally loaded code")
   if o.domains.M8
     throw new Error("modul8 reserves the 'M8' domain for its internal API")
-  if o.domains.npm
+  if o.domains.npm and not o.npmEnabled
     throw new Error("modul8 reserves the 'npm' domain for npm modules")
 
   for fna in o.pre
@@ -311,6 +323,8 @@ sanityCheck = (o) ->
       throw new Error("modul8: cannot re-register #{key} extension")
     if !_.isFunction(fn)
       throw new Error("modul8: registered compiler must be a fn returning a string")
+
+  #TODO: verify anything on the npm list is requirable
   return
 
 module.exports = start

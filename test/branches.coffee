@@ -1,6 +1,7 @@
 zombie    = require 'zombie'
 assert    = require 'assert'
 fs        = require 'fs'
+path      = require 'path'
 rimraf    = require 'rimraf'
 detective = require 'detective'
 utils     = require './../lib/utils'    # hook in to this
@@ -151,9 +152,10 @@ exports["test analyzer#order"] = ->
     testCount+=2
 
     # now detective directly and hook into resolver to see if requirements have been included previously!
-    subFolders = name.split('/')[0...-1]
+
+    extraPath = path.dirname(name)
     code = compile(options.domains[domain]+name)
-    deps = (resolver.locate(dep, subFolders, domain) for dep in detective(code) when isLegalRequire(dep)) # should trivially resolve because we know full string and domain
+    deps = (resolver.locate(dep, extraPath, domain) for dep in detective(code) when isLegalRequire(dep)) # should trivially resolve because we know full string and domain
 
     for [n,d,fake] in deps when !fake
       assert.includes(included, d+'::'+n, "#{domain}::#{name} requires #{d}::#{n}, which should have been included before")

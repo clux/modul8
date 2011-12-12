@@ -2,6 +2,11 @@ TODO
 ==================
   * Use detective's new caching layer?
 
+Upcomming 0.15.0 / Xmas?
+==================
+  * npm module support (see npm docs for details)
+  * windows support
+
 0.14.2 / 2011-12-07
 ==================
   * Various refactoring and test improvements (travis build now succeeds from blank install on both 0.4 and 0.6)

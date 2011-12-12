@@ -1,4 +1,5 @@
 fs          = require('fs')
+path        = require('path')
 crypto      = require('crypto')
 _           = require('underscore')
 {read}      = require('./utils')
@@ -23,7 +24,7 @@ Persister = (guidVals, @persistFile, @log = ->) ->
 Persister::filesModified = (fileList, doms, type) ->
   mTimesOld = @cfg[type] or {}
   mTimes = {}
-  mTimes[d+'::'+f] = fs.statSync(doms[d]+f).mtime.valueOf() for [d, f] in fileList
+  mTimes[d+'::'+f] = fs.statSync(path.join(doms[d], f)).mtime.valueOf() for [d, f] in fileList
 
   @cfg[type] = mTimes
   @save()
