@@ -3,13 +3,18 @@ fs        = require 'fs'
 coffee    = require 'coffee-script'
 dir       = fs.realpathSync()
 
+
+error = (msg) ->
+  throw new Error("modul8 "+msg)
+
 # infer abs domain path and file name from path relative to dir
 domainSplit = (relPath) ->
   if path.existsSync(relPath)
     epath = relPath
   else
-    throw new Error("modul8: cannot resolve #{relPath} (#{epath})")
+    error("cannot resolve #{relPath} (#{epath})")
 
+  #TODO: this has to be fixed!
   file = relPath.split('/')[-1...][0] # get last element of split
   dom = epath.split(file)[0]
   [dom, file]
@@ -26,7 +31,7 @@ makeCompiler = (external={}) ->
     return raw if ext is '.js'
     return coffee.compile(raw, {bare}) if ext is '.coffee'
     return fn(raw, bare) for key,fn of external when key is ext # compile to js languages must take two params, read input and bare bool - bare only if safety wrapping done by default
-    throw new Error("modul8: requested file #{file} does not have a valid javascript, coffeescript or externally registered extension")
+    error("requested file #{file} does not have a valid javascript, coffeescript or externally registered extension")
 
 
 # simple fs extension to check if a file exists [used to verify require calls' validity]
@@ -43,4 +48,5 @@ module.exports = {
   exists
   read
   domainSplit
+  error
 }
