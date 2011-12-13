@@ -13,6 +13,9 @@ If it works, what is required from the `shared` domain will be sent to `alert`.
     app::app
      └───shared::
 
+### npm Example
+Showing basic npm integration with backbone and its underscore dependency.
+
 ### Simple Example
 jQuery integration using arbiters for the global variable and waits for the DOM with the `jQuery()` function.
 It also contains a sample MVC application structure. That it funnels some data through.

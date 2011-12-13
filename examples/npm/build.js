@@ -5,5 +5,7 @@ modul8('./app/app.js')
   .npm('./node_modules')
   .compile('./output.js');
 
+// requires npm install backbone in this folder first
+
 // alternatively use the CLI:
 // $ modul8 app/app.js > output.js
