@@ -219,7 +219,7 @@ Run the tests
 $ npm test
 ````
 
-modul8 is actively tested with the latest node on the 0.4 and the 0.6 branch.
+modul8 is actively tested with the latest node 0.6 branch.
 Many thanks to Travis-CI.
 
 ## License
