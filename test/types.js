@@ -7,7 +7,7 @@ exports['test typeTester'] = function () {
   var expected = {
       'Function'  : [ function () {}, F ]
     , 'Object'    : [ {}, new F() ]
-    , 'Array'     : [ [], [1, '2'] ]
+    , 'Array'     : [ [], [1, '2'], [1, [2, [3]]] ]
     , 'Date'      : [ new Date() ]
     , 'Number'    : [ 223434, 0 / 0, 1 / 0, Date.now(), Number('123') ]
     , 'String'    : [ "str", String('str') ]
@@ -31,7 +31,7 @@ exports['test typeTester'] = function () {
 
     // Expect each element of ary to satisfy t['is' + type]
     ary.forEach(function (e) {
-      assert.ok(t['is' + type](e), 't.is' + type + ' of ' + e + ' is true');
+      assert.ok(t['is' + type](e), 't.is' + type + ' of ' + Object.prototype.toString.call(e) + ' (' + e + ') is true');
       testCount += 1;
     });
 
