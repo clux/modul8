@@ -6,9 +6,9 @@ require('coffee-script');
 
 var fs = require('fs');
 
-var modul8 = require('./lib/api.coffee');
-modul8.minifier = require('./lib/plugins/minifier.coffee');
-modul8.testcutter = require('./lib/plugins/testcutter.coffee');
+var modul8 = require('./lib/api');
+modul8.minifier = require('./lib/plugins/minifier');
+modul8.testcutter = require('./lib/plugins/testcutter');
 modul8.version = JSON.parse(fs.readFileSync(__dirname+'/package.json','utf8')).version;
 
 module.exports = modul8;

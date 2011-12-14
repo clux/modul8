@@ -2,6 +2,7 @@ zombie    = require 'zombie'
 assert    = require 'assert'
 fs        = require 'fs'
 rimraf    = require 'rimraf'
+path      = require('path')
 coffee    = require 'coffee-script'
 detective = require 'detective'
 utils     = require './../lib/utils'    # hook in to this
@@ -16,27 +17,27 @@ dir       = __dirname
 setup = (sub, libPrefix = 'glob') ->
   options =
     paths :
-      app      : dir+'/arbiters/'+sub+'/app/'
-      shared   : dir+'/arbiters/'+sub+'/shared/'
-      libs     : dir+'/arbiters/'+sub+'/libs/'
+      app      : path.join(dir, 'arbiters', sub, 'app')
+      shared   : path.join(dir, 'arbiters', sub, 'shared')
+      libs     : path.join(dir, 'arbiters', sub, 'libs')
     out :
-      app   : dir+'/output/outarb'+sub+'.js'
-      libs  : dir+'/output/outarblibs'+sub+'.js'
+      app   : path.join(dir, 'output', 'outarb'+sub+'.js')
+      libs  : path.join(dir, 'output','outarblibs'+sub+'.js')
 
   makeApp = (requireLibs) ->
-    fs.mkdirSync(dir+'/arbiters/'+sub, 0755)
+    fs.mkdirSync(path.join(dir, 'arbiters', sub), 0755)
     for p of options.paths
-      fs.mkdirSync(dir+'/arbiters/'+sub+'/'+p, 0755)
+      fs.mkdirSync(path.join(dir, 'arbiters', sub, p), 0755)
 
     l = []
     for i in [0...3]
-      fs.writeFileSync(options.paths.libs+libPrefix+i+'.js', "(function(){window['#{libPrefix}#{i}'] = 'ok';})();")
-      fs.writeFileSync(options.paths.app+i+'.js', "module.exports = 'ok';")
-      fs.writeFileSync(options.paths.shared+i+'.js', "module.exports = 'ok';")
+      fs.writeFileSync(path.join(options.paths.libs, libPrefix+i+'.js'), "(function(){window['#{libPrefix}#{i}'] = 'ok';})();")
+      fs.writeFileSync(path.join(options.paths.app, i+'.js'), "module.exports = 'ok';")
+      fs.writeFileSync(path.join(options.paths.shared, i+'.js'), "module.exports = 'ok';")
       l.push "exports.app_#{i} = require('./#{i}');" # if we include arbiters with same name then they will gain priority over non-specific require from app to app
       l.push "exports.shared_#{i} = require('shared::#{i}');"
       l.push "exports.libs_#{i} = require('M8::#{libPrefix}#{i}');" if requireLibs
-    fs.writeFileSync(options.paths.app+'entry.js', l.join('\n'))
+    fs.writeFileSync(path.join(options.paths.app, 'entry.js'), l.join('\n'))
 
   compileApp = (useLibs, separateLibs, useArbiters) ->
     keys = (libPrefix+i for i in [0...3])
@@ -64,9 +65,10 @@ compile = utils.makeCompiler()
 
 exports["test arbiters#priority"] = ->
   # clean out old directory
-  try rimraf.sync(dir+'/arbiters')
+  return
+  try rimraf.sync(path.join(dir, 'arbiters'))
   catch e
-  fs.mkdirSync(dir+'/arbiters', 0755)
+  fs.mkdirSync(path.join(dir, 'arbiters'), 0755)
   count = 0
 
   exts = ['','.js','.coffee']
@@ -112,9 +114,9 @@ testsDone = (count) ->
 
 exports["test arbiters#handling"] = ->
   # clean out old directory
-  try rimraf.sync(dir+'/arbiters')
+  try rimraf.sync(path.join(dir, 'arbiters'))
   catch e
-  fs.mkdirSync(dir+'/arbiters', 0755)
+  fs.mkdirSync(path.join(dir, 'arbiters'), 0755)
 
   requireLibs = false
   useLibs = false
