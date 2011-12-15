@@ -5,33 +5,33 @@ window.M8 = {data:{}};
  * modul8 v0.14.2
  */
 
-var config    = {"namespace":"M8","domains":["app","shared"],"arbiters":{},"logging":1}
+var config    = {"namespace":"M8","domains":["app","shared"],"arbiters":{}} // replaced in
   , ns        = window[config.namespace]
   , domains   = config.domains
   , arbiters  = []
-  , exports   = {}
+  , stash     = {}
   , DomReg    = /^([\w]*)::/;
 
 /**
- * Initialize the exports container with domain names + move data to it
+ * Initialize stash with domain names + move data to it
  */
-exports.M8 = {};
-exports.external = {};
-exports.data = ns.data;
+stash.M8 = {};
+stash.external = {};
+stash.data = ns.data;
 delete ns.data;
 
-domains.forEach(function(e){
-  exports[e] = {};
+domains.forEach(function (e) {
+  stash[e] = {};
 });
 
 /**
  * Attach arbiters to the require system then delete them from the global scope
  */
-Object.keys(config.arbiters).forEach(function(name){
+Object.keys(config.arbiters).forEach(function (name) {
   var arbAry = config.arbiters[name];
   arbiters.push(name);
-  exports.M8[name] = window[arbAry[0]];
-  arbAry.forEach(function(e){
+  stash.M8[name] = window[arbAry[0]];
+  arbAry.forEach(function (e) {
     delete window[e];
   });
 });
@@ -53,18 +53,18 @@ function toAbsPath(pathName, relReqStr) {
  * Each (domain,path) gets a specialized require function from this
  */
 function makeRequire(dom, pathName) {
-  return function(reqStr) {
+  return function (reqStr) {
     var o, scannable, k, skipFolder;
 
     if (config.logging >= 4) {
-      console.debug('modul8: '+dom+':'+pathName+" <- "+reqStr);
+      console.debug('modul8: ' + dom + ':' + pathName + " <- " + reqStr);
     }
 
     if (reqStr.slice(0, 2) === './') {
       scannable = [dom];
       reqStr = toAbsPath(pathName, reqStr.slice(2));
     }
-    else if (reqStr.slice(0,3) === '../') {
+    else if (reqStr.slice(0, 3) === '../') {
       scannable = [dom];
       reqStr = toAbsPath(pathName, reqStr);
     }
@@ -76,7 +76,9 @@ function makeRequire(dom, pathName) {
       scannable = ['M8'];
     }
     else {
-      scannable = [dom].concat(domains.filter(function(e) {return e !== dom;}));
+      scannable = [dom].concat(domains.filter(function (e) {
+        return e !== dom;
+      }));
     }
 
     reqStr = reqStr.split('.')[0];
@@ -86,19 +88,19 @@ function makeRequire(dom, pathName) {
     }
 
     if (config.logging >= 3) {
-      console.log('modul8: '+dom+':'+pathName+' <- '+reqStr);
+      console.log('modul8: ' + dom + ':' + pathName + ' <- ' + reqStr);
     }
     if (config.logging >= 4) {
-      console.debug('modul8: scanned '+JSON.stringify(scannable));
+      console.debug('modul8: scanned ' + JSON.stringify(scannable));
     }
 
     for (k = 0; k < scannable.length; k += 1) {
       o = scannable[k];
-      if (exports[o][reqStr]) {
-        return exports[o][reqStr];
+      if (stash[o][reqStr]) {
+        return stash[o][reqStr];
       }
-      if (!skipFolder && exports[o][reqStr + '/index']) {
-        return exports[o][reqStr + '/index'];
+      if (!skipFolder && stash[o][reqStr + '/index']) {
+        return stash[o][reqStr + '/index'];
       }
     }
 
@@ -108,8 +110,8 @@ function makeRequire(dom, pathName) {
   };
 }
 
-ns.define = function(name, domain, fn) {
-  var mod = {exports:{}}
+ns.define = function (name, domain, fn) {
+  var mod = {exports : {}}
     , exp = {}
     , target;
   fn.call({}, makeRequire(domain, name), mod, exp);
@@ -120,19 +122,19 @@ ns.define = function(name, domain, fn) {
   else {
     target = mod.exports;
   }
-  exports[domain][name] = target;
+  stash[domain][name] = target;
 };
 
 /**
  * Public Debug API
  */
 
-ns.inspect = function(domain) {
-  console.log(exports[domain]);
+ns.inspect = function (domain) {
+  console.log(stash[domain]);
 };
 
-ns.domains = function() {
-  return domains.concat(['external','data']);
+ns.domains = function () {
+  return domains.concat(['external', 'data']);
 };
 
 ns.require = makeRequire('app', 'CONSOLE');
@@ -141,21 +143,21 @@ ns.require = makeRequire('app', 'CONSOLE');
  * Live Extension API
  */
 
-ns.data = function(name, exported) {
-  if (exports.data[name]) {
-    delete exports.data[name];
+ns.data = function (name, exported) {
+  if (stash.data[name]) {
+    delete stash.data[name];
   }
   if (exported) {
-    exports.data[name] = exported;
+    stash.data[name] = exported;
   }
 };
 
-ns.external = function(name, exported) {
-  if (exports.external[name]) {
-    delete exports.external[name];
+ns.external = function (name, exported) {
+  if (stash.external[name]) {
+    delete stash.external[name];
   }
   if (exported) {
-    exports.external[name] = exported;
+    stash.external[name] = exported;
   }
 };
 

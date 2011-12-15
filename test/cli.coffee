@@ -84,7 +84,6 @@ exports["test CLI#complicated"] = ->
   num = num_tests
   initDirs(num)
   for k in [0...num] then do (k) ->
-    opts = {}
     opts =
       dom     : k % 2 is 0
       data    : k % 4 is 0

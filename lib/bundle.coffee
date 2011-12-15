@@ -2,9 +2,14 @@ _           = require 'underscore'
 fs          = require 'fs'
 path        = require 'path'
 codeAnalyis = require './analysis'
-logule      = require 'logule'
 Persister   = require './persist'
-{makeCompiler, exists, read} = require './utils'
+type        = require('./type')
+logule      = require 'logule'
+join        = path.join
+dir         = __dirname
+{makeCompiler, exists, read, error} = require './utils'
+
+noop = (a) -> a
 
 # helpers
 anonWrap = (code) ->
@@ -17,12 +22,17 @@ makeWrapper = (ns, fnstr, hasArbiter) ->
 
 # analyzer will find files of specified ext, but these may clash on client
 verifyCollisionFree = (codeList) ->
-  for [dom, file] in codeList
+  codeList.forEach (pair) ->
+    [dom, file] = pair;
     uid = dom+'::'+file.split('.')[0]
-    for [d,f] in codeList when dom isnt d or file isnt f # dont check self
+    codeList.forEach (inner) ->
+      [d, f] = inner;
+      return if d is dom and f is file
       uidi = d+'::'+f.split('.')[0]
       if uid is uidi
-        throw new Error("modul8: does not support requiring of two files of the same name on the same path with different extensions: #{dom}::#{file} and #{d}::{#f} ")
+        error("two files of the same name on the same path will not work on the client: #{dom}::#{file} and #{d}::#{f}")
+      return
+    return
   return
 
 # main packager
@@ -33,7 +43,9 @@ bundleApp = (codeList, ns, domload, compile, before, o) ->
   l.push "window.#{ns} = {data:{}};"
 
   # 2. pull in data from parsers (force result to string if it isnt already)
-  l.push "#{ns}.data.#{name} = #{json};" for name, json of o.data
+  Object.keys(o.data).forEach (name) ->
+    json = o.data[name]
+    l.push "#{ns}.data.#{name} = #{json};"
 
   # 3. attach require code
   config =
@@ -42,8 +54,8 @@ bundleApp = (codeList, ns, domload, compile, before, o) ->
     arbiters  : o.arbiters
     logging   : o.logLevel
 
-  l.push anonWrap( read(__dirname+'/require.js')
-    .replace(/VERSION/, JSON.parse(read(__dirname+'/../package.json')).version)
+  l.push anonWrap( read(join(dir, 'require.js'))
+    .replace(/VERSION/, JSON.parse(read(join(dir, '..', 'package.json'))).version)
     .replace(/REQUIRECONFIG/, JSON.stringify(config))
   )
 
@@ -53,10 +65,13 @@ bundleApp = (codeList, ns, domload, compile, before, o) ->
 
   # 5. filter function split code into app code and non-app code
   harvest = (onlyMain) ->
-    for [domain, name] in codeList when (domain is 'app') == onlyMain
-      code = before(compile(path.join(o.domains[domain], name))) # middleware applied to code first
-      basename = name.split('.')[0] # take out extension on the client (we throw if collisions requires have happened on the server)
-      defineWrap(basename, domain, code)
+    return codeList.map( (pair) ->
+      [dom, file] = pair
+      return if (dom is 'app') != onlyMain
+      code = before(compile(join(o.domains[dom], file))) # before fns applied to code as well
+      basename = file.split('.')[0] # take out extension on the client (we throw if collisions requires have happened on the server)
+      defineWrap(basename, dom, code)
+    ).filter( (e) -> !!e )
 
 
   # 6.a) include modules not on the app domain
@@ -72,22 +87,21 @@ bundleApp = (codeList, ns, domload, compile, before, o) ->
 
 
 module.exports = (o) ->
-  useLog = o.options.logging and !_.isFunction(o.target) # dont log anything from server if we output result to console
-  log = if o.logger then o.logger else logule.sub('modul8')
-  # keep API log level compatible
-  log.suppress('debug') if !useLog or o.logLevel < 4
-  log.suppress('info', 'warn') if !useLog or o.logLevel < 2
+  useLog = o.options.logging and !type.isFunction(o.target) # dont log anything from server if we output result to console
+  log = o.logger
 
   persist = new Persister([o.target, o.libsOnlyTarget], o.options.persist, log.get('debug'))
   forceUpdate = o.options.force or persist.optionsModified(o)
-  forceUpdate |= (o.target and !_.isFunction(o.target) and !exists(o.target)) # also forceUpdate if target deleted or does not exist
+  forceUpdate |= (o.target and !type.isFunction(o.target) and !exists(o.target)) # also forceUpdate if target deleted or does not exist
 
   ns = o.options.namespace
-  domwrap = o.options.domloader or '' # force into string if not function or falsy
-  domwrap = makeWrapper(ns, domwrap, domwrap of o.arbiters) if !domwrap or !_.isFunction(domwrap) # else use (empty?) str to make wrapper
 
-  before = if o.pre.length > 0 then _.compose.apply({}, o.pre) else _.identity
-  after = if o.post.length > 0 then _.compose.apply({}, o.post) else _.identity
+  dw = o.options.domloader
+  if !type.isFunction(dw) # makeWraper from dw string
+    dw = makeWrapper(ns, dw, Object.keys(o.arbiters).indexOf(dw) >= 0)
+
+  before = if o.pre.length > 0 then _.compose.apply({}, o.pre) else noop
+  after = if o.post.length > 0 then _.compose.apply({}, o.post) else noop
 
   compile = makeCompiler(o.compilers) # will throw if reusing extensions or invalid compile functions
 
@@ -95,7 +109,7 @@ module.exports = (o) ->
 
   if o.treeTarget # do tree before collisionCheck (so that we can identify what triggers collision) + works better with CLI
     tree = ca.printed(o.extSuffix, o.domPrefix)
-    if _.isFunction(o.treeTarget)
+    if type.isFunction(o.treeTarget)
       o.treeTarget(tree)
     else
       fs.writeFileSync(o.treeTarget, tree)
@@ -106,28 +120,28 @@ module.exports = (o) ->
 
     appUpdated = persist.filesModified(codelist, o.domains, 'app')
 
-    c = after(bundleApp(codelist, ns, domwrap, compile, before, o))
+    c = after(bundleApp(codelist, ns, dw, compile, before, o))
 
     if o.libDir and o.libFiles
-      libsUpdated = persist.filesModified((['libs', f] for f in o.libFiles), {libs: o.libDir}, 'libs')
+      libsUpdated = persist.filesModified(o.libFiles.map( (f) -> ['libs', f]), {libs: o.libDir}, 'libs')
 
       if libsUpdated or (appUpdated and !o.libsOnlyTarget) or forceUpdate
         # necessary to do this work if libs changed
-        # but also if app changed and we write it to the same file
-        libs = after((compile(o.libDir+file, false) for file in o.libFiles).join('\n')) # concatenate libs as is - safetywrap any .coffee files
+        # but also if app changed and we write it to the same files
+        libs = after(o.libFiles.map((file) -> compile(join(o.libDir, file))).join('\n')) # concatenate libs as is - safetywrap any .coffee files
 
-      if o.libsOnlyTarget and libsUpdated and not _.isFunction(o.libsOnlyTarget)
+      if o.libsOnlyTarget and libsUpdated and !type.isFunction(o.libsOnlyTarget)
         fs.writeFileSync(o.libsOnlyTarget, libs)
         log.info 'compiling separate libs'
         libsUpdated = false # no need to take this state into account anymore since they are written separately
-      else if _.isFunction(o.libsOnlyTarget)
+      else if type.isFunction(o.libsOnlyTarget)
         o.libsOnlyTarget(libs)
       else if !o.libsOnlyTarget
         c = libs + c
     else
       libsUpdated = false # no need to take lib state into account anymore since they dont exist
 
-    if _.isFunction(o.target)
+    if type.isFunction(o.target)
       return o.target(c)
 
     if appUpdated or (libsUpdated and !o.libsOnlyTarget) or forceUpdate

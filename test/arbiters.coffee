@@ -25,12 +25,13 @@ setup = (sub, libPrefix = 'glob') ->
       libs  : path.join(dir, 'output','outarblibs'+sub+'.js')
 
   makeApp = (requireLibs) ->
-    fs.mkdirSync(path.join(dir, 'arbiters', sub), 0755)
+    #fs.mkdirSync(path.join(dir, 'arbiters', sub, '/'), 0755)
     for p of options.paths
-      fs.mkdirSync(path.join(dir, 'arbiters', sub, p), 0755)
+      fs.mkdirSync(path.join(dir, 'arbiters', sub, p, '/'), 0755)
 
     l = []
     for i in [0...3]
+      console.log path.join(options.paths.libs, libPrefix+i+'.js')
       fs.writeFileSync(path.join(options.paths.libs, libPrefix+i+'.js'), "(function(){window['#{libPrefix}#{i}'] = 'ok';})();")
       fs.writeFileSync(path.join(options.paths.app, i+'.js'), "module.exports = 'ok';")
       fs.writeFileSync(path.join(options.paths.shared, i+'.js'), "module.exports = 'ok';")
