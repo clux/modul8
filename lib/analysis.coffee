@@ -2,12 +2,12 @@ fs          = require 'fs'
 path        = require 'path'
 detective   = require 'detective'
 utils       = require './utils'
-{Resolver, isLegalRequire} = require './resolver'
+Resolver    = require './resolver'
 
 
 # constructor - resolves dependency tree and stores in @tree
 CodeAnalysis = ({@entryPoint, @domains, @ignoreDoms, exts, arbiters}, @before, @compile) ->
-  @resolver = new Resolver(@domains, arbiters, exts)
+  @resolver = new Resolver(@domains, Object.keys(arbiters), exts)
   @buildTree()
   return
 
@@ -21,10 +21,8 @@ CodeAnalysis::resolveDependencies = (absReq, extraPath, dom) ->
   code = @before(code)
 
   # absolutize and locate everything here so we have a unique representation of each file
-  tmp = (@resolver.locate(req, extraPath, dom) for req in detective(code) when isLegalRequire(req))
-  #console.log "resolver returned:", JSON.stringify(tmp)
-  tmp
-
+  detective(code).map (req) ->
+     @resolver.locate(req, extraPath, dom)
 
 # private - loads each files depedencies and recursively calls itself on each new branch
 CodeAnalysis::buildTree = ->
@@ -87,7 +85,7 @@ CodeAnalysis::printed = (extSuffix=false, domPrefix=true) ->
       displayName = formatName(name, extSuffix, domPrefix, domain)
       lines.push " "+indent+turnChar+"──"+forkChar+displayName
 
-      if hasChildren # recurse into uid's dependency tree keeping track of parent lines
+      if hasChildren
         print(branch.deps[uid], level+1, parentAry.concat(isLast))
     return
   print(@tree, 0, [])
