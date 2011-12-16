@@ -6,12 +6,12 @@ exports['test typeTester'] = function () {
   // We expect the that the following arrays can be partitioned as follows
   var expected = {
     'Function'  : [ function () {}, F ]
-  , 'Object'    : [ {}, new F() ]
-  , 'Array'     : [ [], [1, '2'], [1, [2, [3]]] ]
+  , 'Object'    : [ {}, new F(), {a: [1]} ]
+  , 'Array'     : [ [], [1, '2'], [1, [2, [3]]], [13], [[[[]]]] ]
   , 'Date'      : [ new Date() ]
-  , 'Number'    : [ 223434, 0 / 0, 1 / 0, Date.now(), Number('123') ]
-  , 'String'    : [ "str", String('str') ]
-  , 'Boolean'   : [ true, false, !5 ]
+  , 'Number'    : [ 223434, 1 / 0, -Infinity, NaN, 0 / 0, Date.now(), Number('123'), 0, 1 ]
+  , 'String'    : [ "str", String('str'), 5 + "arst" ]
+  , 'Boolean'   : [ true, false, !5, !null, !undefined ]
   , 'Null'      : [ null ]
   , 'RegExp'    : [ /\//, new RegExp("/") ]
   , 'Undefined' : [ F['unknown_prop'], undefined ]
