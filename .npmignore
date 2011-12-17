@@ -7,3 +7,4 @@ test/cli/
 test/arbiters/
 test/output/*.js
 examples/simple/cliout.js
+examples/npm/node_modules/backbone/

@@ -19,22 +19,22 @@ function testsDone(count) {
   if (!num_tests) {
     console.log('cli#complex - completed:', testCount);
   }
-};
+}
 
-function callCLI (str) {
+function callCLI(str) {
   var base = ["coffee", "./bin/cli.coffee"]
     , argv = base.concat(str.split(' '));
   cli(argv);
 }
 
-exports["test CLI#examples/simple"] = function() {
+exports["test CLI#examples/simple"] = function () {
   var browser = new zombie.Browser()
     , workDir = './examples/simple/'
     , str = "" + workDir + "app/app.js -a jQuery=jQuery,$ -w jQuery -o " + workDir + "cliout.js";
 
   callCLI(str);
 
-  browser.visit('file:///' + dir + "/empty.html", function(err, browser, status) {
+  browser.visit('file:///' + dir + "/empty.html", function (err, browser, status) {
     if (err) {
       throw err;
     }
@@ -53,14 +53,14 @@ exports["test CLI#examples/simple"] = function() {
 
 function initDirs(num) {
   var folders = ['libs', 'main', 'plug', 'dom'];
-  for (var i = 0; i < num; i++) {
+  for (var i = 0; i < num; i += 1) {
     folders.forEach(function (folder) {
-      mkdirp(join(dir, 'cli', i + '', folder), 0755)
+      mkdirp(join(dir, 'cli', i + '', folder), '0755'); //TODO: fn in loop
     });
   }
-};
+}
 
-generateApp = function(opts, i) {
+function generateApp(opts, i) {
   var entry = []
     , plug = [];
 
@@ -99,12 +99,12 @@ generateApp = function(opts, i) {
     }));
   }
   fs.writeFileSync(join(dir, 'cli', i + '', 'main', 'temp.js'), "require('./code1')");
-};
+}
 
-exports["test CLI#complicated"] = function() {
+exports["test CLI#complicated"] = function () {
   var num = num_tests;
   initDirs(num);
-  function runCase(k) {
+  var runCase = function (k) {
     var opts = {
       dom       : k % 2 === 0
     , data      : k % 4 === 0
@@ -158,8 +158,10 @@ exports["test CLI#complicated"] = function() {
 
     var ns = opts.ns || 'M8';
     var browser = new zombie.Browser();
-    browser.visit('file:///' + dir + "/empty.html", function(err, browser, status) {
-      if (err) throw err;
+    browser.visit('file:///' + dir + "/empty.html", function (err, browser, status) {
+      if (err) {
+        throw err;
+      }
       var mainCode = compile(workDir + 'output.js')
         , libs1 = compile(workDir + 'libs/lib1.js')
         , libs2 = compile(workDir + 'libs/lib2.js')
@@ -203,7 +205,8 @@ exports["test CLI#complicated"] = function() {
       testsDone(count);
     });
   };
-  for (k = 0; k < num; k++) {
+
+  for (var k = 0; k < num; k += 1) {
     runCase(k);
   }
 };

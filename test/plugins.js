@@ -18,18 +18,20 @@ var data = {
 };
 
 function PluginOne(name) {
-  this.name = (name) ? name : 'myStupidDefault';
+  this.name = 'plug1';
 }
 PluginOne.prototype.data = function() {
   return data;
 };
 PluginOne.prototype.domain = function() {
-  return join(dir, 'plugins', 'dom');
+  var a = join(dir, 'plugins', 'dom');
+  console.log("plugin def:", a);
+  return a;
 };
 
 
 function PluginTwo(name) {
-  this.name = (name) ? name : 'plug2';
+  this.name = 'plug2';
 }
 PluginTwo.prototype.data = function() {
   return JSON.stringify(data);
@@ -51,7 +53,7 @@ generateApp = function () {
     .set('force', true)
     .set('namespace', 'QQ')
     .set('logging', false)
-    .use(new PluginOne('plug1'))
+    .use(new PluginOne())
     .use(new PluginTwo())
     .data(data)
       .add('crazy1', 'new Date()')
@@ -72,7 +74,7 @@ function aaaa(){
   return browser.visit('file:///' + dir + "/empty.html", function(err, browser, status) {
     var key, mainCode, testCount, val;
     if (err) throw err;
-    mainCode = compile(dir + '/output/flat.js');
+    mainCode = compile(dir + '/output/plugins.js');
     assert.isUndefined(browser.evaluate(mainCode), ".compile() result evaluates successfully");
     assert.isUndefined(browser.evaluate("QQ.require('plug1::code')"), "plug1 does not export code when not required");
     assert.isDefined(browser.evaluate("QQ.require('data::plug1')"), "plug1 always exports data");
@@ -102,7 +104,7 @@ function bbbb(){
   browser.visit('file:///' + dir + "/empty.html", function(err, browser, status) {
     var key, mainCode, testCount;
     if (err) throw err;
-    mainCode = compile(dir + '/output/flat.js');
+    mainCode = compile(dir + '/output/plugins.js');
     assert.isUndefined(browser.evaluate(mainCode), ".compile() result evaluates successfully");
     assert.isDefined(browser.evaluate("QQ"), "global namespace is defined");
     assert.isDefined(browser.evaluate("QQ.require"), "require is globally accessible");

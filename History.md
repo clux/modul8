@@ -6,6 +6,7 @@ Upcomming 0.15.0 / Xmas?
 ==================
   * npm module support (see npm docs for details)
   * windows support
+  * analysis().hide('domainName') now works [regression]
 
 0.14.2 / 2011-12-07
 ==================
