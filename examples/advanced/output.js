@@ -7,7 +7,7 @@ QQ.data.test = {"hi": "there"}
  * modul8 v0.14.2
  */
 
-var config    = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]}} // replaced in
+var config    = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]}} // replaced
   , ns        = window[config.namespace]
   , domains   = config.domains
   , arbiters  = []
@@ -15,7 +15,7 @@ var config    = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monoli
   , DomReg    = /^([\w]*)::/;
 
 /**
- * Initialize stash with domain names + move data to it
+ * Initialize stash with domain names and move data to it
  */
 stash.M8 = {};
 stash.external = {};
@@ -112,6 +112,10 @@ function makeRequire(dom, pathName) {
   };
 }
 
+/**
+ * define module name on domain container
+ * expects wrapping fn(require, module, exports) { code };
+ */
 ns.define = function (name, domain, fn) {
   var mod = {exports : {}}
     , exp = {}

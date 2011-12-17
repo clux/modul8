@@ -5,7 +5,7 @@ window.M8 = {data:{}};
  * modul8 v0.14.2
  */
 
-var config    = {"namespace":"M8","domains":["app","shared"],"arbiters":{}} // replaced in
+var config    = {"namespace":"M8","domains":["app","shared"],"arbiters":{}} // replaced
   , ns        = window[config.namespace]
   , domains   = config.domains
   , arbiters  = []
@@ -13,7 +13,7 @@ var config    = {"namespace":"M8","domains":["app","shared"],"arbiters":{}} // r
   , DomReg    = /^([\w]*)::/;
 
 /**
- * Initialize stash with domain names + move data to it
+ * Initialize stash with domain names and move data to it
  */
 stash.M8 = {};
 stash.external = {};
@@ -110,6 +110,10 @@ function makeRequire(dom, pathName) {
   };
 }
 
+/**
+ * define module name on domain container
+ * expects wrapping fn(require, module, exports) { code };
+ */
 ns.define = function (name, domain, fn) {
   var mod = {exports : {}}
     , exp = {}
