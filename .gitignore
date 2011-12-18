@@ -5,6 +5,7 @@ test/collisions/
 test/cli/
 test/modified/
 test/arbiters/
+test/plugins/
 examples/simple/cliout.js
 test/output/*.js
 examples/npm/node_modules/backbone/
