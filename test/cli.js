@@ -22,7 +22,7 @@ function testsDone(count) {
 }
 
 function callCLI(str) {
-  var base = ["coffee", "./bin/cli.coffee"]
+  var base = ["coffee", "./bin/cli.js"]
     , argv = base.concat(str.split(' '));
   cli(argv);
 }
@@ -58,6 +58,13 @@ function initDirs(num) {
       mkdirp(join(dir, 'cli', i + '', folder), '0755'); //TODO: fn in loop
     });
   }
+  /*dirify('cli', {
+    libs : {}
+  , main : {}
+  , plug : {}
+  , dom  : {}
+  });*/
+
 }
 
 function generateApp(opts, i) {

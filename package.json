@@ -9,7 +9,7 @@
   },
   "main": "index.js",
   "bin": {
-    "modul8": "./bin/cli.coffee"
+    "modul8": "./bin/cli.js"
   },
   "scripts": {
     "test": "expresso"
@@ -20,7 +20,7 @@
     "uglify-js": "~1.1.1",
     "detective": "~0.0.4",
     "underscore": "~1.2.2",
-    "logule": "~0.5.3"
+    "logule": "~0.5.4"
   },
   "devDependencies": {
     "zombie": "~0.12.1",
