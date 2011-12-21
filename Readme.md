@@ -8,17 +8,19 @@ var determine = require('./determine');
 console.log(determine.isCool(['clux', 'lava']));
 ````
 
-the required module `determine.coffee` (or .js if you prefer)
+the required module `determine.js`
 
-````coffeescript
-cool = require('shared::cool') # cross-domain require
-exports.isCool = (input) -> input.filter(cool)
+````javascript
+var cool = require('shared::cool'); // cross-domain require
+exports.isCool = function (input) {
+  return input.filter(cool);
+};
 ````
 
 and finally its required `cool.js` on the `shared` domain [?](http://clux.github.com/modul8/docs/xcjs.html#modul8extensions)
 
 ````javascript
-module.exports = function(name){
+module.exports = function (name) {
   return (name === 'clux');
 };
 ````
@@ -57,7 +59,7 @@ To load the browser compatible output file from your site simply stick it in the
 
 ## Quick Overview
 
-modul8 is an extensible CommonJS code packager and analyzer for JavaScript and CoffeeScript web applications.
+modul8 is an extensible CommonJS code packager and analyzer for JavaScript and AltJS web applications.
 Applications are recursively analyzed for dependencies from an entry point and will pull in + compile just what is needed.
 
 Code can be shared with the server by isolating modules/libraries in  shared _domains_. This means stand alone logic

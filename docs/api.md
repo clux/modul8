@@ -380,22 +380,22 @@ But note that this version has a slightly different meaning - it adds them all w
 - `require('$')` and `require('jQuery')` would both resolve whereas above only `require('jQuery')` would.
 
 
-## Registering a Compile-to-JS Language
+## CoffeeScript and Compile-to-JS Languages
 
 It is possible to extend the parsers capabilities by sending the extension and compiler down to modul8.
-For instance, registering Coffee-Script (if it wasn't already done automatically) would be done like this
+For instance, registering Coffee-Script (is done like this:
 
     var coffee = require('coffee-script');
     modul8('./client/app.js')
-      .register('.coffee', function(code, bare){
-        coffee.compile(code, {bare:bare})
+      .register('.coffee', function (code, bare){
+        coffee.compile(code, {bare: bare})
       })
       .compile('./out.js');
 
 Note the boolean `bare` option is to let modul8 fine tune when it is necessary to include the safety wrapper - if the compile to language includes one by default.
 
 CoffeeScript uses a safety wrapper by default, but it is irrelevant for application code as we define-wrap each file in a function anyway.
-However, if you included library code written in CoffeeScript, then modul8 will call the compile function with bare:false.
+However, if you included library code written in CoffeeScript, then modul8 will call the compile function with bare = false.
 
-You should implement the bare compilation option if your language supports it, as an optimization (less function wrapping for app code). If your code already contains wrapper,
-or if your language always safety-wraps, then this is fine too.
+You should implement the bare compilation option if your language supports it, as an optimization (less function wrapping for app code).
+If your code already contains wrapper, or if your language always safety-wraps, then this is fine too.
