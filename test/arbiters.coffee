@@ -64,46 +64,6 @@ setup = (sub, libPrefix = 'glob') ->
 compile = utils.makeCompiler()
 
 
-exports["test arbiters#priority"] = ->
-  # clean out old directory
-  return
-  try rimraf.sync(path.join(dir, 'arbiters'))
-  catch e
-  fs.mkdirSync(path.join(dir, 'arbiters'), 0755)
-  count = 0
-
-  exts = ['','.js','.coffee']
-  compile = utils.makeCompiler()
-
-  run = (suf, libReq) ->
-    [makeApp, compileApp, opts] = setup('noglob'+suf, '')
-    doms = {}
-    doms[name] = path for name,path of opts.paths when name isnt 'libs'
-    makeApp(libReq)
-
-    arbs = if libReq then {'0':['0'], '1': ['1'], '2':['2']} else {}
-    ca = analysis
-      entryPoint : 'entry.js'
-      domains    : doms
-      arbiters   : arbs
-      exts       : exts
-      ignoreDoms : []
-      (a) -> a # before
-      compile
-    order = ca.sorted()
-    assert.includes(order[order.length-1], 'entry.js', "ordered list includes entry when libsRequired=#{libReq}")
-    order.pop()
-    wantedLen = 6
-    assert.equal(order.length, wantedLen, "order contains all files when libsRequired=#{libReq}")
-    count += 2
-
-  run('a', false)
-  run('b', true)
-
-  console.log 'arbiters#priority - completed:', count
-
-
-
 testCount = 0
 num_tests = 7
 testsDone = (count) ->

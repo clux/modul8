@@ -4,16 +4,12 @@ var assert    = require('assert')
   , zombie    = require('zombie')
   , rimraf    = require('rimraf')
   , mkdirp    = require('mkdirp').sync
-  , coffee    = require('coffee-script')
   , detective = require('detective')
-  , modul8    = require('./../index.js')
-  , utils     = require('./../lib/utils')
-  , analysis  = require('./../lib/analysis')
-  , resolver  = require('./../lib/resolver')
+  , modul8    = require('../')
+  , utils     = require('../lib/utils')
   , join      = path.join
   , dir       = __dirname
   , read      = utils.read
-  , Resolver = resolver.Resolver;
 
 function setup (sub, libPrefix) {
   if (libPrefix == null) libPrefix = 'glob';
@@ -31,7 +27,7 @@ function setup (sub, libPrefix) {
   };
 
   function makeApp (requireLibs) {
-    Object.keys(opitons.paths).forEach(function (p) {
+    Object.keys(options.paths).forEach(function (p) {
       mkdirp(join(dir, 'arbiters', sub, p + '.js'), 0755)
     });
 
@@ -97,54 +93,8 @@ function setup (sub, libPrefix) {
 
 compile = utils.makeCompiler();
 
-exports["test arbiters#priority"] = function() {
-  try {
-    rimraf.sync(join(dir, 'arbiters'));
-  } catch (e) {}
-  mkdirp(join(dir, 'arbiters'), 0755);
-
-
-  count = 0;
-  exts = ['', '.js', '.coffee'];
-  compile = utils.makeCompiler();
-  run = function(suf, libReq) {
-    var arbs, ca, compileApp, doms, makeApp, name, opts, order, path, wantedLen, _ref, _ref2;
-    _ref = setup('noglob' + suf, ''), makeApp = _ref[0], compileApp = _ref[1], opts = _ref[2];
-    doms = {};
-    _ref2 = opts.paths;
-    for (name in _ref2) {
-      path = _ref2[name];
-      if (name !== 'libs') doms[name] = path;
-    }
-    makeApp(libReq);
-    arbs = libReq ? {
-      '0': ['0'],
-      '1': ['1'],
-      '2': ['2']
-    } : {};
-    ca = analysis({
-      entryPoint: 'entry.js',
-      domains: doms,
-      arbiters: arbs,
-      exts: exts,
-      ignoreDoms: []
-    }, function(a) {
-      return a;
-    }, compile);
-    order = ca.sorted();
-    assert.includes(order[order.length - 1], 'entry.js', "ordered list includes entry when libsRequired=" + libReq);
-    order.pop();
-    wantedLen = 6;
-    assert.equal(order.length, wantedLen, "order contains all files when libsRequired=" + libReq);
-    return count += 2;
-  };
-  run('a', false);
-  run('b', true);
-  return console.log('arbiters#priority - completed:', count);
-};
 
 testCount = 0;
-
 num_tests = 7;
 
 testsDone = function(count) {
