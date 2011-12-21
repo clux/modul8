@@ -1,13 +1,12 @@
 var fs = require('fs')
   , rimraf = require('rimraf')
   , join = require('path').join
-  , coffee = require('coffee-script')
   , brain = require('./brain')
   , utils = require('../lib/utils')
   , modul8 = require('../');
 
 var root = join(__dirname, 'collisions')
-  , exts = ['.js', '.coffee', '.coco']
+  , exts = ['.js', '.coffee']
   , output = join(__dirname, 'output', 'collisions.js');
 
 var domains = {
@@ -71,8 +70,8 @@ function generateApp() {
   modul8(entry)
     .domains({shared: domains.shared})
     //.analysis(console.log)
-    .register('.coco', function (code) {
-      return coffee.compile(code, {bare: true});
+    .register('.coffee', function (code) {
+      return code + ';'
     })
     .compile(output);
 }

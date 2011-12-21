@@ -162,7 +162,7 @@ module.exports = function (argv) {
   program.parse(argv);
   complete();
 
-  // for testing, program retain state between multiple calls from smae file
+  // reset state which program retains between multiple calls from same file
   var resettables = [
     'analyze'     // -z
   , 'data'        // -d

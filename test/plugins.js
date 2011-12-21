@@ -41,11 +41,11 @@ function generateApp() {
     , 'code3.js' : "module.exports = 320;"
     }
   , main  : {
-      'temp.js'  : "require('plug1::code1');"
+      'entry.js'  : "require('plug1::code1');"
     }
   });
 
-  modul8(join(dir, 'plugins', 'main', 'temp.js'))
+  modul8(join(dir, 'plugins', 'main', 'entry.js'))
     .set('namespace', 'QQ')
     .set('logging', false)
     .use(new PluginOne())
