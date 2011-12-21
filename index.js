@@ -1,9 +1,3 @@
-require('coffee-script');
-/*
- * App code might be CS, so we must require it at some point anyway.
- * By doing it here, we avoid having to compile the lib.
- */
-
 var fs = require('fs');
 
 var modul8 = require('./lib/api');
