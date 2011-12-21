@@ -43,7 +43,7 @@ export everything relevant from there.
 This does not require a domain prefix because it is assumed this domain gets sufficiently frequent use to have it bumped up on the priority list.
 
 Note that if a jQuery.js file is found on the current domain, however, it will gain priority over the arbiter domain.
-If this coexistence is necessary, any arbiters must be  required by specifying the internal domain name: `$ = require('M8::jQuery')`.
+If this coexistence is necessary, any arbiters must be  required by specifying the internal domain name: `var $ = require('M8::jQuery')`.
 
 ## File extensions
 
@@ -60,7 +60,6 @@ To see why, consider a simplified resolver algorithm from the server
     while(domain)
       return true if exists(domain + name)
       return true if exists(domain + name + '.js')
-      return true if exists(domain + name + '.coffee')
       return true if exists(domain + name + altJsExt) //optional
       domain = nextDomain // if applicable (see require priority below)
     return false
@@ -73,7 +72,7 @@ then it will gain priority over your normal files if you do not specify the exte
 The corollary to this extension priority is that we can't accurately distinguish between two extensions on the client when we omit the extension.
 Thus, since omitting the extension is generally advantageous for brevity, we have decided to simply truncate the extension on the client.
 
-This is advantageous also because it makes the require code leaner, more perfomant, and each **dom::name pair is unique** as they should be.
+This is advantageous also because it makes the require code leaner, more perfomant, and each **dom::name pair is unique**, as they should be.
 
 You can still have a `.js` duplicate of your `.coffee` file in a directory, but you then have to explicitly define `.coffee` so that the server
 can pre-pick the right one to include for you.
@@ -84,11 +83,11 @@ To help you remember this, modul8 will actually throw an error if you simultaneo
 - app::subpath/module.js
 - app::subpath/module.otherExt
 
-It is not a complete failsafe, we are aware, but it helps force usage so that the problem above does not occur.
+It is not a complete failsafe, but it helps force usage so that the problem above does not occur.
 
 **In short**: try not to have different extension versions of your files in the same directory or you can run into the following two problems:
 
-- **A)** your Coffee changes wont do anything because you are unknowingly requiring a JS version that got in the directory
+- **A)** your Coffee changes won't do anything because you are unknowingly requiring a JS version that got in the directory
 - **B)** you will have a conflict error thrown at you to help you not challenging fate with techniques that can result in problem A
 
 Note that the error will only be thrown after the `.analysis()` dependency tree was logged, allowing you to pinpoint the careless `require()`.
