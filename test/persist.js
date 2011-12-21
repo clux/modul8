@@ -133,7 +133,7 @@ function runCase(k) {
 }
 
 exports["test persist"] = function () {
-  if (false) {
+  if (true) {
     log.info('modified on hold - skipping 16 second test');
     return;
   }
