@@ -3,6 +3,7 @@ var fs      = require('fs')
   , zombie  = require('zombie')
   , assert  = require('assert')
   , rimraf  = require('rimraf')
+  , log     = require('logule').sub('CLI').suppress('trace')
   , mkdirp  = require('mkdirp').sync
   , utils   = require('../lib/utils')
   , modul8  = require('../')
@@ -17,20 +18,21 @@ function testsDone(count) {
   testCount += count;
   num_tests -= 1;
   if (!num_tests) {
-    console.log('cli#complex - completed:', testCount);
+    log.info('complex completed:', testCount);
   }
 }
 
 function callCLI(str) {
-  var base = ["coffee", "./bin/cli.js"]
+  var base = ["node", "./bin/cli.js"]
     , argv = base.concat(str.split(' '));
+  log.trace('call: ', str);
   cli(argv);
 }
 
 exports["test CLI#examples/simple"] = function () {
   var browser = new zombie.Browser()
     , workDir = './examples/simple/'
-    , str = "" + workDir + "app/app.js -a jQuery=jQuery,$ -w jQuery -o " + workDir + "cliout.js";
+    , str = workDir + "app/app.js -a jQuery=jQuery,$ -w jQuery -o " + join(workDir, "cliout.js");
 
   callCLI(str);
 
@@ -47,7 +49,7 @@ exports["test CLI#examples/simple"] = function () {
     assert.isUndefined(browser.evaluate("window.jQuery", "jQuery is not global"));
     assert.isUndefined(browser.evaluate("window.$", "$ is not global"));
 
-    console.log('CLI#examples/simple - completed:', 5);
+    log.info('simple completed:', 5)
   });
 };
 
@@ -58,13 +60,6 @@ function initDirs(num) {
       mkdirp(join(dir, 'cli', i + '', folder), '0755'); //TODO: fn in loop
     });
   }
-  /*dirify('cli', {
-    libs : {}
-  , main : {}
-  , plug : {}
-  , dom  : {}
-  });*/
-
 }
 
 function generateApp(opts, i) {

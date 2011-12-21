@@ -2,10 +2,11 @@ var assert = require('assert')
   , fs = require('fs')
   , modul8 = require('../index.js')
   , join = require('path').join
+  , log = require('logule').sub('PERSIST')
   , dirify = require('./dirify')
   , read = require('../lib/utils').read;
 
-var root = join(__dirname, 'modified')
+var root = join(__dirname, 'persist')
   , out = join(__dirname, 'output');
 
 var paths = {
@@ -15,8 +16,8 @@ var paths = {
 };
 
 var out = {
-  app   : join(out, 'outmod.js')
-, libs  : join(out, 'outlibs.js')
+  app   : join(out, 'persist.js')
+, libs  : join(out, 'persistlibs.js')
 };
 
 
@@ -32,6 +33,7 @@ var mTimesOld = {
 
 function modify(type) {
   var file = join(paths[type], '0.js');
+  //log.warn(file);
   sleep(1005);
   fs.writeFileSync(file, read(file) + ';');
   sleep(1005);
@@ -62,15 +64,15 @@ function makeApp() {
 
 function compile(useLibs, separateLibs) {
   modul8(join(paths.app, 'entry.js'))
-    .set('logging', 'DEBUG')
+    .logger(log.sub().suppress('info', 'debug'))
     .libraries()
-      .list(useLibs ? ['0.js'] : [])
+      .list(useLibs ? ['0.js'] : []) //TODO:  there's a case when it's updating even when the lib files are not included!?
+      //.list([])
       .path(paths.libs)
       .target(separateLibs ? out.libs : false)
     .domains({shared : paths.shared})
     .compile(out.app);
 }
-
 
 function runCase(k) {
   var testCount = 0
@@ -89,10 +91,9 @@ function runCase(k) {
       wasUpdated('libs');
     }
 
-    // start
+    // start (reset state and make sure a blank compile does not change things ever)
 
     compile(withLibs, separateLibs);
-    //console.log("modifying " + name + "::0 using libs? " + withLibs + ". Separately? " + separateLibs);
 
     assert.ok(!wasUpdated('app'), "preparing to modify " + name + "::0 - recompile does not change libs mTimes without changes");
 
@@ -106,33 +107,34 @@ function runCase(k) {
     //    and expect modul8 to understand all the time
     // TODO: use fs.(f)utimesSync when we ditch 0.4 compatibility
     modify(name);
+    var msg = 'changing ' + name + ' ' + (withLibs ? separateLibs ? 'using separate libs' : 'using included libs' : 'without libs');
 
     compile(withLibs, separateLibs);
     var appChanged = wasUpdated('app')
       , libsChanged = separateLibs ? wasUpdated('libs') : true;
 
-    if (modifyingLibs && !separateLibs) {
+    if ((modifyingLibs && !separateLibs) || (!modifyingLibs && separateLibs)) {
+      log.trace(msg + ' => appChanged');
       assert.ok(appChanged, "modified " + name + "::0 - compiling with lib changes for included libs app mtime");
     }
     else if (modifyingLibs && separateLibs) {
       assert.ok(libsChanged, "modified " + name + "::0 - compiling with lib changes for separate libs changes libs mtime");
       assert.ok(!appChanged, "modified " + name + "::0 - compiling with lib changes for separate libs does not change app mtime");
+      log.trace(msg + ' => libsChanged && !appChanged');
       testCount += 1;
     }
     else if (!modifyingLibs) {
       assert.ok(appChanged, "modified " + name + "::0 - compiling with app changes changes app mtime");
+      log.trace(msg + ' => appChanged');
     }
     testCount += 2;
   });
-  // each call takes 2*sleepDuration * num_keys [s]
-  // == 2* ~1 * 3 || 2 * ~1 * 2 == 6 || 4
-
   return testCount;
 }
 
-exports["test compile#modified"] = function () {
+exports["test persist"] = function () {
   if (false) {
-    console.log('compile#modified on hold - skipping 24 second test');
+    log.info('modified on hold - skipping 16 second test');
     return;
   }
   makeApp();
@@ -155,6 +157,5 @@ exports["test compile#modified"] = function () {
   for (var k = 0; k < 3; k += 1) {
     testCount += runCase(k);
   }
-  // should take 6 * 2 + 1 * 4 = 16s
-  console.log('compile#modified - completed:', testCount);
+  log.info('completed:', testCount);
 };

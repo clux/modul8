@@ -1,8 +1,9 @@
 var assert = require('assert')
   , t = require('../lib/type.js')
+  , log = require('logule').sub('TYPES')
   , F = function () {};
 
-exports['test typeTester'] = function () {
+exports['test type#partitioning'] = function () {
   // We expect the that the following arrays can be partitioned as follows
   var expected = {
     'Function'  : [ function () {}, F ]
@@ -57,5 +58,5 @@ exports['test typeTester'] = function () {
     });
 
   });
-  console.log('typeTester - completed:', testCount);
+  log.info('completed partition test', testCount);
 };
