@@ -58,5 +58,5 @@ exports['test type#partitioning'] = function () {
     });
 
   });
-  log.info('completed partition test', testCount);
+  log.info('completed', testCount, 'type partitioning tests');
 };

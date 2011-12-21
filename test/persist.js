@@ -1,10 +1,10 @@
-var assert = require('assert')
-  , fs = require('fs')
-  , modul8 = require('../index.js')
-  , join = require('path').join
-  , log = require('logule').sub('PERSIST')
-  , dirify = require('./dirify')
-  , read = require('../lib/utils').read;
+var assert  = require('assert')
+  , fs      = require('fs')
+  , modul8  = require('../index.js')
+  , join    = require('path').join
+  , log     = require('logule').sub('PERSIST')
+  , dirify  = require('./lib/dirify')
+  , read    = require('../lib/utils').read;
 
 var root = join(__dirname, 'persist')
   , out = join(__dirname, 'output');
@@ -52,7 +52,7 @@ function wasUpdated(type) {
 
 
 function makeApp() {
-  dirify('modified', {
+  dirify('persist', {
     shared: { '0.js' : "module.exports = 'ok';" }
   , libs  : { '0.js' : "(function(){window.libs = 'ok';}());" }
   , app   : {
@@ -157,5 +157,5 @@ exports["test persist"] = function () {
   for (var k = 0; k < 3; k += 1) {
     testCount += runCase(k);
   }
-  log.info('completed:', testCount);
+  log.info('completed', testCount, 'mTime checks');
 };

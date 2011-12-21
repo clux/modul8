@@ -1,10 +1,10 @@
-var fs = require('fs')
-  , rimraf = require('rimraf')
-  , join = require('path').join
-  , log = require('logule').sub('CLASH')
-  , brain = require('./brain')
-  , utils = require('../lib/utils')
-  , modul8 = require('../');
+var fs      = require('fs')
+  , rimraf  = require('rimraf')
+  , join    = require('path').join
+  , log     = require('logule').sub('CLASH')
+  , brain   = require('./lib/brain')()
+  , utils   = require('../lib/utils')
+  , modul8  = require('../');
 
 var root = join(__dirname, 'clash')
   , exts = ['.js', '.coffee']
@@ -68,11 +68,11 @@ function generateApp() {
   var entry = join(domains.app, 'entry.js');
   fs.writeFileSync(entry, l.join('\n'));
 
-  log.trace('compiling')
+  //log.trace('compiling')
   modul8(entry)
     .domains({shared: domains.shared})
     .logger(log.sub().suppress('info', 'debug'))
-    .analysis(console.log)
+    //.analysis(console.log)
     .register('.coffee', function (code) {
       return code + ';'
     })
@@ -108,5 +108,5 @@ exports["test clashes"] = function () {
       testCount += 8;
     }
   });
-  log.info('completed', testCount);
+  log.info('verified', testCount, 'collision prone requires');
 };

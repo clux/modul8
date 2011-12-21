@@ -3,8 +3,7 @@ var fs      = require('fs')
   , rimraf  = require('rimraf').sync
   , path    = require('path')
   , join    = path.join
-  , type    = require('../lib/type')
-  , dir     = __dirname;
+  , type    = require(join('..', '..', 'lib', 'type'));
 
 /**
  * generate directory trees and files from an object recursively
@@ -12,7 +11,7 @@ var fs      = require('fs')
  * a string as a value means key should be a file
  */
 module.exports = function (name, obj) {
-  var root = join(dir, name);
+  var root = join(__dirname, '..', name);
   try {
     rimraf(root);
   } catch (e) {}

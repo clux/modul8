@@ -1,8 +1,9 @@
 var path      = require('path')
   , modul8    = require('../')
   , utils     = require('../lib/utils')
-  , dirify    = require('./dirify')
-  , brain     = require('./brain')
+  , dirify    = require('./lib/dirify')
+  , brain     = require('./lib/brain')()
+  , log       = require('logule').sub('PLUGIN')
   , join      = path.join
   , dir       = __dirname
   , compile   = utils.makeCompiler();
@@ -45,9 +46,10 @@ function generateApp() {
     }
   });
 
+
   modul8(join(dir, 'plugins', 'main', 'entry.js'))
     .set('namespace', 'QQ')
-    .set('logging', false)
+    .logger(log.sub().suppress('info', 'debug'))
     .use(new PluginOne())
     .use(new PluginTwo())
     .data(data)
@@ -56,9 +58,9 @@ function generateApp() {
       .add('crazy3', 'window')
     .compile(join(dir, 'output', 'plugins.js'));
 }
-generateApp();
 
-exports["test require#plugins&data"] = function () {
+exports["test plugins"] = function () {
+  generateApp();
   var mainCode = compile(join(dir, 'output', 'plugins.js'));
   brain.isUndefined(mainCode, ".compile() result evaluates successfully");
 
@@ -90,7 +92,7 @@ exports["test require#plugins&data"] = function () {
     brain.eql("QQ.require('data::plug2')." + key, data[key], "require('data::plug2')." + key + " is data['" + key + "']");
     testCount += 4;
   });
-  console.log('require#plugins - completed:', testCount);
+  log.info('completed', testCount, 'plugin tests')
 
   // check that crazy data is included
   brain.ok("QQ.require('data::crazy1')", "require('data::crazy1') exists");
@@ -125,5 +127,5 @@ exports["test require#plugins&data"] = function () {
 
     testCount += 6;
   });
-  console.log('require#data - completed:', testCount);
+  log.info('completed', testCount, 'data tests');
 };

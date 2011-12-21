@@ -1,10 +1,10 @@
-var fs        = require('fs')
-  , join      = require('path').join
-  , brain     = require('./brain')
-  , modul8    = require('../')
-  , dirify    = require('./dirify')
-  , log       = require('logule').sub('ARBITER')
-  , utils     = require('../lib/utils');
+var fs      = require('fs')
+  , join    = require('path').join
+  , modul8  = require('../')
+  , dirify  = require('./lib/dirify')
+  , log     = require('logule').sub('ARBITER')
+  , brain   = require('./lib/brain')()
+  , utils   = require('../lib/utils');
 
 var root = join(__dirname, 'arbiters')
   , output  = join(__dirname, 'output')
@@ -26,11 +26,10 @@ function setup() {
     }
   });
 
-  log.info('compiling');
-
+  //log.trace('compiling');
   modul8(join(root, 'app', 'entry.js'))
     .logger(log.sub().suppress('info', 'warn', 'debug'))
-    .analysis(console.log)
+    //.analysis(console.log)
     .arbiters({'r': 'libVar'})
     .libraries()
       .list(['lib.js'])
@@ -63,6 +62,6 @@ exports["test arbiters"] = function () {
   brain.isUndefined("window.libVar", "window.libVar has been deleted");
   count += 3;
 
-  log.info('completed', count);
+  log.info('completed', count, 'arbiter requires');
 };
 
