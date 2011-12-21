@@ -1,6 +1,5 @@
 var assert = require('assert')
   , fs = require('fs')
-  , rimraf = require('rimraf')
   , modul8 = require('../index.js')
   , join = require('path').join
   , dirify = require('./dirify')
