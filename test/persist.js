@@ -54,7 +54,7 @@ function wasUpdated(type) {
 function makeApp() {
   dirify('persist', {
     shared: { '0.js' : "module.exports = 'ok';" }
-  , libs  : { '0.js' : "(function(){window.libs = 'ok';}());" }
+  , libs  : { '0.js' : "(function(){window.libs = 'ok';}());", '1.js' : 'window.arst = "ok";'}
   , app   : {
       '0.js'         : "module.exports = 'ok';"
     , 'entry.js'     : "exports.app = require('0');" + "exports.shared = require('shared::0');"
@@ -66,8 +66,7 @@ function compile(useLibs, separateLibs) {
   modul8(join(paths.app, 'entry.js'))
     .logger(log.sub().suppress('info', 'debug'))
     .libraries()
-      .list(useLibs ? ['0.js'] : []) //TODO:  there's a case when it's updating even when the lib files are not included!?
-      //.list([])
+      .list(useLibs ? ['0.js'] : [])
       .path(paths.libs)
       .target(separateLibs ? out.libs : false)
     .domains({shared : paths.shared})
@@ -133,7 +132,7 @@ function runCase(k) {
 }
 
 exports["test persist"] = function () {
-  if (true) {
+  if (false) {
     log.info('modified on hold - skipping 16 second test');
     return;
   }

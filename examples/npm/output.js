@@ -36,6 +36,8 @@ Object.keys(config.arbiters).forEach(function (name) {
   });
 });
 
+//TODO: windows path support is needed in here
+
 /**
  * Converts a relative path to an absolute one
  */
@@ -182,6 +184,7 @@ M8.define('backbone/node_modules/underscore/underscore','npm',function(require, 
 
   // Baseline setup
   // --------------
+
 
   // Establish the root object, `window` in the browser, or `global` on the server.
   var root = this;
@@ -2320,8 +2323,8 @@ M8.define('backbone/backbone','npm',function(require, module, exports){
 
 (function(){
 M8.define('app','app',function(require, module, exports){
-var backbone = require('backbone');
-
+var backbone = require('npm::backbone');
+//
 if (_) {
   alert('found backbone '+backbone.VERSION);
 }

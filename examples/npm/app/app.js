@@ -1,5 +1,5 @@
-var backbone = require('backbone');
-
+var backbone = require('npm::backbone');
+//
 if (_) {
   alert('found backbone '+backbone.VERSION);
 }
