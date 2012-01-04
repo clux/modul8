@@ -1,14 +1,15 @@
 TODO
 ==================
-  * Use detective's new caching layer?
+  * support windows paths in require.js - include path.js?
+  * add intelligent npm code on the client to try various branches
 
-Upcomming 0.15.0 / Xmas?
+0.15.0 / 2011-12-28
 ==================
+  * require parsing is now done with substack's caching layer around detective: deputy - this gives a great speedup for large files
   * npm module support (see npm docs for details)
-  * windows support
   * analysis().hide('domainName') now works [regression]
   * Coffee-Script has to be registered [only work programmatically and not via CLI]
-  * CLI plugin usage is deprecated
+  * plugin usage via CLI is deprecated - was a bad and clunky way of doing things
 
 0.14.2 / 2011-12-07
 ==================
