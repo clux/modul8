@@ -1,9 +1,6 @@
-var backbone = require('npm::backbone');
+var backbone = require('npm::backbone')
+  , _ = require('npm::underscore');
 
-if (_) {
-  alert('found backbone '+backbone.VERSION);
-}
-else {
-  alert('npm require of backbone failed');
-}
+alert('found backbone ' + backbone.VERSION + ', and underscore: ' + _.VERSION);
+
 
