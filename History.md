@@ -1,14 +1,16 @@
 TODO
 ==================
-  * support windows paths in require.js - include path.js?
-  * add intelligent npm code on the client to try various branches
+  * support windows paths in require.js - include path.win32.js?
+  * npm docs
+  * npm tests
 
-0.15.0 / 2011-12-28
+0.15.0 / 2012-01-??
 ==================
-  * require parsing is now done with substack's caching layer around detective: deputy - this gives a great speedup for large files
-  * npm module support (see npm docs for details)
+  * require parsing is now done with substack's caching layer around detective: deputy - NB: greatly speeds up analysis on large code bases
+  * proper npm module support (see new npm docs)
+  * separate libs file is now also recompiled on deletion
   * analysis().hide('domainName') now works [regression]
-  * Coffee-Script has to be registered [only work programmatically and not via CLI]
+  * Coffee-Script has to be registered [only works programmatically and not via CLI]
   * plugin usage via CLI is deprecated - was a bad and clunky way of doing things
 
 0.14.2 / 2011-12-07
