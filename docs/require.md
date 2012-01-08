@@ -10,15 +10,11 @@ There are four different ways to use require from your application code:
 
 You can indicate a relative require by using either the `./` prefix, or the folder traversing `../` prefix. Going up folders is done by chaining on `../` strings.
 
-**Note** that all the `../` chaining has to happen in the beginning of the require string (easy convention on the client). In other words:
-
-- `require('./../subfolder/../basemodule.js')` **is not legal** while `require('./../basemodule.js')` **is**.
-
 #### Absolutely
 
 - `require('subfolder/module.js')` - Can resolve subfolder/module.js on any domain - regardless of what subfolder or domain you are in - but **will scan the current domain first**.
 
-**NB**: Not recommended for relative use, collisions can appear.
+**NB**: Not recommended as a shorter substitution to relative requires, as collisions can appear.
 
 #### Domain Specific
 

@@ -22,7 +22,7 @@ E.g. `require('npm::backbone')` would pull in underscore, but `require('undersco
 For underscore to also be easily requirable (and to prevent pulling in copies or different versions),
 you should install dependencies like underscore in root, before installing backbone.
 
-In other words, if you a module's dependencies as well, try to make `npm list` look like this:
+In other words, if you want a module's dependencies as well, try to make `npm list` look like this:
 
     app
      ├───backbone

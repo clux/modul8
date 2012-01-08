@@ -150,6 +150,11 @@ It removes the global shortcut(s) from your application code and inserts them on
 Why we (can and sometimes) want to do this is explained in the [modularity doc](modularity.html), whilst
 the feature is fully documented in the [API](api.html).
 
+#### node modules
+The `npm` domain is really a domain with you local node modules folder as its root. It's, however, heavily special cased to deal with absolute requires internal to that domain.
+This means you can use a lot of npm installable modules right out of the box and with full control (via the logged dependency tree), over what is included.
+Usage is documented in the [npm doc](npm.html)
+
 #### Live Extensions
 Because we have a `require()` function available in all the application code, and because this is synchronous (in the sense that it has been resolved on the server already),
 we migth want to extend our requiable data with results from third-party asynchronous script loaders.
