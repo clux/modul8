@@ -181,6 +181,24 @@ This can be changed by configuring arbiters for the globals in the require syste
 Libraries passed to `list()` must be in the same order you would normally order your script tags.
 modul8 does not scan libraries in any way.
 
+## Using node modules
+Set the node modules directory using the `.npm()` command as follows.
+
+    modul8('./app/client/app.js')
+      .npm('./node_modules')
+      .compile('./out.js');
+
+Getting node modules to work on the client requires these modules to be not server reliant.
+modul8 goes a long way trying to integrate common node modules (like path), but not everything is going to work.
+If you rely on fs file IO, for instance, things will not work.
+
+Everything in the npm folder specified can be required, but it is optimized to obtain modules in the root.
+Modules are required like on the server, but you have to specify the npm domain to avoid accidentally pulling in big files when requiring from the main domain.
+
+E.g. `require('npm::backbone')` would pull in underscore, but `require('backbone')` would not work, unless you arbitered it manually.
+For more information, see the modul8 [npm docs](npm.html).
+
+
 ## Middleware
 
 Middleware come in two forms: pre-processing and post-processing:
