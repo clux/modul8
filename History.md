@@ -1,10 +1,11 @@
 TODO
 ==================
   * support windows paths in require.js - include path.win32.js?
-  * npm docs
+  * write a slimmer api doc
   * npm tests
+  * better handling of analysis elements from npm domain
 
-0.15.0 / 2012-01-??
+0.15.0 / 2012-01-08
 ==================
   * require parsing is now done with substack's caching layer around detective: deputy - NB: greatly speeds up analysis on large code bases
   * proper npm module support (see new npm docs)
