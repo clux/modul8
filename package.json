@@ -1,6 +1,6 @@
 {
   "name": "modul8",
-  "description": "Extensible CommonJS browser code sharing",
+  "description": "Extensible CommonJS Code Packager and Analyzer",
   "version": "0.14.2",
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
   "repository": {

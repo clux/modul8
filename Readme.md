@@ -1,4 +1,4 @@
-# Extensible CommonJS browser code sharing ![travis build status](https://secure.travis-ci.org/clux/modul8.png)
+# Extensible CommonJS Code Packager and Analyzer ![travis build status](https://secure.travis-ci.org/clux/modul8.png)
 ## Intro
 
 Write a `main.js` as the application entry point
@@ -63,10 +63,10 @@ modul8 is an extensible CommonJS code packager and analyzer for JavaScript and A
 Applications are recursively analyzed for dependencies from an entry point and will pull in + compile just what is needed.
 
 Code can be shared with the server by isolating modules/libraries in  shared _domains_. This means stand alone logic
-can exist on the server and be referenced via a normal `require(dir+'module')`, but also be referenced via `require('shared::module')` on the client.
+can exist on the server and be referenced via a normal `require(dir + 'module')`, but also be referenced via `require('shared::module')` on the client.
 
-To give you full overview and control over what code is pulled in, modul8 automatically generates a depedency tree. This allows
-fast analysis and identification of extraneous links, and becomes a very important tool for refactoring.
+To give you full overview and control over what code is pulled in, modul8 automatically generates a per-file depedency tree. This allows
+fast analysis and identification of extraneous links, and becomes a very useful tool for refactoring.
 
 modul8 supports live extensions of certain exports containers via third party script loaders, and server side data injection at compile time.
 
@@ -75,6 +75,7 @@ Lastly, modul8 aims to eliminate most global variables from your code. It does s
  - Encapsulate all exported data in the closure inhabited by `require()`
  - Incorporate globally available libraries into the module system via automatic arbiters
 
+Additionally, node modules can be required (if installed) as if on the server!
 To dive in properly; consult the [api docs](http://clux.github.com/modul8/docs/api.html).
 
 ## Features
@@ -83,9 +84,10 @@ To dive in properly; consult the [api docs](http://clux.github.com/modul8/docs/a
  - simple and safe code sharing between the server and the client
  - dynamic resolution and compilation of dependencies server-side
  - compatible with JavaScript, CoffeeScript or (configurable) AltJS languages
- - low footprint: ~1kB (minified/gzipped) output size inflation
+ - low footprint: <2kB (minified/gzipped) output size inflation
  - enforces modularity best practices and logs an npm style dependency tree
  - can inject data to require dynamically from the server or live from the client
+ - can require npm installed modules
  - easy to write, modular plugins allows super easy client extensions with server logic and data
  - minimizes global usage, encapsulates exports in closures, absorbs library globals
  - only rebuilds on repeat calls if necessary (files modified || options changed)

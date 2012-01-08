@@ -1,15 +1,8 @@
 # require()
 
-modul8's `require()` works hand in hand with a private `define()` call that will wrap each module in the compiled source.
-This ensures that each module has the necessary context for the `require()` calls it will make. All this context is stored via closures and will be hidden from you.
-
 ## Ways to require
 
-There are four different ways to use require:
-
-#### Absolutely
-
-- `require('subfolder/module.js')` - Can resolve subfolder/module.js on any domain - regardless of what subfolder or domain you are in - but **will scan the current domain first**.
+There are four different ways to use require from your application code:
 
 #### Relatively
 
@@ -21,6 +14,12 @@ You can indicate a relative require by using either the `./` prefix, or the fold
 
 - `require('./../subfolder/../basemodule.js')` **is not legal** while `require('./../basemodule.js')` **is**.
 
+#### Absolutely
+
+- `require('subfolder/module.js')` - Can resolve subfolder/module.js on any domain - regardless of what subfolder or domain you are in - but **will scan the current domain first**.
+
+**NB**: Not recommended for relative use, collisions can appear.
+
 #### Domain Specific
 
 - `require('shared::val.js')` - Like absolute requires, but specifies the only domain which will be searched. If you want to do relative domain specific requires,
@@ -28,6 +27,10 @@ just use a pure relative require where the current domain is implicitly assumed.
 
 Note that `require('dom::')` will look for an index file in the root of that domain. So if you want to minimize the cross-domain interaction,
 export everything relevant from there.
+
+##### NPM Domain
+
+- `require('npm::underscore')` - Will find the files from the specified node modules root. Node modules will show up in the dependency tree as a single file (SOON).
 
 ##### Data Domain
 
@@ -56,12 +59,11 @@ the following warning does not apply to you.
 ### Extension Priority
 To see why, consider a simplified resolver algorithm from the server
 
-    name = require input, domain = domain of requiree
-    while(domain)
-      return true if exists(domain + name)
-      return true if exists(domain + name + '.js')
-      return true if exists(domain + name + altJsExt) //optional
-      domain = nextDomain // if applicable (see require priority below)
+    name = require input
+    for domain in domainsScannable
+      return true if exists(join(domain, name))
+      return true if exists(join(domain, name + '.js'))
+      return true if exists(join(domain, name + altJsExt)) //optional
     return false
 
 If you use _CoffeeScript_ or other registered compilers for AltJS languages,
@@ -92,7 +94,10 @@ It is not a complete failsafe, but it helps force usage so that the problem abov
 
 Note that the error will only be thrown after the `.analysis()` dependency tree was logged, allowing you to pinpoint the careless `require()`.
 
-## Folders Priority
+## Require Priority
+Require priority will mostly follow the nodejs require algorithm, but with some slight modifications to get cross domain requires working without require.paths.
+
+### Folders Priority
 
 Require strings that contain a trailing slash or does not point to a file directly, will try to resolve the name as a folder and look for a file named `index` following the above logic.
 The following will all resolve a folder, but the last has the possiblility of a collision with a file of the same name as the folder:
@@ -101,14 +106,16 @@ The following will all resolve a folder, but the last has the possiblility of a 
     require('controllers/'); //looks for controllers/index+extension
     require('controllers'); //looks for controllers+extension then controllers/index+extension
 
-## General Priority
+### General Priority
 
 Requires are attempted resolved with the following priority:
 
     if require string is relative
-      resolve absolutized require string on current domain
+      resolve require string using current path on current domain
+    if require string includes npm prefix or is from npm domain
+      require node modules from builtins or from current node_modules subdir or above one recursively
     else if require string includes domain prefix
-      resolve require string on specified domain
+      resolve require string on specified domain absolutely
     else //try arbiter search
       resolve require string on the M8 domain
 
@@ -119,8 +126,3 @@ Requires are attempted resolved with the following priority:
 
 In other words, collisions should not occur unless you have duplicate files in different domains and
 you are overly relaxed about your domain specifiers, or you have actual files with arbiter names lying around.
-
-## Hooking into define
-
-modul8 defines way to help you attach objects/fn to certain domains both live on the client and from the server.
-The [API docs](api.html) have full information on these features.
