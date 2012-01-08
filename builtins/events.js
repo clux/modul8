@@ -1,6 +1,4 @@
-if (!process.EventEmitter) process.EventEmitter = function () {};
-
-var EventEmitter = exports.EventEmitter = process.EventEmitter;
+var EventEmitter = function () {};
 var isArray = typeof Array.isArray === 'function'
     ? Array.isArray
     : function (xs) {
@@ -169,3 +167,5 @@ EventEmitter.prototype.listeners = function(type) {
   }
   return this._events[type];
 };
+
+exports.EventEmitter = EventEmitter;
