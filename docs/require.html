@@ -12,24 +12,16 @@
       <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
       <li><a href="plugins.html" title="available plugins, and how to write them">Plugins</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
+      <li><a href="npm.html" title="using node modules">npm</a></li>
       <li><a href="xcjs.html" title="Extended CommonJS: basic and extensions">X-CommonJS</a></li>
       <li><a href="modularity.html" title="Modularity: issues and advice">Modularity</a></li>
     </ul>
     <div id="content">
 <h1>require()</h1>
 
-<p>modul8's <code>require()</code> works hand in hand with a private <code>define()</code> call that will wrap each module in the compiled source.
-This ensures that each module has the necessary context for the <code>require()</code> calls it will make. All this context is stored via closures and will be hidden from you.</p>
-
 <h2>Ways to require</h2>
 
-<p>There are four different ways to use require:</p>
-
-<h4>Absolutely</h4>
-
-<ul>
-<li><code>require('subfolder/module.js')</code> - Can resolve subfolder/module.js on any domain - regardless of what subfolder or domain you are in - but <strong>will scan the current domain first</strong>.</li>
-</ul>
+<p>There are four different ways to use require from your application code:</p>
 
 <h4>Relatively</h4>
 
@@ -39,11 +31,13 @@ This ensures that each module has the necessary context for the <code>require()<
 
 <p>You can indicate a relative require by using either the <code>./</code> prefix, or the folder traversing <code>../</code> prefix. Going up folders is done by chaining on <code>../</code> strings.</p>
 
-<p><strong>Note</strong> that all the <code>../</code> chaining has to happen in the beginning of the require string (easy convention on the client). In other words:</p>
+<h4>Absolutely</h4>
 
 <ul>
-<li><code>require('./../subfolder/../basemodule.js')</code> <strong>is not legal</strong> while <code>require('./../basemodule.js')</code> <strong>is</strong>.</li>
+<li><code>require('subfolder/module.js')</code> - Can resolve subfolder/module.js on any domain - regardless of what subfolder or domain you are in - but <strong>will scan the current domain first</strong>.</li>
 </ul>
+
+<p><strong>NB</strong>: Not recommended as a shorter substitution to relative requires, as collisions can appear.</p>
 
 <h4>Domain Specific</h4>
 
@@ -54,6 +48,12 @@ just use a pure relative require where the current domain is implicitly assumed.
 
 <p>Note that <code>require('dom::')</code> will look for an index file in the root of that domain. So if you want to minimize the cross-domain interaction,
 export everything relevant from there.</p>
+
+<h5>NPM Domain</h5>
+
+<ul>
+<li><code>require('npm::underscore')</code> - Will find the files from the specified node modules root. Node modules will show up in the dependency tree as a single file (SOON).</li>
+</ul>
 
 <h5>Data Domain</h5>
 
@@ -75,7 +75,7 @@ This does not require a domain prefix because it is assumed this domain gets suf
 </ul>
 
 <p>Note that if a jQuery.js file is found on the current domain, however, it will gain priority over the arbiter domain.
-If this coexistence is necessary, any arbiters must be  required by specifying the internal domain name: <code>$ = require('M8::jQuery')</code>.</p>
+If this coexistence is necessary, any arbiters must be  required by specifying the internal domain name: <code>var $ = require('M8::jQuery')</code>.</p>
 
 <h2>File extensions</h2>
 
@@ -89,13 +89,11 @@ the following warning does not apply to you.</p>
 
 <p>To see why, consider a simplified resolver algorithm from the server</p>
 
-<pre><code>name = require input, domain = domain of requiree
-while(domain)
-  return true if exists(domain + name)
-  return true if exists(domain + name + '.js')
-  return true if exists(domain + name + '.coffee')
-  return true if exists(domain + name + altJsExt) //optional
-  domain = nextDomain // if applicable (see require priority below)
+<pre><code>name = require input
+for domain in domainsScannable
+  return true if exists(join(domain, name))
+  return true if exists(join(domain, name + '.js'))
+  return true if exists(join(domain, name + altJsExt)) //optional
 return false
 </code></pre>
 
@@ -108,7 +106,7 @@ then it will gain priority over your normal files if you do not specify the exte
 <p>The corollary to this extension priority is that we can't accurately distinguish between two extensions on the client when we omit the extension.
 Thus, since omitting the extension is generally advantageous for brevity, we have decided to simply truncate the extension on the client.</p>
 
-<p>This is advantageous also because it makes the require code leaner, more perfomant, and each <strong>dom::name pair is unique</strong> as they should be.</p>
+<p>This is advantageous also because it makes the require code leaner, more perfomant, and each <strong>dom::name pair is unique</strong>, as they should be.</p>
 
 <p>You can still have a <code>.js</code> duplicate of your <code>.coffee</code> file in a directory, but you then have to explicitly define <code>.coffee</code> so that the server
 can pre-pick the right one to include for you.</p>
@@ -122,18 +120,22 @@ can pre-pick the right one to include for you.</p>
 <li>app::subpath/module.otherExt</li>
 </ul>
 
-<p>It is not a complete failsafe, we are aware, but it helps force usage so that the problem above does not occur.</p>
+<p>It is not a complete failsafe, but it helps force usage so that the problem above does not occur.</p>
 
 <p><strong>In short</strong>: try not to have different extension versions of your files in the same directory or you can run into the following two problems:</p>
 
 <ul>
-<li><strong>A)</strong> your Coffee changes wont do anything because you are unknowingly requiring a JS version that got in the directory</li>
+<li><strong>A)</strong> your Coffee changes won't do anything because you are unknowingly requiring a JS version that got in the directory</li>
 <li><strong>B)</strong> you will have a conflict error thrown at you to help you not challenging fate with techniques that can result in problem A</li>
 </ul>
 
 <p>Note that the error will only be thrown after the <code>.analysis()</code> dependency tree was logged, allowing you to pinpoint the careless <code>require()</code>.</p>
 
-<h2>Folders Priority</h2>
+<h2>Require Priority</h2>
+
+<p>Require priority will mostly follow the nodejs require algorithm, but with some slight modifications to get cross domain requires working without require.paths.</p>
+
+<h3>Folders Priority</h3>
 
 <p>Require strings that contain a trailing slash or does not point to a file directly, will try to resolve the name as a folder and look for a file named <code>index</code> following the above logic.
 The following will all resolve a folder, but the last has the possiblility of a collision with a file of the same name as the folder:</p>
@@ -143,14 +145,16 @@ require('controllers/'); //looks for controllers/index+extension
 require('controllers'); //looks for controllers+extension then controllers/index+extension
 </code></pre>
 
-<h2>General Priority</h2>
+<h3>General Priority</h3>
 
 <p>Requires are attempted resolved with the following priority:</p>
 
 <pre><code>if require string is relative
-  resolve absolutized require string on current domain
+  resolve require string using current path on current domain
+if require string includes npm prefix or is from npm domain
+  require node modules from builtins or from current node_modules subdir or above one recursively
 else if require string includes domain prefix
-  resolve require string on specified domain
+  resolve require string on specified domain absolutely
 else //try arbiter search
   resolve require string on the M8 domain
 
@@ -161,11 +165,6 @@ if none of the above true
 </code></pre>
 
 <p>In other words, collisions should not occur unless you have duplicate files in different domains and
-you are overly relaxed about your domain specifiers, or you have actual files with arbiter names lying around.</p>
-
-<h2>Hooking into define</h2>
-
-<p>modul8 defines way to help you attach objects/fn to certain domains both live on the client and from the server.
-The <a href="api.html">API docs</a> have full information on these features.</p>    </div>
+you are overly relaxed about your domain specifiers, or you have actual files with arbiter names lying around.</p>    </div>
   </body>
 </html>

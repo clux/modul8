@@ -12,6 +12,7 @@
       <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
       <li><a href="plugins.html" title="available plugins, and how to write them">Plugins</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
+      <li><a href="npm.html" title="using node modules">npm</a></li>
       <li><a href="xcjs.html" title="Extended CommonJS: basic and extensions">X-CommonJS</a></li>
       <li><a href="modularity.html" title="Modularity: issues and advice">Modularity</a></li>
     </ul>
@@ -214,6 +215,25 @@ This can be changed by configuring arbiters for the globals in the require syste
 
 <p>Libraries passed to <code>list()</code> must be in the same order you would normally order your script tags.
 modul8 does not scan libraries in any way.</p>
+
+<h2>Using node modules</h2>
+
+<p>Set the node modules directory using the <code>.npm()</code> command as follows.</p>
+
+<pre><code>modul8('./app/client/app.js')
+  .npm('./node_modules')
+  .compile('./out.js');
+</code></pre>
+
+<p>Getting node modules to work on the client requires these modules to be not server reliant.
+modul8 goes a long way trying to integrate common node modules (like path), but not everything is going to work.
+If you rely on fs file IO, for instance, things will not work.</p>
+
+<p>Everything in the npm folder specified can be required, but it is optimized to obtain modules in the root.
+Modules are required like on the server, but you have to specify the npm domain to avoid accidentally pulling in big files when requiring from the main domain.</p>
+
+<p>E.g. <code>require('npm::backbone')</code> would pull in underscore, but <code>require('backbone')</code> would not work, unless you arbitered it manually.
+For more information, see the modul8 <a href="npm.html">npm docs</a>.</p>
 
 <h2>Middleware</h2>
 
@@ -437,15 +457,15 @@ it can be entered as a string, but if this is the same as as the arbiter's name,
 <li><code>require('$')</code> and <code>require('jQuery')</code> would both resolve whereas above only <code>require('jQuery')</code> would.</li>
 </ul>
 
-<h2>Registering a Compile-to-JS Language</h2>
+<h2>CoffeeScript and Compile-to-JS Languages</h2>
 
 <p>It is possible to extend the parsers capabilities by sending the extension and compiler down to modul8.
-For instance, registering Coffee-Script (if it wasn't already done automatically) would be done like this</p>
+For instance, registering Coffee-Script (is done like this:</p>
 
 <pre><code>var coffee = require('coffee-script');
 modul8('./client/app.js')
-  .register('.coffee', function(code, bare){
-    coffee.compile(code, {bare:bare})
+  .register('.coffee', function (code, bare){
+    coffee.compile(code, {bare: bare})
   })
   .compile('./out.js');
 </code></pre>
@@ -453,9 +473,9 @@ modul8('./client/app.js')
 <p>Note the boolean <code>bare</code> option is to let modul8 fine tune when it is necessary to include the safety wrapper - if the compile to language includes one by default.</p>
 
 <p>CoffeeScript uses a safety wrapper by default, but it is irrelevant for application code as we define-wrap each file in a function anyway.
-However, if you included library code written in CoffeeScript, then modul8 will call the compile function with bare:false.</p>
+However, if you included library code written in CoffeeScript, then modul8 will call the compile function with bare = false.</p>
 
-<p>You should implement the bare compilation option if your language supports it, as an optimization (less function wrapping for app code). If your code already contains wrapper,
-or if your language always safety-wraps, then this is fine too.</p>    </div>
+<p>You should implement the bare compilation option if your language supports it, as an optimization (less function wrapping for app code).
+If your code already contains wrapper, or if your language always safety-wraps, then this is fine too.</p>    </div>
   </body>
 </html>

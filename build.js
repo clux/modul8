@@ -4,7 +4,7 @@ var fs = require('fs')
 function generateDocs() {
   var head = fs.readFileSync('head.html', 'utf8')
     , tail = fs.readFileSync('tail.html', 'utf8')
-    , files = ['api', 'cli', 'xcjs', 'plugins', 'modularity', 'require'];
+    , files = ['api', 'cli', 'xcjs', 'plugins', 'modularity', 'npm', 'require'];
 
   files.forEach(function (file) {
     var out = fs.readFileSync('../docs/' + file + '.md', 'utf8');

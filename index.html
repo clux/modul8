@@ -1,21 +1,22 @@
 <html>
   <head>
-    <title>modul8 - Extensible CommonJS browser code sharing</title>
+    <title>modul8 - Extensible CommonJS Code Packager and Analyzer</title>
     <meta charset="utf8">
     <link rel='stylesheet' href='main.css' />
   </head>
   <body>
     <h1>modul8</h1>
-    <span class="description">Extensible CommonJS browser code sharing via <a href="http://nodejs.org">NodeJS</a>.</span>
+    <span class="description">Extensible CommonJS Code Packager and Analyzer for <a href="http://nodejs.org">NodeJS</a>.</span>
 
     <ul id="features">
-      <li>(extensible) client side require compatible with JS, Coffee & AltJS</li>
+      <li>(extensible) client side require compatible with JS, Coffee & other AltJS</li>
       <li>share code between the server and the client</li>
       <li>dynamic resolution and compilation of dependencies server-side</li>
-      <li>low footprint: ~1kB (minified/gzipped) output size inflation</li>
+      <li>low footprint: <2kB (minified/gzipped) output size inflation</li>
       <li>enforces modularity best practices, and logs an npm style dependency tree</li>
       <li>inject require data dynamically from the server or live from the client</li>
       <li>minimizes global usage, encapsulates exports in closures, absorbs library globals</li>
+      <li>require npm modules with full control over the dependency tree</li>
       <li>easy to write plugins can package down server side behaviour and data for the client</li>
     </ul>
 
@@ -26,6 +27,7 @@
       <li><a href="docs/cli.html">CLI</a> documentation</li>
       <li><a href="docs/plugins.html">Plugins</a> documentation</li>
       <li><a href="docs/require.html">require()</a> types and priorities</li>
+      <li><a href="docs/npm.html">node modules</a> via npm</li>
       <li><a href="docs/xcjs.html">X-CommonJS</a> basics and extensions</li>
       <li><a href="docs/modularity.html">Modularity</a> issues and advice</li>
     </ul>

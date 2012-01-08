@@ -1,0 +1,79 @@
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>modul8 - Extensible CommonJS browser code sharing</title>
+    <link rel='stylesheet' href='../main.css' />
+  </head>
+  <body class="subpage">
+    <ul id="nav">
+      <li><a href="https://github.com/clux/modul8#readme" title="Source and introduction">Intro</a></li>
+      <li><a href="https://github.com/clux/modul8/tree/master/examples" title="Examples from github source">Examples</a></li>
+      <li><a href="api.html" title="API documentation">API</a></li>
+      <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
+      <li><a href="plugins.html" title="available plugins, and how to write them">Plugins</a></li>
+      <li><a href="require.html" title="require() types and priorities">require</a></li>
+      <li><a href="npm.html" title="using node modules">npm</a></li>
+      <li><a href="xcjs.html" title="Extended CommonJS: basic and extensions">X-CommonJS</a></li>
+      <li><a href="modularity.html" title="Modularity: issues and advice">Modularity</a></li>
+    </ul>
+    <div id="content">
+<h1>npm support</h1>
+
+<h3>Usage</h3>
+
+<p>Set the node modules directory using the <code>.npm()</code> command as follows.</p>
+
+<pre><code>modul8('./app/client/app.js')
+  .npm('./node_modules')
+  .compile('./out.js');
+</code></pre>
+
+<h3>Compatibility</h3>
+
+<p>Getting node modules to work on the client requires these modules to be not server reliant.
+modul8 goes a long way trying to integrate common node modules (like path), but not everything is going to work.
+If you rely on fs file IO, for instance, things will not work.</p>
+
+<h3>Requirability</h3>
+
+<p>Everything in the npm folder specified can be required, but it is optimized to obtain modules in the root.
+Modules are required like on the server, but you have to specify the npm domain to avoid accidentally pulling in big files when requiring from the main domain.</p>
+
+<p>E.g. <code>require('npm::backbone')</code> would pull in underscore, but <code>require('underscore')</code> would not necessarily work.</p>
+
+<p><code>require('npm::backbone')</code> with backbone installed, would pull its underscore dependency from either backbone/node_modules/underscore, or underscore.
+For underscore to also be easily requirable (and to prevent pulling in copies or different versions),
+you should install dependencies like underscore in root, before installing backbone.</p>
+
+<p>In other words, if you want a module's dependencies as well, try to make <code>npm list</code> look like this:</p>
+
+<pre><code>app
+ ├───backbone
+ └───underscore
+</code></pre>
+
+<p>rather than this:</p>
+
+<pre><code>app
+ └──┬backbone
+    └───underscore
+</code></pre>
+
+<h2>Builtins</h2>
+
+<p>Certain core node modules are conditionally included if they are required.
+This is to allow npm modules that only use these core modules in a browser compatible way to work on the client.</p>
+
+<p>Builtins currently include:</p>
+
+<ul>
+<li>path</li>
+<li>events</li>
+</ul>
+
+<p>Node modules can require buitins as normal, and the app domain can require them from the npm domain directly, e.g. <code>require('npm::path')</code>.</p>
+
+<p>Note that path is always included, as it is used ensure the require algorithm used is identical on the server and the browser.
+Therefore, requiring it comes at no extra size cost.</p>    </div>
+  </body>
+</html>
