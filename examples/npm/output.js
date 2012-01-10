@@ -1,7 +1,7 @@
 (function(){
 window.M8 = {data:{}, path:{}};
 
-// npm::path first
+// include npm::path
 (function (exports) {
  function filter (xs, fn) {
     var res = [];
@@ -141,10 +141,10 @@ exports.extname = function(path) {
 }(window.M8.path));
 (function(){
 /**
- * modul8 v0.14.2
+ * modul8 v0.15.0
  */
 
-var config    = {"namespace":"M8","domains":["app","npm"],"arbiters":{},"npmTree":{"_builtIns":["events"],"backbone":{"main":"backbone/backbone.js","deps":{"underscore":{"main":"backbone/node_modules/underscore/underscore.js","deps":{}}}},"underscore":{"main":"underscore/underscore.js","deps":{}}},"builtIns":["path","events"],"slash":"/"} // replaced
+var config    = {"namespace":"M8","domains":["app","npm"],"arbiters":{},"npmTree":{"backbone":{"main":"backbone/backbone.js","deps":{"underscore":{"main":"backbone/node_modules/underscore/underscore.js","deps":{}}}},"underscore":{"main":"underscore/underscore.js","deps":{}}},"builtIns":["path","events"],"slash":"/"} // replaced
   , ns        = window[config.namespace]
   , path      = ns.path
   , slash     = config.slash
@@ -345,6 +345,9 @@ ns.external = function (name, exported) {
 };
 
 }());
+
+// node builtins
+
 M8.define('events','npm',function (require, module, exports) {
 var EventEmitter = function () {};
 var isArray = typeof Array.isArray === 'function'
@@ -3667,10 +3670,9 @@ M8.define('underscore/underscore','npm',function (require, module, exports) {
 
 });
 
-// app code - safety wrap
+// app code - safety wrapped
 
 
-(function(){
 M8.define('app','app',function (require, module, exports) {
 var backbone  = require('npm::backbone')
   , _         = require('npm::underscore')
@@ -3681,5 +3683,4 @@ alert('found backbone ' + backbone.VERSION + ', and underscore: ' + _.VERSION + 
 
 
 });
-}());
 }());

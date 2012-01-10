@@ -1,7 +1,7 @@
 (function(){
 window.QQ = {data:{}, path:{}};
 
-// npm::path first
+// include npm::path
 (function (exports) {
  function filter (xs, fn) {
     var res = [];
@@ -143,10 +143,10 @@ QQ.data.test = {"hi": "there"}
 ;
 (function(){
 /**
- * modul8 v0.14.2
+ * modul8 v0.15.0
  */
 
-var config    = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"npmTree":{},"builtIns":["path"],"slash":"/"} // replaced
+var config    = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"npmTree":{},"builtIns":["path","events"],"slash":"/"} // replaced
   , ns        = window[config.namespace]
   , path      = ns.path
   , slash     = config.slash
@@ -231,7 +231,7 @@ function makeRequire(dom, pathName) {
     }
 
     if (!isAbsolute(reqStr)) {
-      console.log('relative resolve:', reqStr, 'from domain:', dom, 'join:', path.join(path.dirname(pathName), reqStr));
+      //console.log('relative resolve:', reqStr, 'from domain:', dom, 'join:', path.join(path.dirname(pathName), reqStr));
       return resolve([dom], path.join(path.dirname(pathName), reqStr));
     }
 
@@ -245,40 +245,29 @@ function makeRequire(dom, pathName) {
 
     // require from/to npm domain - sandbox and join in current path if exists
     if (dom === 'npm' || (domSpecific && sDomain === 'npm')) {
-      if (builtIns.indexOf(reqStr) >= 0 || domSpecific) {
+      if (builtIns.indexOf(reqStr) >= 0) {
         return resolve(['npm'], reqStr); // => can put builtIns on npm::
       }
-      // we include a hashmap tree of require strings to full export path
-      /*
-      npm {
-        backbone: {
-          main: 'backbone/backbone'
-          deps: [
-            underscore: {
-              main: 'backbone/node_modules/underscore/underscore' || 'underscore/underscore' depending on installation
-            }
-          ]
-        }
+      if (domSpecific) {
+        return resolve(['npm'], config.npmTree[reqStr].main);
       }
-      */
-      // if here, this is a from-npm absolute request - check tree
-      //TODO: depending on whether multiple slash types can coexist, conditionally split this based on found slash type
+      // else, absolute: use included hashmap tree of npm mains
 
-      // can not just split path.join(pathName, 'node_modules', reqStr), as then if requiree was a lib dir, it would fail
-      // therefore find root of module referenced in pathName, by counting number of node_modules referenced
+      // find root of module referenced in pathName, by counting number of node_modules referenced
       // this ensures our startpoint, when split around /node_modules/ is an array of modules requiring each other
-      var order = pathName.split('node_modules').length;
-      var root = pathName.split(slash).slice(0, Math.max(2 * (order - 2) + 1, 0)).join(slash);
+      var order = pathName.split('node_modules').length; //TODO: depending on whether multiple slash types can coexist, conditionally split this based on found slash type
+      var root = pathName.split(slash).slice(0, Math.max(2 * (order - 2) + 1, 1)).join(slash);
 
       // server side resolver has figured out where the module resides and its main
       // use resolvers passed down npmTree to get correct require string
-      var branch = root.split(slash + 'node_modules' + slash).concat(reqStr); //TODO: fails inside lib library.. also on server..
+      var branch = root.split(slash + 'node_modules' + slash).concat(reqStr);
+      //console.log(root, order, reqStr, pathName, branch);
       // use the branch array to find the keys used to traverse the npm tree, to find the key of this particular npm module's main in stash
       var position = config.npmTree[branch[0]];
       for (var i = 1; i < branch.length; i += 1) {
         position = position.deps[branch[i]];
         if (!position) {
-          console.error('expected vertex: ' + branch[i] + ' missing from current npm tree branch ' + pathName);
+          console.error('expected vertex: ' + branch[i] + ' missing from current npm tree branch ' + pathName); // should not happen, remove eventually
           return;
         }
       }
@@ -381,10 +370,9 @@ exports.isLeapYear = function(yr) {
 
 });
 
-// app code - safety wrap
+// app code - safety wrapped
 
 
-(function(){
 QQ.define('bigthing/sub2','app',function (require, module, exports) {
 
 module.exports = function(str) {
@@ -434,5 +422,4 @@ test = require('data::test');
 console.log('injected data:', test);
 
 });
-}());
 }());
