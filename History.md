@@ -4,6 +4,13 @@ TODO
   * write a slimmer api doc
   * npm tests
   * better handling of analysis elements from npm domain
+  * decide on better logging interface when logule dependency injection code is done
+
+0.15.1 / 2012-01-24
+==================
+  * Better output formatting
+  * Fixed hickup in resolver code which failed to resolve properly nested npm modules
+  to inject suppressed logule sub to control server output
 
 0.15.0 / 2012-01-08
 ==================
