@@ -89,19 +89,6 @@ Load them with the `-b` flag, supplying a path as the key, and a list of files i
 
     $ modul8 app/entry.js -b libs/=jQuery.js,jQuery.ui.js,plugins/datepicker.js
 
-### Loading Plugins
-It requires a relative or absolute path to the plugins root, and an optional list of options
-to pass as strings to the `require(pathOrNameOfModule).Plugin` constructor.
-
-    $ modul8 app/entry.js -g pathToModule=opt1,opt2
-
-This would be the equivalent of doing
-
-    var Plugin = require('pathToModule');
-    modul8('./app/entry.js')
-      .use(new Plugin('opt1', 'opt2'))
-      .compile(console.log)
-
 For a blank constructor call, do not use `-g pathToModule=` as this is used to pass the empty string as the first parameter.
 Instead omit the equals sign: `-g pathToModule`
 
