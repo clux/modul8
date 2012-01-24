@@ -68,9 +68,6 @@ program.on('--help', function () {
   console.log('    # wait for the DOM using the jQuery function');
   console.log('    $ modul8 app/entry.js -w jQuery');
   console.log('');
-  console.log('    # specify plugins');
-  console.log('    $ modul8 app/entry.js -g m8-templation=template_path,.jade');
-  return console.log('');
 });
 
 function complete() {
