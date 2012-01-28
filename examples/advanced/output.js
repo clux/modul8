@@ -143,7 +143,7 @@ QQ.data.test = {"hi": "there"}
 ;
 (function(){
 /**
- * modul8 v0.15.0
+ * modul8 v0.15.1
  */
 
 var config    = {"namespace":"QQ","domains":["app","shared"],"arbiters":{"monolith":["monolith"]},"npmTree":{},"builtIns":["path","events"],"slash":"/"} // replaced

@@ -141,7 +141,7 @@ exports.extname = function(path) {
 }(window.M8.path));
 (function(){
 /**
- * modul8 v0.15.0
+ * modul8 v0.15.1
  */
 
 var config    = {"namespace":"M8","domains":["app","npm"],"arbiters":{},"npmTree":{"backbone":{"main":"backbone/backbone.js","deps":{"underscore":{"main":"backbone/node_modules/underscore/underscore.js","deps":{}}}},"underscore":{"main":"underscore/underscore.js","deps":{}}},"builtIns":["path","events"],"slash":"/"} // replaced

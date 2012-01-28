@@ -19,7 +19,8 @@ Showing basic npm integration with backbone and its underscore dependency.
     app::app
      ├──┬npm::backbone
      │  └───npm::underscore
-     └───npm::underscore
+     ├───npm::underscore
+     └───npm::events
 
 Note that there are two different versions of underscore present. As per npm priority, backbone will first look for its local copy first.
 If underscore were to be uninstalled from backbone, then the outer one would be resolved.

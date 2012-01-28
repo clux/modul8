@@ -141,7 +141,7 @@ exports.extname = function(path) {
 }(window.M8.path));
 (function(){
 /**
- * modul8 v0.15.0
+ * modul8 v0.15.1
  */
 
 var config    = {"namespace":"M8","domains":["app","shared"],"arbiters":{},"npmTree":{},"builtIns":["path","events"],"slash":"/"} // replaced
