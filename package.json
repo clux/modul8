@@ -18,8 +18,9 @@
     "commander": "~0.3.3",
     "uglify-js": "~1.1.1",
     "deputy": "~0.0.0",
-    "underscore": "~1.2.3",
-    "logule": "~0.5.5"
+    "underscore": "~1.3.1",
+    "logule": "~0.5.5",
+    "topiary": "~0.0.1"
   },
   "devDependencies": {
     "zombie": "~0.12.1",
