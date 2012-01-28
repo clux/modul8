@@ -6,10 +6,11 @@ TODO
   * better handling of analysis elements from npm domain
   * decide on better logging interface when logule dependency injection code is done
 
-0.15.2 / 2012-01-28
+0.15.3 / 2012-01-28
 ==================
   * Factor tree printing code out to a separate module and use that: topiary
   * Allow node modules to not include extensions on package.json's main
+  * 0.15.2 got lost to an accidental ctrl-c mid publish
 
 0.15.1 / 2012-01-24
 ==================
