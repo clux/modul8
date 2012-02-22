@@ -257,33 +257,37 @@ Options can be set by chaining them on `modul8()` using the `set(option, value)`
       .compile('./out.js');
 
 
-### Logging
-Logging has 3 levels at the moment
+### Client Side Logging
+Client side logging is essentially there for debug logs and is set with the above
 
-- ERROR
-- INFO
-- DEBUG
+    .set('logging', level)
 
-They have cumulative ordering:
+call. It has two valid levels: 'ERROR' and 'DEBUG'.
 
-- ERROR will only give failed to resolve require messages in the client console via `console.error`.
-- INFO additionally gives recompile information on the server (via logule).
-- DEBUG adds log messages from require on the client to show what is attempted resolved via `console.log`
-- DEBUG also adds messages from the internal persist module of why recompilation is required.
+- 'ERROR' will only give failed to resolve require messages in the client console via `console.error`.
+- 'DEBUG' adds (additionally) log messages from require on the client to show what is attempted resolved via `console.log`
 
-ERROR level will not give any messages on the server, but if you don't even want the fail messages from require, you may disable logging altogether by pasing in false.
-Note that ERROR is the default.
+Alternatively it can be turned off completely with level false.
+This will not affect logs on the server, to filter these see server side logging below.
 
-#### Integrating With Logule
-It is possible to pass down a [logule](https://github.com/clux/logule) instance itself if you would like to control log output on the server that way.
-That way you can also prefix the appropriate namespaces to the log output.
+## Server Side Logging - Logule
+Currently, modul8 uses [logule](https://github.com/clux/logule) internally for logging,
+and calls its `.info()`, `.debug()` and `.error()` methods to print to the console.
+
+It is possible to pass down a logule instance to modul8,
+to control the output and namespaces/formatting of the server side logs.
 
     modul8(filePath)
       .logger(logule.sub('logPrefix'))
 
-If you additionally set the log level like above, modul8 will call `suppress` on the appropriate methods of the passed in logule instance,
-but the idea is that with logule you can globally control it yourself.
+Info messages give recompile information, whereas debug adds messages from the internal
+persist module of why recompilation of the output was required.
 
+Error messages are shown when modul8 throws because of resolution failure
+to make the output needed to fix it a little clearer (usually this happens when
+you mistype a require). It is recommended you do not suppress error messages.
+
+If no logule instance is passed in, only debug messages are suppressed.
 
 ## Environment Conditionals
 
@@ -386,7 +390,7 @@ Alternative adding syntax is to add an object directly to `arbiters()`
 
     .arbiters({
       jQuery : ['$', 'jQuery']
-      Spine  : Spine
+      Spine  : 'Spine'
     })
 
 Or even simpler:
