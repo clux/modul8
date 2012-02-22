@@ -141,7 +141,7 @@ exports.extname = function(path) {
 }(window.M8.path));
 (function(){
 /**
- * modul8 v0.15.1
+ * modul8 v0.15.3
  */
 
 var config    = {"namespace":"M8","domains":["app"],"arbiters":{"jQuery":["jQuery","$"]},"npmTree":{},"builtIns":["path","events"],"slash":"/"} // replaced
