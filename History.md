@@ -1,10 +1,17 @@
 TODO
 ==================
   * support windows paths in require.js - include path.win32.js?
-  * write a slimmer api doc
   * npm tests
   * better handling of analysis elements from npm domain
-  * decide on better logging interface when logule dependency injection code is done
+
+0.16.0 / 2012-02-XX
+==================
+  * logging now uses one interface for server side logging and one for client side logging
+  * set('logging', level) now ignores level set as info or warn, only error and debug work (->docs)
+  * set('logging') controls client side logging for debug only, whereas .logger() controls server logging fully (->docs)
+  * all crashes now produce prettified output to easier identify what went wrong if something did during compilation
+  * New slim API docs!
+  BETTER CRASH HANDLING
 
 0.15.3 / 2012-01-28
 ==================
