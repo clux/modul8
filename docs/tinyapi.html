@@ -1,0 +1,316 @@
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>modul8 - Extensible CommonJS browser code sharing</title>
+    <link rel='stylesheet' href='../main.css' />
+  </head>
+  <body class="subpage">
+    <ul id="nav">
+      <li><a href="https://github.com/clux/modul8#readme" title="Source and introduction">Intro</a></li>
+      <li><a href="https://github.com/clux/modul8/tree/master/examples" title="Examples from github source">Examples</a></li>
+      <li><a href="tinyapi.html" title="API documentation">API</a></li>
+      <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
+      <li><a href="plugins.html" title="available plugins, and how to write them">Plugins</a></li>
+      <li><a href="require.html" title="require() types and priorities">require</a></li>
+      <li><a href="npm.html" title="using node modules">npm</a></li>
+      <li><a href="xcjs.html" title="Extended CommonJS: basic and extensions">X-CommonJS</a></li>
+      <li><a href="modularity.html" title="Modularity: issues and advice">Modularity</a></li>
+    </ul>
+    <div id="content">
+<h1>API</h1>
+
+<p>Want more details about certain sections? There's a more <a href="api.html">extensive API doc</a> available.</p>
+
+<h2>modul8() and .compile()</h2>
+
+<p>Statically analyze <code>entryFile</code> and its requirements recursively,
+and bundle up all dependencies in a browser compatible <code>targetFile</code>.</p>
+
+<pre><code>var modul8 = require('modul8');
+modul8(entryFile)
+  //chain on options here
+  .compile(targetFile);
+</code></pre>
+
+<h2>Options</h2>
+
+<p>The following can be inserted verbatim as chained options on the modul8
+constructor, and a working <code>.compile()</code> call will end any further chaining.</p>
+
+<h3>domains()</h3>
+
+<p>Allow requiring code from namespaced domains,</p>
+
+<pre><code>.domains()
+  .add('shared', './shared')
+  .add('internal', './internal')
+</code></pre>
+
+<p>Or equivalently:</p>
+
+<pre><code>.domains({
+  'shared'   : './shared'
+, 'internal' : './internal'
+})
+</code></pre>
+
+<p>Both would allow <code>require('shared::file')</code> to resolve on the client when
+<code>file.js</code> exists on <code>./shared</code>.</p>
+
+<p>Reserved domain names:</p>
+
+<ul>
+<li>M8</li>
+<li>data</li>
+<li>external</li>
+<li>npm</li>
+</ul>
+
+<h3>data()</h3>
+
+<p>Injects raw data in the <code>data</code> domain from the server.</p>
+
+<pre><code>.data()
+  .add('models', {user: {name: 'clux', type: 'String'})
+  .add('versions', "{'templates' : 123}")
+</code></pre>
+
+<p>Or equivalently</p>
+
+<pre><code>.data({
+  models  : {user: {name: 'clux', type: 'String'}}
+, version : "{'templates' : 123}"
+})
+</code></pre>
+
+<p>Values will be serialized using <code>JSON.stringify</code> if they are not strings,
+otherwise, they are assumed to be serialized.</p>
+
+<h3>use()</h3>
+
+<p>Call with <a href="plugins.html">Plugin</a> instance(s).</p>
+
+<pre><code>.use(new Plugin())
+</code></pre>
+
+<h3>analysis()</h3>
+
+<p>View the analyzers prettified output somehow.</p>
+
+<pre><code>.analysis()
+  .output(console.log)
+  .prefix(false)
+  .suffix(true)
+  .hide('external')
+</code></pre>
+
+<p>Or equivalently:</p>
+
+<pre><code>.analysis(console.log, false, true, 'external')
+</code></pre>
+
+<h4>output()</h4>
+
+<p>Function or file to pipe to.</p>
+
+<h4>prefix()</h4>
+
+<p>Show the domain of each file in the dependency tree. Default true.</p>
+
+<h4>suffix()</h4>
+
+<p>Show the extension of each file in the dependency tree. Default false.</p>
+
+<h4>hide()</h4>
+
+<p>Call with domain(s) to hide from the tree. Default [].</p>
+
+<h3>libraries()</h3>
+
+<p>Pre-concatenate in an ordered list of libraries to the target output,
+or save this concatenation to a separate <code>libs</code> file.</p>
+
+<pre><code>.libraries()
+  .list(['jQuery.js', 'history.js'])
+  .path('./app/client/libs/')
+  .target('./libs.js')
+</code></pre>
+
+<p>Or equivalently:</p>
+
+<pre><code>.libraries(['jQuery.js', 'history.js'], './app/client/libs/', './libs.js')
+</code></pre>
+
+<p>AltJS libraries are compiled with a safety wrapper, whenever
+the the registered language supports this.</p>
+
+<h3>npm()</h3>
+
+<p>Set the node_modules directory to allow requiring npm installed modules.</p>
+
+<pre><code>.npm('./node_modules')
+</code></pre>
+
+<h3>before()</h3>
+
+<p>Pre-process all code before it gets sent to analysis with input function(s).</p>
+
+<pre><code>.before(function (code) { return code;})
+</code></pre>
+
+<p><code>modul8.testcutter</code> is an example of such a function.</p>
+
+<h3>after()</h3>
+
+<p>Post-process all code after it has been bundled.</p>
+
+<pre><code>.before(function (code) { return code; })
+</code></pre>
+
+<p><code>modul8.minifier</code> is an example of such a function.</p>
+
+<h3>set()</h3>
+
+<p>Set a few extra options. Available options to set are:</p>
+
+<ul>
+<li><code>domloader</code></li>
+<li><code>namespace</code></li>
+<li><code>logging</code></li>
+<li><code>force</code></li>
+</ul>
+
+<h4>set('domloader', value)</h4>
+
+<p><code>domloader</code> is the name of a global or arbitered function, or a direct substitution
+function, which wraps the application domain code and (usually) waits for the DOM.</p>
+
+<p>Examples values:</p>
+
+<ul>
+<li><code>jQuery</code></li>
+<li><code>$(document).ready</code></li>
+<li>function (code) { return "jQuery(function () {" + code + "})"; }</li>
+<li>`` // blank string - default</li>
+</ul>
+
+<p>The last example simply wraps the app domain code in an anonymous,
+self-executing funciton.</p>
+
+<h4>set('namespace', value)</h4>
+
+<p>The name of the global variable used in the browser to export console helpers to.
+The default value for this is <code>M8</code>.</p>
+
+<h4>set('logging', value)</h4>
+
+<p>This will set the amount of messages sent on the client. Allowed values:</p>
+
+<ul>
+<li>'ERROR' - only failed requires are logs <strong>DEFAULT</strong></li>
+<li>'DEBUG' - additionally adds debug of what is sent to require</li>
+<li><code>false</code> - no client side logging</li>
+</ul>
+
+<h3>logger()</h3>
+
+<p>Pass down a <a href="https://github.com/clux/logule">logule</a> sub to fully control server side log
+output. A passed down instance will attempt to call <code>.info()</code>, <code>.debug()</code> and <code>.error()</code>.</p>
+
+<p>Error messages are used to aid on throws, recommended kept unsuppressed.
+If not used, only debug messages are suppressed.</p>
+
+<h3>in()</h3>
+
+<p>Only do chainOfStuff() when <strong>NODE_ENV</strong> matches environment.</p>
+
+<pre><code>in(environment).chainOfStuff()
+</code></pre>
+
+<p>To break out of the environment chain, use: <code>in('all')</code> or <code>in(otherEnv)</code>.</p>
+
+<h3>register()</h3>
+
+<p>Register an AltJS language with a compilation function. CoffeeScript can be supported using:</p>
+
+<pre><code>.register('.coffee', function (code, bare){
+  coffee.compile(code, {bare: bare})
+})
+</code></pre>
+
+<h3>arbiters()</h3>
+
+<p>Move browser globals to the require system safely.</p>
+
+<pre><code>.arbiters()
+  .add('jQuery', ['$', 'jQuery'])
+  .add('Spine')
+</code></pre>
+
+<p>Or with object style:</p>
+
+<pre><code>.arbiters({
+  jQuery : ['$', 'jQuery']
+  Spine  : 'Spine'
+})
+</code></pre>
+
+<p>Values are either a list of global names to alias under the key's name, or a single name to alias,
+or - when using the chaining add style - undefined to indicate same as key.</p>
+
+<h2>Client API</h2>
+
+<p>modul8 exports debug functions and extension functions on the single global variable configurable
+via set('namespace').</p>
+
+<p>The following functions exists on this global in the browser only, illustrated with <code>ns</code> as the global.</p>
+
+<h3>require()</h3>
+
+<p>A console specific version of require can require relatively from the main <code>app</code> domain.</p>
+
+<pre><code>ns.require('./fileOnAppRoot'); // exportObj of file
+</code></pre>
+
+<h3>data()</h3>
+
+<p>Extend the data domain with a new key:</p>
+
+<pre><code>ns.data('libX', libXobj);
+require('data::libX'); // -&gt; libXobj
+</code></pre>
+
+<p>Modify a key on the data domain:</p>
+
+<pre><code>ns.data('libX', {});
+require('data::libX'); // -&gt; {}
+</code></pre>
+
+<p>Delete a key  on the data domain:</p>
+
+<pre><code>ns.data('libX'); //unsets
+require('data::libX'); // -&gt; undefined
+</code></pre>
+
+<h3>external()</h3>
+
+<p>Has identical behaviour to <code>ns.data()</code>, but modifies the <code>external</code> domain,
+which is only modified on the server, wheras the <code>data</code> domain is initialized on the server.</p>
+
+<h3>domains()</h3>
+
+<p>List the domains initialized by modul8</p>
+
+<pre><code>ns.domains(); // ['data', 'external', 'npm', 'app'] or similar
+</code></pre>
+
+<h3>inspect()</h3>
+
+<p>Logs the contents of a specific domain by name</p>
+
+<pre><code>ns.inspect('app'); // logs object of keys -&gt; raw export object
+</code></pre>
+
+<p>Can not be used to actually require things in the console.</p>    </div>
+  </body>
+</html>

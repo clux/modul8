@@ -8,7 +8,7 @@
     <ul id="nav">
       <li><a href="https://github.com/clux/modul8#readme" title="Source and introduction">Intro</a></li>
       <li><a href="https://github.com/clux/modul8/tree/master/examples" title="Examples from github source">Examples</a></li>
-      <li><a href="api.html" title="API documentation">API</a></li>
+      <li><a href="tinyapi.html" title="API documentation">API</a></li>
       <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
       <li><a href="plugins.html" title="available plugins, and how to write them">Plugins</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
@@ -20,7 +20,8 @@
 <h1>Modularity</h1>
 
 <p>This document contains some basic advice for how to achieve modularity,
-then it goes into more advanced ideas as you scroll. At the bottom lie some information on arbiters.</p>
+then it goes into more advanced ideas as you scroll.
+At the bottom lie some information on arbiters.</p>
 
 <h2>Welcome to Italy</h2>
 
@@ -34,46 +35,60 @@ then it goes into more advanced ideas as you scroll. At the bottom lie some info
 
 <h2>What is Bad Code</h2>
 
-<p>Without rehashing the entire internet: <strong>tightly coupled code is bad code</strong>. Because</p>
+<p>Without rehashing the entire internet:
+<strong>tightly coupled code is bad code</strong>. Because</p>
 
 <ul>
-<li>The more tightly coupled your modules become, the more side-effects alterations will have and the harder it will be to reuse that module (violating DRY)</li>
-<li>The more different behaviour per module, the harder it is to to maintain that module.</li>
-<li>The more one type of behaviour is spread out into different modules, the harder it is to find the source of that behaviour.</li>
+<li>The more tightly coupled your modules become,
+the more side-effects alterations will have
+and the harder it will be to reuse that module (violating DRY)</li>
+<li>The more different behaviour per module,
+the harder it is to to maintain that module.</li>
+<li>The more one type of behaviour is spread out into different modules,
+the harder it is to find the source of that behaviour.</li>
 </ul>
 
 <h2>What is Good Code</h2>
 
 <h4>What it is not: Bad Code</h4>
 
-<p>If tightly coupled code is bad code, then good code is loosely coupled. A ⇒ B ∴ ¬B ⇒ ¬A.</p>
+<p>If tightly coupled code is bad code, then good code is loosely coupled.
+A ⇒ B ∴ ¬B ⇒ ¬A.</p>
 
-<p>In other words, if you factor out your behaviour into small separate units of behaviour, you will have gained maintainability and
-readibility properties for free, and your code will inevitably have less unknown side-effects, leading to more secure code as well.
-It does, however, take certain disipline to constantly police your files for multiple types of behaviour.</p>
+<p>In other words, if you factor out your behaviour into small separate units
+of behaviour, you will have gained maintainability and readibility
+properties for free, and your code will inevitably have less unknown
+side-effects, leading to more secure code as well. It does, however,
+take certain disipline to constantly police your files for multiple types
+of behaviour.</p>
 
 <p>You may shrug and say, well, I'm only going to write this once anyway..</p>
 
-<p>..and you will be right. You will write it once and likely wish you wrote it zero times.</p>
+<p>..and you will be right. You will write it once and likely wish you wrote
+it zero times.</p>
 
-<p>In my opinion, the biggest mistake you can make as a learning programmer is to not bothering to factor out behaviour as early as possible.
+<p>In my opinion, the biggest mistake you can make as a learning programmer
+is to not bothering to factor out behaviour as early as possible.
 <em></advice></em></p>
 
 <h2>Best Practices</h2>
 
-<p>modul8 provides the means to separate your code into different files effectively, but how do you as a developer split up your behaviour?</p>
+<p>modul8 provides the means to separate your code into different files
+effectively, but how do you as a developer split up your behaviour?</p>
 
-<p>One of the hardest areas to modularize web applications is the client application domain. If you are using jQuery,
-you should be particularly familiar with this. <code>$</code> selector calls all around, DOM insertion &amp; manipulation code
-in random places, identical behaviour existing for each URL.</p>
-
-<p>If this is problem to you, the first thing you should consider is a MVC/MVVM framework such as Spine/Backbone/Knockout.
-Spine is a strongly recommended personal favorite as it is arguably the most lightweight and most modular one discovered.
-But ultimately, there are a lot of good frameworks out there, don't take my word for it. The important thing is to learn one well and then stick to it.</p>
+<p>One of the hardest areas to modularize web applications is the client
+application domain. If you are using jQuery, you should be particularly
+familiar with this. <code>$</code> selector calls all around,
+DOM insertion &amp; manipulation code in random places,
+identical behaviour existing for each URL. If this is a problem for you,
+read on.</p>
 
 <h3>Decouping MVC code</h3>
 
-<p>How to properly do this depends on the layout of your framework, but here's the gist.</p>
+<p>If you have tried the one size fits all approach to modularity and
+try to cram your project into a MVC/MVVM structure, you may have had
+success, or you might have hated it. At any rate, here is some general
+ideas to consider if you are currently using or planning to use an MVC framework.</p>
 
 <p><strong>Independent entry controller</strong></p>
 
@@ -105,78 +120,135 @@ But ultimately, there are a lot of good frameworks out there, don't take my word
 <li>Extra HTML helper logic should have its own module (possibly even DOM independent)</li>
 </ul>
 
-<h3>Decoupling jQuery code</h3>
+<h3>DOM Decoupling</h3>
 
-<p>For jQuery based applications, some things transcends the framework you use to manage your events.</p>
+<p>This section is very relevant if you are just using jQuery, or if you are
+trying to roll your own application structure rather than using MVC.</p>
 
-<p>It is always important to think about the behaviour you are defining. If it is for</p>
+<p>The general jQuery advice is that you think about the behaviour you are
+defining. Here are 4 general rules to go on for certain behaviour:</p>
 
 <ul>
-<li>non-request based DOM interactivity - it is almost always better to write a plugin</li>
-<li>request based DOM interactivity - you should use controllers/eventmanagers to handle your events and call above plugins.</li>
-<li>calculations needed before DOM manipulation - you should make a standalone calulation module (on a shared domain perhaps) that should work on its own,
-and call it at appropriate stages above.</li>
+<li>non-request based DOM interactivity
+⇒ write a plugin</li>
+<li>request based DOM interactivity
+⇒ use controllers/eventmanagers to handle events, and call above plugin(s)</li>
+<li>calculations needed before DOM manipulation
+⇒ make a standalone module (in a domain / npm) and call it at above stages.</li>
+<li>DOM interactivity changing styles
+⇒ add a className to relevant container, and keep the style in the CSS</li>
 </ul>
 
-<p>This way if something breaks, you should be easily able to narrow down the problem to a UI error, a signaling error, or a calculation error.
-⇒ Debugging becomes up to 3 times easier.</p>
+<p>This way if something breaks, you should be able to narrow down the problem to
+a UI error (code or style), a signaling error, or a calculation error.
+⇒ Debugging becomes up to 4 times easier.</p>
 
-<h3>General</h3>
+<h3>General Modularity</h3>
 
-<p>modul8 just tries to facilitate the building of maintainable code. To actually do so, you need to always stay vigilant and remember to:</p>
+<p>modul8 just tries to facilitate the building of maintainable code.
+To actually do so, you need to always stay vigilant and remember to:</p>
 
 <ul>
 <li>Not blend multiple types of behaviour together in one file.</li>
 <li>Limit the areas from which you reference global variables.</li>
 <li>Look for opportunities to move independent code onto different domains.</li>
 <li>Look for opportunities to refactor code to make bits of it independent.</li>
-<li>Enforce basic rules of JavaScript modularity: don't try to make circular dependencies work, analyse your require tree.
-If you are requiring the same libraries from every file, chances are you are doing something wrong.</li>
+<li>Enforce basic rules of JavaScript modularity: don't try to make
+circular dependencies work, analyse your require tree. If you are requiring
+the same libraries from every file, chances are you are doing something wrong.</li>
 </ul>
 
-<p>Decouple your code this way and you will save yourself the trouble of later having to learn from your mistakes the hard way.</p>
+<p>Decouple your code this way and you will save yourself the trouble of later
+having to learn from your mistakes the hard way.</p>
 
 <h2>Going Further</h2>
 
+<h3>Domains or Node Modules?</h3>
+
+<p>Say you have factored out a piece of behaviour from your client side app.
+Where do you put it? Do you put it</p>
+
+<ul>
+<li>in a folder under the client root</li>
+<li>in a separate domain</li>
+<li>make a node module out if it</li>
+</ul>
+
+<p>This are increasingly flexible depending on what you want to do.
+If you want to only use it on the client, you should keep it in the client root
+so that it is immediately obvious to anyone reading your code where it works.</p>
+
+<p>If you want to use it on the server, you have to use one of the other approaches.
+A shared domain is great if you have completely server and client agnostic code.
+This is what extra domains were designed for. One of the key reasons domains were
+pushed by modul8 is that having a 'shared' folder next to your 'client' and
+'server' folders screams to the reader that this code should work anywhere
+and must be treated with respect. This is good.</p>
+
+<p>Sometimes however, you need extra npm functionality on either end.
+This is possible to achieve, but only if it is itself a node module.
+A node module can be required on the client if it
+sufficiently server agnostic. The downside to placing your code in here is that
+it gives no indication to the people reading your code that it will work on
+the client. On the other hand, it might be easier to reuse across projects when
+things are checked into npm. Use with caution, but it's worth taking advantage of.</p>
+
 <h3>Killing Globals</h3>
 
-<p>Global variable are evil, and should be kept to a minimum. We know this, and this is were a require system really shines, but you are generally
-going to depend on a few global variables. Not all libraries are CommonJS compliant, and having jQuery plugins showing up in your
-dependency tree under every branch that requires jQuery might just make things more confusing than to load them classically.</p>
+<p>Global variable are evil, and should be kept to a minimum.
+We know this, and this is were a require system really shines,
+but you are generally going to depend on a few global variables.
+Not all libraries are CommonJS compliant, and having jQuery plugins showing up
+in your dependency tree under every branch that requires jQuery might
+just make things more confusing than to load them classically.</p>
 
 <p>Besides, you may want to load it in from a separate CDN anyway.</p>
 
-<p>Even in such an environment, it is possible rid yourself of the global <code>$</code> and <code>jQuery</code> symbols without breaking everything.</p>
+<p>Even in such an environment, it is possible rid yourself of the global
+<code>$</code> and <code>jQuery</code> symbols without breaking everything.</p>
 
-<p>We will demonstrate such a solution. Begin by constructing a <code>jQuery.js</code> file on your application domain containing:</p>
+<p>We will demonstrate such a solution. Begin by constructing a <code>jQuery.js</code>
+file on your application domain containing:</p>
 
 <pre><code>module.exports = window.jQuery;
 delete window.jQuery;
 delete window.$
 </code></pre>
 
-<p>With this you can put <code>var $ = require('jQuery')</code> so everything will be explicitly defined on the application domain.
-You've also deleted the global shortcuts so that you will know when you forgot to require. Finally, jQuery (but none of its dependencies)
-show up in the dependency tree - so you will quickly identify what code is actually DOM dependent, and what isn't or shouldn't be.
-Clearly this is advantageous.</p>
+<p>With this you can put <code>var $ = require('jQuery')</code> so everything will be explicitly
+defined on the application domain. You've also deleted the global shortcuts so that
+you will know when you forgot to require.
+Finally, jQuery (but none of its dependencies) show up in the dependency tree -
+so you will quickly identify what code is actually DOM dependent
+, and what isn't or shouldn't be. Clearly this is advantageous.</p>
 
-<p>Having found this pattern very useful, but also noticing how repeating this pattern on several libraries pollutes our application
-code folder with meaningless files, a modul8 extension was created early on to allow automatic creation of these arbiters in the
-internal module system by using the <code>arbiters()</code> call.
-This example could be automated by chaining on <code>arbiters().add('jQuery', ['jQuery', '$'])</code>. See the <a href="api.html">API docs</a> for more details.</p>
+<p>Having found this pattern very useful, but also noticing how repeating this pattern
+on several libraries pollutes our application code folder with meaningless files,
+a modul8 extension was created early on to allow automatic creation of these
+arbiters in the internal module system by using the <code>arbiters()</code> call.</p>
+
+<p>This example could be automated by
+chaining on <code>arbiters().add('jQuery', ['jQuery', '$'])</code>.
+See the <a href="api.html">API docs</a> for more details.</p>
 
 <h3>DOM Dependence</h3>
 
-<p>Note that modul8 only allows one domain to be DOM dependent (the application domain), and from the start you are likely going to have
-<code>require('jQuery')</code> in many places there. But if you just find some areas that do not use it, and as a result move logic to an
-environment agnostic domain, then it has clearly improved your code enough for me to consider this project a success.</p>
+<p>Note that modul8 only allows one domain to be DOM dependent
+(the application domain), and from the start you are likely going to have
+<code>require('jQuery')</code> or similar in many places there.</p>
 
-<p>If you can efficiently separate code on the domain level, try to keep above advice in mind -
-always aim to factor out behavior into small loosely coupled modules - then you are already
-well on your way to resolving spaghetti hell. The rest is getting the correct signaling model for your events to your controllers/controller style entities.</p>
+<p>However, if you just find some areas that do not use it, and as a result move
+logic to an environment agnostic domain, then it this is a great success.
+Your jQuery dependent code is diminished, so the more tightly coupled code
+of your application is smaller.</p>
 
-<p>Good luck.</p>
+<p>If you can efficiently separate code on the domain level, try to keep above
+advice in mind; always aim to factor out behavior into small loosely coupled
+modules. If you can do this then you are already well on your way to resolving
+spaghetti hell. The rest is mostly  getting the correct signaling model for your
+events to your controllers/controller style entities.</p>
 
-<p>Hopefully this has been useful on some level : )</p>    </div>
+<p>Good luck.
+Hopefully this has been useful on some level : )</p>    </div>
   </body>
 </html>

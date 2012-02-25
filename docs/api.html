@@ -8,7 +8,7 @@
     <ul id="nav">
       <li><a href="https://github.com/clux/modul8#readme" title="Source and introduction">Intro</a></li>
       <li><a href="https://github.com/clux/modul8/tree/master/examples" title="Examples from github source">Examples</a></li>
-      <li><a href="api.html" title="API documentation">API</a></li>
+      <li><a href="tinyapi.html" title="API documentation">API</a></li>
       <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
       <li><a href="plugins.html" title="available plugins, and how to write them">Plugins</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
@@ -19,7 +19,11 @@
     <div id="content">
 <h1>API</h1>
 
-<p>modul8's API is extremely simple, in its basic form all we need to do pass a entry point and an output.
+<p>Get back to the slim <a href="tinyapi.html">API</a> doc.</p>
+
+<h2>modul8()</h2>
+
+<p>modul8's API is very simple, in its basic form all we need to do pass a entry point and an output.
 To add extra require domains for the client pass a dictionary of form <code>{name : path}</code>.</p>
 
 <pre><code>var modul8 = require('modul8');
@@ -301,39 +305,43 @@ This information is encapsulated in a closure. The namespace'd object simply con
   .compile('./out.js');
 </code></pre>
 
-<h3>Logging</h3>
+<h3>Client Side Logging</h3>
 
-<p>Logging has 3 levels at the moment</p>
+<p>Client side logging is essentially there for debug logs and is set with the above</p>
 
-<ul>
-<li>ERROR</li>
-<li>INFO</li>
-<li>DEBUG</li>
-</ul>
+<pre><code>.set('logging', level)
+</code></pre>
 
-<p>They have cumulative ordering:</p>
+<p>call. It has two valid levels: 'ERROR' and 'DEBUG'.</p>
 
 <ul>
-<li>ERROR will only give failed to resolve require messages in the client console via <code>console.error</code>.</li>
-<li>INFO additionally gives recompile information on the server (via logule).</li>
-<li>DEBUG adds log messages from require on the client to show what is attempted resolved via <code>console.log</code></li>
-<li>DEBUG also adds messages from the internal persist module of why recompilation is required.</li>
+<li>'ERROR' will only give failed to resolve require messages in the client console via <code>console.error</code>.</li>
+<li>'DEBUG' adds (additionally) log messages from require on the client to show what is attempted resolved via <code>console.log</code></li>
 </ul>
 
-<p>ERROR level will not give any messages on the server, but if you don't even want the fail messages from require, you may disable logging altogether by pasing in false.
-Note that ERROR is the default.</p>
+<p>Alternatively it can be turned off completely with level false.
+This will not affect logs on the server, to filter these see server side logging below.</p>
 
-<h4>Integrating With Logule</h4>
+<h2>Server Side Logging - Logule</h2>
 
-<p>It is possible to pass down a <a href="https://github.com/clux/logule">logule</a> instance itself if you would like to control log output on the server that way.
-That way you can also prefix the appropriate namespaces to the log output.</p>
+<p>Currently, modul8 uses <a href="https://github.com/clux/logule">logule</a> internally for logging,
+and calls its <code>.info()</code>, <code>.debug()</code> and <code>.error()</code> methods to print to the console.</p>
+
+<p>It is possible to pass down a logule instance to modul8,
+to control the output and namespaces/formatting of the server side logs.</p>
 
 <pre><code>modul8(filePath)
   .logger(logule.sub('logPrefix'))
 </code></pre>
 
-<p>If you additionally set the log level like above, modul8 will call <code>suppress</code> on the appropriate methods of the passed in logule instance,
-but the idea is that with logule you can globally control it yourself.</p>
+<p>Info messages give recompile information, whereas debug adds messages from the internal
+persist module of why recompilation of the output was required.</p>
+
+<p>Error messages are shown when modul8 throws because of resolution failure
+to make the output needed to fix it a little clearer (usually this happens when
+you mistype a require). It is recommended you do not suppress error messages.</p>
+
+<p>If no logule instance is passed in, only debug messages are suppressed.</p>
 
 <h2>Environment Conditionals</h2>
 
@@ -442,7 +450,7 @@ it can be entered as a string, but if this is the same as as the arbiter's name,
 
 <pre><code>.arbiters({
   jQuery : ['$', 'jQuery']
-  Spine  : Spine
+  Spine  : 'Spine'
 })
 </code></pre>
 

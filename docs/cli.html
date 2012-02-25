@@ -8,7 +8,7 @@
     <ul id="nav">
       <li><a href="https://github.com/clux/modul8#readme" title="Source and introduction">Intro</a></li>
       <li><a href="https://github.com/clux/modul8/tree/master/examples" title="Examples from github source">Examples</a></li>
-      <li><a href="api.html" title="API documentation">API</a></li>
+      <li><a href="tinyapi.html" title="API documentation">API</a></li>
       <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
       <li><a href="plugins.html" title="available plugins, and how to write them">Plugins</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
@@ -127,22 +127,6 @@ Here you rely on your data pre-existing in a <code>.json</code> file and specify
 Load them with the <code>-b</code> flag, supplying a path as the key, and a list of files inside that path.</p>
 
 <pre><code>$ modul8 app/entry.js -b libs/=jQuery.js,jQuery.ui.js,plugins/datepicker.js
-</code></pre>
-
-<h3>Loading Plugins</h3>
-
-<p>It requires a relative or absolute path to the plugins root, and an optional list of options
-to pass as strings to the <code>require(pathOrNameOfModule).Plugin</code> constructor.</p>
-
-<pre><code>$ modul8 app/entry.js -g pathToModule=opt1,opt2
-</code></pre>
-
-<p>This would be the equivalent of doing</p>
-
-<pre><code>var Plugin = require('pathToModule');
-modul8('./app/entry.js')
-  .use(new Plugin('opt1', 'opt2'))
-  .compile(console.log)
 </code></pre>
 
 <p>For a blank constructor call, do not use <code>-g pathToModule=</code> as this is used to pass the empty string as the first parameter.

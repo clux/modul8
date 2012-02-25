@@ -8,7 +8,7 @@
     <ul id="nav">
       <li><a href="https://github.com/clux/modul8#readme" title="Source and introduction">Intro</a></li>
       <li><a href="https://github.com/clux/modul8/tree/master/examples" title="Examples from github source">Examples</a></li>
-      <li><a href="api.html" title="API documentation">API</a></li>
+      <li><a href="tinyapi.html" title="API documentation">API</a></li>
       <li><a href="cli.html" title="using the Command Line Interface">CLI</a></li>
       <li><a href="plugins.html" title="available plugins, and how to write them">Plugins</a></li>
       <li><a href="require.html" title="require() types and priorities">require</a></li>
@@ -19,8 +19,9 @@
     <div id="content">
 <h1>Extended CommonJS</h1>
 
-<p>This is going to contain more advanced background about what a general module systems do, and, finally, what
-distinguishes modul8 from plain CommonJS.</p>
+<p>This is going to contain more advanced background about what a general
+module systems do, and, finally,
+what distinguishes modul8 from plain CommonJS bundler.</p>
 
 <h2>CommonJS Parsing</h2>
 
@@ -120,8 +121,11 @@ What happens if this module has not yet been placed in the document? Syntax erro
 <p>To solve this problem, you can either give a safe ordering yourself - which will become increasingly difficult as your application grows in size -
 or you can resolve <code>require()</code> calls recursively to create a dependency tree.</p>
 
-<p>modul8 in particular, does so via excellently simple <code>detective</code> module that constructs a full Abstract Syntax Tree before it safely scans for <code>require()</code> calls.
-Using <code>detective</code> data, a tree structure representing the dependencies can be created. modul8 allows printing of a prettified form of this tree.</p>
+<p>modul8 in particular, does so via the excellently simple <code>detective</code> module
+that constructs a full Abstract Syntax Tree before it safely scans
+for <code>require()</code> calls.
+Using <code>detective</code> data, a tree structure representing the dependencies
+can be created. modul8 allows printing of a prettified form of this tree.</p>
 
 <pre><code>app::main
 ├───app::forms
@@ -134,69 +138,102 @@ Using <code>detective</code> data, a tree structure representing the dependencie
    └───shared::defs
 </code></pre>
 
-<p>It is clear that the modules on the edges of this tree must get required first, because they do not depend on anything. And similarly,
-the previous level should be safe having included the outmost level. Note here that <code>app::forms</code> is needed both by
-<code>app:moduls/user</code> and <code>app::main</code> so it must be included before both. Thus, we only care about a module's outmost level.</p>
+<p>It is clear that the modules on the edges of this tree must get required
+first, because they do not depend on anything. And similarly, the previous
+level should be safe having included the outmost level.
+Note here that <code>app::forms</code> is needed both by <code>app:moduls/user</code> and
+<code>app::main</code> so it must be included before both.
+Thus, we only care about a module's outmost level.</p>
 
-<p>Thus, to order our modules correctly, we must reduce the tree into an unique array of modules and their (maximum) level numbers,
+<p>To order our modules correctly, we must therefore reduce the tree
+into an unique array of modules and their (maximum) level numbers,
 and simply sort this by their level numbers descending.</p>
 
 <h2>modul8's CommonJS Extensions</h2>
 
 <h3>Require Path Problem</h3>
 
-<p>Whilst maintaining compatibility with the CommonJS spec, we have extended <code>require()</code> to ameliorate one common problem.</p>
+<p>Whilst maintaining compatibility with the basic CommonJS spec, we have
+extended <code>require()</code> to ameliorate one common problem.</p>
 
 <ul>
-<li><code>require()</code> calls is a simple (clash prone) object property look-up on <code>stash[reqStr]</code></li>
+<li><code>require()</code> calls is a clash prone property look-up on <code>stash[reqStr]</code></li>
 </ul>
 
-<p>We wanted to be able to share code between the server and the client by essentially having multiple <em>require paths</em>.
-But require paths force you to scan all of them, with no way of specifying what path to do your look-up on. It also would
-make it very difficult to whitelist injected data from the server resolver - as it could simply find files with the same names as your data somewhere..</p>
+<p>We wanted to be able to share code between the server and the client by
+essentially having multiple <em>require paths</em>. But require paths force you
+to scan all of them, with no way of specifying what path to do your
+look-up on. It also would make it very difficult to whitelist injected
+data from the server resolver - as it could simply find files
+with the same names as your data somewhere else.</p>
 
-<p>The relation between the paths are also lost on the browser, so there is no sense in maintining any illusions about this by using traditional require paths.</p>
+<p>The relation between the paths are also lost on the browser,
+so there is no sense in maintining any illusions about this by using
+traditional require paths.</p>
 
 <h3>Domains</h3>
 
-<p>In the end, namespacing each path became the accepted solution. To distinguish them from typical require paths, we refer to them as <em>domains</em> or <em>require domains</em>.</p>
+<p>In the end, namespacing each path became the accepted solution.
+To distinguish them from typical require paths, we refer to them
+as <em>domains</em> or <em>require domains</em>.</p>
 
-<p>This also simplifies implementation as well, as we can create one object container directly on <code>stash</code> for each domain with key equal to its name.</p>
+<p>This also simplifies implementation as well, as we can create one object
+container directly on <code>stash</code> for each domain with key equal to its name.</p>
 
-<p>Additionally, we can make <code>require()</code> functions that knows which domains to look on by passing this extra parameter on from the compiler,
-down to <code>define</code>, and finally, down to the require factory.</p>
+<p>Additionally, we can make <code>require()</code> functions that know which domains
+to look in by passing this extra parameter from the compiler down
+to <code>define</code>.</p>
 
-<p>The result is that, with modul8, we can <code>require()</code> files relatively as if it was on a 100% CommonJS environment,
-but we could also do cross-domain <code>require()</code> by using C++ style namespacing, e.g. calls like <code>require('shared::helper.js')</code>
-to get access to code on a different domain that does not rely on the DOM, which can be required directly on the server as well.</p>
+<p>The result, is that with modul8, we can <code>require()</code> files relatively as if
+it was on a 100% CommonJS environment, but we could also do cross-domain
+<code>require()</code> by using C++ style namespacing. I.e. calls
+like <code>require('shared::helper.js')</code> will give access to code on a 'shared'
+domain.</p>
 
-<p>To get the most out of this deal, having domains that are server-clean and client-clean are therefore advantageous.
-I.e. it should not reference something from outside its base directory to work on the client, and it should not reference DOM/client specific elements to work on the server.</p>
+<p>To get the most out of this deal, having certain domains be completely
+server and client agnostic necessary:
+Code on reusable domains must not reference something from outside
+its base directory to work on the client (including npm modules),
+and it should not reference DOM/client specific elements to work
+on the server.</p>
 
-<p>Domains also provide 3 more areas of use that each get their own reserved domain.</p>
+<p>Domains also provide 3 more areas of use that each get their own
+reserved domain:</p>
 
 <h4>Arbiters</h4>
 
-<p>modul8 hates globals. They ruin otherwise solid modularity. Thus, it desperately tries to integrate globally exported libraries into its require system.
-It removes the global shortcut(s) from your application code and inserts them onto the reserved <code>M8</code> domain.
-Why we (can and sometimes) want to do this is explained in the <a href="modularity.html">modularity doc</a>, whilst
-the feature is fully documented in the <a href="api.html">API</a>.</p>
+<p>modul8 hates globals. They ruin otherwise solid modularity.
+Thus, it desperately tries to integrate globally exported libraries
+into its require system. With your permission, it removes the global
+shortcut(s) from your  application code and inserts them onto the reserved
+<code>M8</code> domain. Why we (can and sometimes) want to do this is explained in the
+<a href="modularity.html">modularity doc</a>, whilst the feature itself is fully
+documented in the <a href="api.html">API doc</a>.</p>
 
 <h4>node modules</h4>
 
-<p>The <code>npm</code> domain is really a domain with you local node modules folder as its root. It's, however, heavily special cased to deal with absolute requires internal to that domain.
-This means you can use a lot of npm installable modules right out of the box and with full control (via the logged dependency tree), over what is included.
+<p>The <code>npm</code> domain is really a domain with you local node modules folder as
+its root. It's, however, heavily special cased to deal with absolute
+requires internal to that domain. This means you can use a lot of npm
+installable modules right out of the box and with full control
+(via the logged dependency tree), over what is included.
 Usage is documented in the <a href="npm.html">npm doc</a></p>
 
 <h4>Live Extensions</h4>
 
-<p>Because we have a <code>require()</code> function available in all the application code, and because this is synchronous (in the sense that it has been resolved on the server already),
-we migth want to extend our requiable data with results from third-party asynchronous script loaders.
-There's an <code>external</code> domain for that, and a client API for it. It's documented in the <a href="api.html">API doc</a>.</p>
+<p>Because we have a <code>require()</code> function available in all the application
+code, and because this is synchronous
+(in the sense that it has been resolved on the server already),
+we migth want to extend our requiable data with results from third-party
+asynchronous script loaders. There's an <code>external</code> domain for that,
+and a client API for it. It's documented in the <a href="api.html">API doc</a>.</p>
 
 <h4>Direct Extension</h4>
 
-<p>Finally, modul8 allows exporting of data that exists on the server, without having to add separate script tags for them.
-The <code>data</code> domain contains all such data, and like all the above, it can be gotten with <code>require()</code>. The <a href="api.html">API doc</a> contains how to use it.</p>    </div>
+<p>Finally, modul8 allows exporting of data that exists on the server,
+without having to add separate script tags for them.
+The <code>data</code> domain contains all such data, and like all the above,
+it can be gotten with <code>require()</code>.
+The <a href="api.html">API doc</a> contains the how-to.</p>    </div>
   </body>
 </html>
