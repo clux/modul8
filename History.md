@@ -4,7 +4,7 @@ TODO
   * npm tests
   * better handling of analysis elements from npm domain
 
-0.16.0 / 2012-02-XX
+0.16.0 / 2012-02-25
 ==================
   * logging now uses one interface for server side logging and one for client side logging
   * set('logging', level) now ignores level set as info or warn, only error and debug work (->docs)
