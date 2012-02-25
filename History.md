@@ -11,6 +11,7 @@ TODO
   * set('logging') controls client side logging for debug only, whereas .logger() controls server logging fully (->docs)
   * all crashes now produce prettified output to easier identify what went wrong if something did during compilation
   * New slim API docs!
+  * Modularity doc updated to include some domain vs npm ideas
   * Error messages are stylized to highlight the actual problem instead of just throwing
 
 0.15.3 / 2012-01-28
