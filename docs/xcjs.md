@@ -1,7 +1,8 @@
 # Extended CommonJS
 
-This is going to contain more advanced background about what a general module systems do, and, finally, what
-distinguishes modul8 from plain CommonJS.
+This is going to contain more advanced background about what a general
+module systems do, and, finally,
+what distinguishes modul8 from plain CommonJS bundler.
 
 ## CommonJS Parsing
 Or, how a module system works.
@@ -95,8 +96,11 @@ What happens if this module has not yet been placed in the document? Syntax erro
 To solve this problem, you can either give a safe ordering yourself - which will become increasingly difficult as your application grows in size -
 or you can resolve `require()` calls recursively to create a dependency tree.
 
-modul8 in particular, does so via excellently simple `detective` module that constructs a full Abstract Syntax Tree before it safely scans for `require()` calls.
-Using `detective` data, a tree structure representing the dependencies can be created. modul8 allows printing of a prettified form of this tree.
+modul8 in particular, does so via the excellently simple `detective` module
+that constructs a full Abstract Syntax Tree before it safely scans
+for `require()` calls.
+Using `detective` data, a tree structure representing the dependencies
+can be created. modul8 allows printing of a prettified form of this tree.
 
     app::main
     ├───app::forms
@@ -108,58 +112,91 @@ Using `detective` data, a tree structure representing the dependencies can be cr
     └──┬shared::validation
        └───shared::defs
 
-It is clear that the modules on the edges of this tree must get required first, because they do not depend on anything. And similarly,
-the previous level should be safe having included the outmost level. Note here that `app::forms` is needed both by
-`app:moduls/user` and `app::main` so it must be included before both. Thus, we only care about a module's outmost level.
+It is clear that the modules on the edges of this tree must get required
+first, because they do not depend on anything. And similarly, the previous
+level should be safe having included the outmost level.
+Note here that `app::forms` is needed both by `app:moduls/user` and
+`app::main` so it must be included before both.
+Thus, we only care about a module's outmost level.
 
-Thus, to order our modules correctly, we must reduce the tree into an unique array of modules and their (maximum) level numbers,
+To order our modules correctly, we must therefore reduce the tree
+into an unique array of modules and their (maximum) level numbers,
 and simply sort this by their level numbers descending.
 
 ## modul8's CommonJS Extensions
 ### Require Path Problem
-Whilst maintaining compatibility with the CommonJS spec, we have extended `require()` to ameliorate one common problem.
+Whilst maintaining compatibility with the basic CommonJS spec, we have
+extended `require()` to ameliorate one common problem.
 
- - `require()` calls is a simple (clash prone) object property look-up on `stash[reqStr]`
+ - `require()` calls is a clash prone property look-up on `stash[reqStr]`
 
-We wanted to be able to share code between the server and the client by essentially having multiple _require paths_.
-But require paths force you to scan all of them, with no way of specifying what path to do your look-up on. It also would
-make it very difficult to whitelist injected data from the server resolver - as it could simply find files with the same names as your data somewhere..
+We wanted to be able to share code between the server and the client by
+essentially having multiple _require paths_. But require paths force you
+to scan all of them, with no way of specifying what path to do your
+look-up on. It also would make it very difficult to whitelist injected
+data from the server resolver - as it could simply find files
+with the same names as your data somewhere else.
 
-The relation between the paths are also lost on the browser, so there is no sense in maintining any illusions about this by using traditional require paths.
+The relation between the paths are also lost on the browser,
+so there is no sense in maintining any illusions about this by using
+traditional require paths.
 
 ### Domains
-In the end, namespacing each path became the accepted solution. To distinguish them from typical require paths, we refer to them as _domains_ or _require domains_.
+In the end, namespacing each path became the accepted solution.
+To distinguish them from typical require paths, we refer to them
+as _domains_ or _require domains_.
 
-This also simplifies implementation as well, as we can create one object container directly on `stash` for each domain with key equal to its name.
+This also simplifies implementation as well, as we can create one object
+container directly on `stash` for each domain with key equal to its name.
 
-Additionally, we can make `require()` functions that knows which domains to look on by passing this extra parameter on from the compiler,
-down to `define`, and finally, down to the require factory.
+Additionally, we can make `require()` functions that know which domains
+to look in by passing this extra parameter from the compiler down
+to `define`.
 
-The result is that, with modul8, we can `require()` files relatively as if it was on a 100% CommonJS environment,
-but we could also do cross-domain `require()` by using C++ style namespacing, e.g. calls like `require('shared::helper.js')`
-to get access to code on a different domain that does not rely on the DOM, which can be required directly on the server as well.
+The result, is that with modul8, we can `require()` files relatively as if
+it was on a 100% CommonJS environment, but we could also do cross-domain
+`require()` by using C++ style namespacing. I.e. calls
+like `require('shared::helper.js')` will give access to code on a 'shared'
+domain.
 
-To get the most out of this deal, having domains that are server-clean and client-clean are therefore advantageous.
-I.e. it should not reference something from outside its base directory to work on the client, and it should not reference DOM/client specific elements to work on the server.
+To get the most out of this deal, having certain domains be completely
+server and client agnostic necessary:
+Code on reusable domains must not reference something from outside
+its base directory to work on the client (including npm modules),
+and it should not reference DOM/client specific elements to work
+on the server.
 
-Domains also provide 3 more areas of use that each get their own reserved domain.
+Domains also provide 3 more areas of use that each get their own
+reserved domain:
 
 #### Arbiters
-modul8 hates globals. They ruin otherwise solid modularity. Thus, it desperately tries to integrate globally exported libraries into its require system.
-It removes the global shortcut(s) from your application code and inserts them onto the reserved `M8` domain.
-Why we (can and sometimes) want to do this is explained in the [modularity doc](modularity.html), whilst
-the feature is fully documented in the [API](api.html).
+modul8 hates globals. They ruin otherwise solid modularity.
+Thus, it desperately tries to integrate globally exported libraries
+into its require system. With your permission, it removes the global
+shortcut(s) from your  application code and inserts them onto the reserved
+`M8` domain. Why we (can and sometimes) want to do this is explained in the
+[modularity doc](modularity.html), whilst the feature itself is fully
+documented in the [API doc](api.html).
 
 #### node modules
-The `npm` domain is really a domain with you local node modules folder as its root. It's, however, heavily special cased to deal with absolute requires internal to that domain.
-This means you can use a lot of npm installable modules right out of the box and with full control (via the logged dependency tree), over what is included.
+The `npm` domain is really a domain with you local node modules folder as
+its root. It's, however, heavily special cased to deal with absolute
+requires internal to that domain. This means you can use a lot of npm
+installable modules right out of the box and with full control
+(via the logged dependency tree), over what is included.
 Usage is documented in the [npm doc](npm.html)
 
 #### Live Extensions
-Because we have a `require()` function available in all the application code, and because this is synchronous (in the sense that it has been resolved on the server already),
-we migth want to extend our requiable data with results from third-party asynchronous script loaders.
-There's an `external` domain for that, and a client API for it. It's documented in the [API doc](api.html).
+Because we have a `require()` function available in all the application
+code, and because this is synchronous
+(in the sense that it has been resolved on the server already),
+we migth want to extend our requiable data with results from third-party
+asynchronous script loaders. There's an `external` domain for that,
+and a client API for it. It's documented in the [API doc](api.html).
 
 #### Direct Extension
-Finally, modul8 allows exporting of data that exists on the server, without having to add separate script tags for them.
-The `data` domain contains all such data, and like all the above, it can be gotten with `require()`. The [API doc](api.html) contains how to use it.
+Finally, modul8 allows exporting of data that exists on the server,
+without having to add separate script tags for them.
+The `data` domain contains all such data, and like all the above,
+it can be gotten with `require()`.
+The [API doc](api.html) contains the how-to.

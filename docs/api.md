@@ -1,6 +1,9 @@
 # API
+Get back to the slim [API](tinyapi.html) doc.
 
-modul8's API is extremely simple, in its basic form all we need to do pass a entry point and an output.
+## modul8()
+
+modul8's API is very simple, in its basic form all we need to do pass a entry point and an output.
 To add extra require domains for the client pass a dictionary of form `{name : path}`.
 
     var modul8 = require('modul8');

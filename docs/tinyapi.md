@@ -1,4 +1,5 @@
 # API
+Want more details about certain sections? There's a more [extensive API doc](api.html) available.
 
 ## modul8() and .compile()
 
@@ -56,7 +57,7 @@ Values will be serialized using `JSON.stringify` if they are not strings,
 otherwise, they are assumed to be serialized.
 
 ### use()
-Call with Plugin instance(s).
+Call with [Plugin](plugins.html) instance(s).
 
     .use(new Plugin())
 
