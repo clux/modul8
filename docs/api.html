@@ -400,13 +400,13 @@ and by default it is set to <code>M8</code>, but we refer to it here simply as <
 <p>Both these functions will overwrite on repeat calls. For example:</p>
 
 <pre><code>ns.data('libX', libXobj);
-require('data::libX'); // -&gt; libXobj
+ns.require('data::libX'); // -&gt; libXobj
 
 ns.data('libX', {});
-require('data::libX'); // -&gt; {}
+ns.require('data::libX'); // -&gt; {}
 
 ns.data('libX'); //unsets
-require('data::libX'); // -&gt; undefined
+ns.require('data::libX'); // -&gt; undefined
 </code></pre>
 
 <p>And similarly for <code>ns.external</code>.
