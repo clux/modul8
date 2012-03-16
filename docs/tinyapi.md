@@ -132,10 +132,10 @@ function, which wraps the application domain code and (usually) waits for the DO
 
 Examples values:
 
- - `jQuery`
- - `$(document).ready`
+ - "jQuery"
+ - "$(document).ready"
  - function (code) { return "jQuery(function () {" + code + "})"; }
- - `` // blank string - default
+ - "" // blank string - default
 
 The last example simply wraps the app domain code in an anonymous,
 self-executing funciton.

@@ -16,7 +16,7 @@ If you rely on fs file IO, for instance, things will not work.
 Everything in the npm folder specified can be required, but it is optimized to obtain modules in the root.
 Modules are required like on the server, but you have to specify the npm domain to avoid accidentally pulling in big files when requiring from the main domain.
 
-E.g. `require('npm::backbone')` would pull in underscore, but `require('underscore')` would not necessarily work.
+E.g. `require('npm::backbone')` would pull in underscore, but `require('npm::underscore')` would not necessarily work.
 
 `require('npm::backbone')` with backbone installed, would pull its underscore dependency from either backbone/node_modules/underscore, or underscore.
 For underscore to also be easily requirable (and to prevent pulling in copies or different versions),

@@ -345,13 +345,13 @@ Note that the `ns` object stores simply the API to interact with the data, not t
 Both these functions will overwrite on repeat calls. For example:
 
     ns.data('libX', libXobj);
-    require('data::libX'); // -> libXobj
+    ns.require('data::libX'); // -> libXobj
 
     ns.data('libX', {});
-    require('data::libX'); // -> {}
+    ns.require('data::libX'); // -> {}
 
     ns.data('libX'); //unsets
-    require('data::libX'); // -> undefined
+    ns.require('data::libX'); // -> undefined
 
 And similarly for `ns.external`.
 See the debug section for how to log the `external` and `data` domains.
