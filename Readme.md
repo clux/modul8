@@ -1,4 +1,4 @@
-# Extensible CommonJS Code Packager and Analyzer ![travis build status](https://secure.travis-ci.org/clux/modul8.png)
+# Extensible CommonJS Code Packager and Analyzer [![Build Status](https://secure.travis-ci.org/clux/modul8.png)](http://travis-ci.org/clux/modul8)
 ## Intro
 
 Write a `main.js` as the application entry point

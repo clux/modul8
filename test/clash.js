@@ -2,8 +2,8 @@ var fs      = require('fs')
   , rimraf  = require('rimraf')
   , join    = require('path').join
   , log     = require('logule').sub('CLASH')
-  , brain   = require('./lib/brain')()
   , utils   = require('../lib/utils')
+  , test    = require('tap').test
   , modul8  = require('../');
 
 var root = join(__dirname, 'clash')
@@ -79,16 +79,16 @@ function generateApp() {
     .compile(output);
 }
 
-exports["test clashes"] = function () {
+test("clashes", function (t) {
   generateApp();
+  var brain   = require('./lib/brain')(t)
 
   var compile = utils.makeCompiler()
-    , mainCode = compile(output)
-    , testCount = 3;
+    , mainCode = compile(output);
 
-  brain.isUndefined(mainCode, ".compile() result evaluates successfully");
-  brain.isDefined("M8", "global namespace is defined");
-  brain.isDefined("M8.require('entry')", "entry can be required")
+  brain.do(mainCode);
+  brain.ok("M8", "global namespace is defined");
+  brain.ok("M8.require('entry')", "entry can be required");
 
   Object.keys(domains).forEach(function (dom) {
     for (var i = 0; i < exts.length; i += 1) {
@@ -105,8 +105,7 @@ exports["test clashes"] = function () {
 
       brain.equal(reqStr + "revclash" + i + "slash", 'inside', dom + "_revclash" + i + "slash is defined and is inside");
       brain.equal(reqStr + "revclash" + i, 'outside', dom + "_revclash" + i + " is defined and is outside");
-      testCount += 8;
     }
   });
-  log.info('verified', testCount, 'collision prone requires');
-};
+  t.end();
+});

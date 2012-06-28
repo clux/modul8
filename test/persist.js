@@ -2,6 +2,7 @@ var assert  = require('assert')
   , fs      = require('fs')
   , modul8  = require('../index.js')
   , join    = require('path').join
+  , test    = require('tap').test
   , log     = require('logule').sub('PERSIST')
   , dirify  = require('./lib/dirify')
   , read    = require('../lib/utils').read;
@@ -73,9 +74,8 @@ function compile(useLibs, separateLibs) {
     .compile(out.app);
 }
 
-function runCase(k) {
-  var testCount = 0
-    , withLibs = (k === 1 || k === 2)
+function runCase(k, t) {
+  var withLibs = (k === 1 || k === 2)
     , separateLibs = (k === 2);
 
   Object.keys(paths).forEach(function (name) {
@@ -94,11 +94,10 @@ function runCase(k) {
 
     compile(withLibs, separateLibs);
 
-    assert.ok(!wasUpdated('app'), "preparing to modify " + name + "::0 - recompile does not change libs mTimes without changes");
+    t.ok(!wasUpdated('app'), "preparing to modify " + name + "::0 - recompile does not change libs mTimes without changes");
 
     if (separateLibs) {
-      assert.ok(!wasUpdated('libs'), "preparing to modify " + name + "::0 - recompile does not change libs mTimes without changes");
-      testCount += 1;
+      t.ok(!wasUpdated('libs'), "preparing to modify " + name + "::0 - recompile does not change libs mTimes without changes");
     }
 
     // modify sleeps as there is a limited resolution on mtime
@@ -114,24 +113,21 @@ function runCase(k) {
 
     if ((modifyingLibs && !separateLibs) || (!modifyingLibs && separateLibs)) {
       log.trace(msg + ' => appChanged');
-      assert.ok(appChanged, "modified " + name + "::0 - compiling with lib changes for included libs app mtime");
+      t.ok(appChanged, "modified " + name + "::0 - compiling with lib changes for included libs app mtime");
     }
     else if (modifyingLibs && separateLibs) {
-      assert.ok(libsChanged, "modified " + name + "::0 - compiling with lib changes for separate libs changes libs mtime");
-      assert.ok(!appChanged, "modified " + name + "::0 - compiling with lib changes for separate libs does not change app mtime");
+      t.ok(libsChanged, "modified " + name + "::0 - compiling with lib changes for separate libs changes libs mtime");
+      t.ok(!appChanged, "modified " + name + "::0 - compiling with lib changes for separate libs does not change app mtime");
       log.trace(msg + ' => libsChanged && !appChanged');
-      testCount += 1;
     }
     else if (!modifyingLibs) {
-      assert.ok(appChanged, "modified " + name + "::0 - compiling with app changes changes app mtime");
+      t.ok(appChanged, "modified " + name + "::0 - compiling with app changes changes app mtime");
       log.trace(msg + ' => appChanged');
     }
-    testCount += 2;
   });
-  return testCount;
 }
 
-exports["test persist"] = function () {
+test("persist", function (t) {
   if (false) {
     log.info('modified on hold - skipping 16 second test');
     return;
@@ -154,7 +150,7 @@ exports["test persist"] = function () {
   */
   var testCount = 0;
   for (var k = 0; k < 3; k += 1) {
-    testCount += runCase(k);
+    runCase(k, t);
   }
-  log.info('completed', testCount, 'mTime checks');
-};
+  t.end();
+});

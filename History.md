@@ -4,6 +4,11 @@ TODO
   * npm tests
   * better handling of analysis elements from npm domain
 
+0.16.1 / 2012-06-??
+==================
+  * maintenance release for 0.8
+  * testability using tap rather than expresso, dependency cleanups and slight code cleaning
+
 0.16.0 / 2012-02-25
 ==================
   * logging now uses one interface for server side logging and one for client side logging

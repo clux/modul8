@@ -1,24 +1,21 @@
+// brain - zombie tap test helper
 var zombie    = require('zombie')
-  , assert    = require('assert');
+  , singles = ['ok', 'isDefined', 'isUndefined']
+  , doubles = ['eql', 'equal', 'deepEqual', 'type'];
 
-// brain - browser assert helper
-
-var singles = ['ok', 'isDefined', 'isUndefined']
-  , doubles = ['eql', 'equal', 'includes', 'type'];
-
-
-function Brain() {
+function Brain (t) {
+  this.t = t;
   this.browser = new zombie.Browser();
 }
 singles.forEach(function (s) {
   Brain.prototype[s] = function (statement, msg) {
-    return assert[s](this.browser.evaluate(statement), msg);
+    return this.t[s](this.browser.evaluate(statement), msg);
   };
 });
 
 doubles.forEach(function (d) {
   Brain.prototype[d] = function (statement, expected, msg) {
-    return assert[d](this.browser.evaluate(statement), expected, msg);
+    return this.t[d](this.browser.evaluate(statement), expected, msg);
   };
 });
 
@@ -27,8 +24,8 @@ Brain.prototype.do = function (statement) {
   return this.browser.evaluate(statement);
 };
 
-function factory () {
-  return new Brain();
+function factory (t) {
+  return new Brain(t);
 }
 
 module.exports = factory;

@@ -3,7 +3,7 @@ var fs      = require('fs')
   , rimraf  = require('rimraf').sync
   , path    = require('path')
   , join    = path.join
-  , type    = require(join('..', '..', 'lib', 'type'));
+  , type    = require('typr');
 
 /**
  * generate directory trees and files from an object recursively

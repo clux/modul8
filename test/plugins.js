@@ -2,7 +2,7 @@ var path      = require('path')
   , modul8    = require('../')
   , utils     = require('../lib/utils')
   , dirify    = require('./lib/dirify')
-  , brain     = require('./lib/brain')()
+  , test      = require('tap').test
   , log       = require('logule').sub('PLUGIN')
   , join      = path.join
   , dir       = __dirname
@@ -59,40 +59,39 @@ function generateApp() {
     .compile(join(dir, 'output', 'plugins.js'));
 }
 
-exports["test plugins"] = function () {
+test("plugins", function (t) {
   generateApp();
+  var brain     = require('./lib/brain')(t)
+
   var mainCode = compile(join(dir, 'output', 'plugins.js'));
-  brain.isUndefined(mainCode, ".compile() result evaluates successfully");
+  brain.do(mainCode);
 
   // sanity
-  brain.isDefined("QQ", "global namespace is defined");
-  brain.isDefined("QQ.require", "require is globally accessible");
+  brain.ok("!!QQ", "global namespace is defined");
+  brain.ok("!!QQ.require", "require is globally accessible");
   brain.type("QQ.require", 'function', "require is a function");
 
   // plug1 exports the right code
-  brain.isUndefined("QQ.require('plug1::code')", "plug1 does not export code when not required");
-  brain.includes("QQ.domains()", 'plug1', "plug1 was exported as a domain");
+  brain.ok("!QQ.require('plug1::code')", "plug1 does not export code when not required");
+  brain.ok("QQ.domains().indexOf('plug1') >= 0", "plug1 was exported as a domain");
   brain.equal("QQ.require('plug1::code1')", 160, "plug1::code1 is included as it is required");
   brain.equal("QQ.require('plug1::code2')", 160, "plug1:;code2 is included as it is required by a required module");
-  brain.isUndefined("QQ.require('plug1::code3')", "plug1::code3 is NOT included as it is NOT required");
+  brain.ok("!QQ.require('plug1::code3')", "plug1::code3 is NOT included as it is NOT required");
 
   // plug2 exports nothing
   brain.equal("QQ.domains().indexOf('plug2')", -1, "plug2 did not export a domain");
 
   // both export data
-  brain.isDefined("QQ.require('data::plug1')", "plug1 exports data");
-  brain.isDefined("QQ.require('data::plug2')", "plug2 exports data");
-
-  var testCount = 1 + 3 + 5 + 2;
+  brain.ok("!!QQ.require('data::plug1')", "plug1 exports data");
+  brain.ok("!!QQ.require('data::plug2')", "plug2 exports data");
 
   Object.keys(data).forEach(function (key) {
     brain.ok("QQ.require('data::plug1')." + key, "require('data::plug1')." + key + " exists");
-    brain.eql("QQ.require('data::plug1')." + key, data[key], "require('data::plug1')." + key + " is data['" + key + "']");
+    brain.deepEqual("QQ.require('data::plug1')." + key, data[key], "require('data::plug1')." + key + " is data['" + key + "']");
     brain.ok("QQ.require('data::plug2')." + key, "require('data::plug2')." + key + " exists");
-    brain.eql("QQ.require('data::plug2')." + key, data[key], "require('data::plug2')." + key + " is data['" + key + "']");
-    testCount += 4;
+    brain.deepEqual("QQ.require('data::plug2')." + key, data[key], "require('data::plug2')." + key + " is data['" + key + "']");
   });
-  log.info('completed', testCount, 'plugin tests')
+  // plugin tests over
 
   // check that crazy data is included
   brain.ok("QQ.require('data::crazy1')", "require('data::crazy1') exists");
@@ -101,13 +100,12 @@ exports["test plugins"] = function () {
   brain.ok("QQ.require('data::crazy1').getDay", "require('data::crazy1') is an instance of Date");
   brain.ok("QQ.require('data::crazy2').getDay", "require('data::crazy2') is an instance of Date");
   brain.ok("QQ.require('data::crazy3').QQ", "require('data::crazy3') returns window (found namespace)");
-  testCount = 6;
 
   Object.keys(data).forEach(function (key) {
     var val = data[key];
     // viewing data
     brain.ok("QQ.require('data::" + key + "')", "require('data::" + key + "') exists");
-    brain.eql("QQ.require('data::" + key + "')", data[key], "require('data::" + key + "') is data[" + key + "]");
+    brain.deepEqual("QQ.require('data::" + key + "')", data[key], "require('data::" + key + "') is data[" + key + "]");
 
     // crud interface tool
     brain.do("var dataMod = QQ.data;");
@@ -123,9 +121,8 @@ exports["test plugins"] = function () {
 
     // deleting data
     brain.do("dataMod('" + key + "')");
-    brain.equal("QQ.require('data::" + key + "')", null, "successfully deleted data::" + key);
-
-    testCount += 6;
+    brain.equal("QQ.require('data::" + key + "')", undefined, "successfully deleted data::" + key);
   });
-  log.info('completed', testCount, 'data tests');
-};
+
+  t.end();
+});

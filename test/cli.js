@@ -7,21 +7,13 @@ var fs      = require('fs')
   , join    = require('path').join
   , utils   = require('../lib/utils')
   , modul8  = require('../')
+  , test    = require('tap').test
   , cli     = require('../bin/cli')
   , dir     = __dirname
   , compile = utils.makeCompiler()
   , makeBrain = require('./lib/brain')
   , testCount = 0
   , num_tests = 8;
-
-
-function testsDone(count) {
-  testCount += count;
-  num_tests -= 1;
-  if (!num_tests) {
-    log.info('completed', testCount, 'complex cli combinations');
-  }
-}
 
 function callCLI(str) {
   var base = ["node", "./bin/cli.js"]
@@ -30,12 +22,9 @@ function callCLI(str) {
   cli(argv);
 }
 
-exports["test CLI#examples/simple"] = function () {
-  return;
-  // this test is on hold - jQuery fails to evaluate with zombie atm
-
-  var brain   = makeBrain()
-    , workDir = join('examples', 'simple')
+test("CLI/simple", function (t) {
+  var brain   = makeBrain(t)
+    , workDir = join('..', 'examples', 'simple')
     , str = join(workDir, 'app', 'app.js') + " -a jQuery=jQuery,$ -w jQuery -o " + join(workDir, "cliout.js");
 
   callCLI(str);
@@ -43,14 +32,13 @@ exports["test CLI#examples/simple"] = function () {
   var libs = compile(join(workDir, 'libs', 'jquery.js'))
     , mainCode = compile(join(workDir, 'cliout.js'));
 
-  brain.isUndefined(libs, "libs evaluate successfully");
-  brain.isUndefined(mainCode, ".compile() result evaluates successfully");
-  brain.isDefined("M8.require('jQuery')", "jQuery is requirable");
-  brain.isUndefined("window.jQuery", "jQuery is not global");
-  brain.isUndefined("window.$", "$ is not global");
-
-  log.info('completed', 5, 'simple cli verifications using the simple example');
-};
+  brain.do(libs);
+  brain.do(mainCode);
+  brain.ok("M8.require('jQuery') !== undefined", "jQuery is requirable");
+  brain.ok("window.jQuery === undefined", "jQuery is not global");
+  brain.ok("window.$ === undefined", "$ is not global");
+  t.end();
+});
 
 function initDirs(num) {
   var folders = ['libs', 'main', 'plug', 'dom'];
@@ -73,8 +61,8 @@ function generateApp(opts, i) {
   plug.push("Plugin.prototype.data = function(){return {plugData:true};};");
   plug.push("exports.Plugin = Plugin;");
 
-  entry.push("exports.libTest1 = !!window.libTest1;");
-  entry.push("exports.libTest2 = !!window.libTest2;");
+  entry.push("exports.libTest1 = window.libTest1 !== undefined;");
+  entry.push("exports.libTest2 = window.libTest2 !== undefined;");
 
   if (opts.data) {
     entry.push("exports.data = !!require('data::dataKey').hy;");
@@ -106,7 +94,7 @@ function generateApp(opts, i) {
   fs.writeFileSync(join(dir, 'cli', i + '', 'main', 'temp.js'), "require('./code1')");
 }
 
-function runCase(k) {
+function runCase(k, t) {
   var opts = {
     dom       : k % 2 === 0
   , data      : k % 4 === 0
@@ -164,54 +152,53 @@ function runCase(k) {
     , libs1 = compile(join(workDir, 'libs', 'lib1.js'))
     , libs2 = compile(join(workDir, 'libs', 'lib2.js'))
     , ns = opts.ns || 'M8'
-    , brain = makeBrain()
-    , count = 0;
+    , brain = makeBrain(t);
 
   brain.do(libs1);
   brain.do(libs2);
 
   if (opts.lib1Arb) {
-    brain.isUndefined("window.lib1", "lib1 globals exist");
-    count += 1;
+    brain.ok("!window.lib1", "lib1 global removed");
   } else {
-    brain.isDefined("window.lib1", "lib1 global has been removed");
+    brain.ok("!!window.lib1", "lib1 global has exists");
     brain.type("window.lib1", "function", "lib1 is a function");
-    count += 2;
   }
 
-  brain.isUndefined(mainCode, ".compile() result evaluates successfully");
-  brain.isDefined(ns, "namespace exists");
-  brain.isDefined(ns + ".require", "require fn exists");
-  brain.isDefined(ns + ".require('./entry')", "can require entry point run " + k);
-  count += 4;
+  brain.do(mainCode);
+  brain.ok(ns, "namespace exists");
+  brain.ok(ns + ".require", "require fn exists");
+  brain.ok("!!" + ns + ".require('./entry')", "can require entry point run " + k);
 
   if (opts.lib1Arb) {
-    brain.isDefined(ns + ".require('lib1')", "lib1 is arbitered");
-    count += 1;
+    brain.ok("!!" + ns + ".require('lib1')", "lib1 is arbitered");
   }
   if (opts.lib2Arb) {
-    brain.isDefined(ns + ".require('lib2')", "lib2 is arbitered correctly");
-    count += 1;
+    brain.ok("!!" + ns + ".require('lib2')", "lib2 is arbitered correctly");
   }
   if (opts.data) {
-    brain.isDefined(ns + ".require('data::dataKey')", "can require dataKey");
-    brain.isDefined(ns + ".require('./entry').data", "data was also required via entry");
-    count += 2;
+    brain.ok("!!" + ns + ".require('data::dataKey')", "can require dataKey");
+    brain.ok("!!" + ns + ".require('./entry').data", "data was also required via entry");
   }
   if (opts.dom) {
-    brain.isDefined(ns + ".require('dom::')", "domain can be required");
-    brain.isDefined(ns + ".require('./entry').domain", "domain was successfully required from entry too");
-    count += 2;
+    brain.ok("!!" + ns + ".require('dom::')", "domain can be required");
+    brain.ok("!!" + ns + ".require('./entry').domain", "domain was successfully required from entry too");
   }
-  testsDone(count);
+  testsDone(t);
 }
 
-exports["test CLI#complicated"] = function () {
+function testsDone (t) {
+  num_tests -= 1;
+  if (!num_tests) {
+    t.end();
+  }
+}
+
+test("CLI complex", function (t) {
   var num = num_tests;
   initDirs(num);
 
   for (var k = 0; k < num; k += 1) {
-    runCase(k);
+    runCase(k, t);
   }
-};
+});
 
