@@ -4,10 +4,11 @@ TODO
   * npm tests
   * better handling of analysis elements from npm domain
 
-0.16.1 / 2012-06-??
+0.17.0 / 2012-06-??
 ==================
-  * maintenance release for 0.8
+  * mainly a maintenance release for 0.8 (it does not support 0.6)
   * testability using tap rather than expresso, dependency cleanups and slight code cleaning
+  * type testing bit moved into the `typr` module
 
 0.16.0 / 2012-02-25
 ==================
