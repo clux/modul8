@@ -21,7 +21,7 @@ function callCLI(str) {
   log.trace('call: ', str);
   cli(argv);
 }
-
+/*
 test("CLI/simple", function (t) {
   var brain   = makeBrain(t)
     , workDir = join('..', 'examples', 'simple')
@@ -39,6 +39,7 @@ test("CLI/simple", function (t) {
   brain.ok("window.$ === undefined", "$ is not global");
   t.end();
 });
+*/
 
 function initDirs(num) {
   var folders = ['libs', 'main', 'plug', 'dom'];
