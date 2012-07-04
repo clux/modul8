@@ -4,6 +4,10 @@ TODO
   * npm tests
   * better handling of analysis elements from npm domain
 
+0.17.1 / 2012-07-04
+===================
+  * forgot to use latest logule
+
 0.17.0 / 2012-07-04
 ==================
   * maintenance release to support 0.8 properly
