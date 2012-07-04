@@ -9,6 +9,7 @@ TODO
   * maintenance release to support 0.8 properly
   * testability using tap rather than expresso, dependency cleanups and slight code cleaning
   * type testing bit moved into the `typr` module
+  * In hindsight, this should have been `0.16.1`, should not break anything - sorry
 
 0.16.0 / 2012-02-25
 ==================
