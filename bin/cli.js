@@ -102,7 +102,7 @@ function complete() {
       process.exit();
     }
     var rel = join(fs.realpathSync(), name);
-    if (path.existsSync(rel)) {
+    if (fs.existsSync(rel)) {
       name = rel;
     }
     // path can be absolute, relative to execution directory, or relative to CLI dir
@@ -119,7 +119,7 @@ function complete() {
 
   Object.keys(program.data || {}).forEach(function (k) {
     var p = program.data[k];
-    if (!p || !path.existsSync(p)) {
+    if (!p || !fs.existsSync(p)) {
       console.error("invalid data usage: value must be a path to a file");
       process.exit();
     }
